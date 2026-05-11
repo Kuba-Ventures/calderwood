@@ -4,9 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const APP_PREFIXES = ["/dashboard", "/intake", "/reports", "/account"];
+
 export function Header() {
   const pathname = usePathname();
   const isAuthPage = pathname === "/login";
+  const isAppPage = APP_PREFIXES.some(
+    (p) => pathname === p || pathname?.startsWith(p + "/")
+  );
+
+  if (isAppPage) return null;
 
   return (
     <header className="border-b border-canvas-border bg-canvas">
