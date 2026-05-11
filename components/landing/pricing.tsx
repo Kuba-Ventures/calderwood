@@ -38,7 +38,7 @@ export function Pricing() {
             ))}
           </ul>
           <a
-            href="/start"
+            href="/login"
             className="mt-8 inline-flex w-full items-center justify-center rounded-md bg-ink-900 px-6 py-3.5 text-base font-medium text-white shadow-sm transition hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900"
           >
             Start your assessment

@@ -13,7 +13,7 @@ export function Hero() {
         </p>
         <div className="mt-10 flex flex-col items-start gap-3">
           <a
-            href="/start"
+            href="/login"
             className="inline-flex items-center justify-center rounded-md bg-ink-900 px-6 py-4 text-base font-medium text-white shadow-sm transition hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900"
           >
             Find out what you&rsquo;re leaving on the table for $199
