@@ -15,13 +15,23 @@ const TITLES: Record<string, string> = {
 export function Topbar() {
   const pathname = usePathname() ?? "/dashboard";
   const router = useRouter();
-  const [practiceName, setPracticeName] = useState<string>("");
+  const [identity, setIdentity] = useState<{ label: string; initial: string }>({
+    label: "Your practice",
+    initial: "?",
+  });
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const a = account.get();
-    setPracticeName(a?.practiceName?.trim() || "Your practice");
+    const firstName = a?.firstName?.trim() ?? "";
+    const practiceName = a?.practiceName?.trim() ?? "";
+    let label = "Your practice";
+    if (firstName && practiceName) label = `${firstName} at ${practiceName}`;
+    else if (firstName) label = firstName;
+    else if (practiceName) label = practiceName;
+    const initial = (firstName || practiceName || "?").charAt(0).toUpperCase();
+    setIdentity({ label, initial });
   }, [pathname]);
 
   useEffect(() => {
@@ -63,7 +73,7 @@ export function Topbar() {
             href="/account"
             className="hidden text-sm text-ink-500 hover:text-ink-900 sm:inline"
           >
-            {practiceName}
+            {identity.label}
           </Link>
           <div className="relative" ref={menuRef}>
             <button
@@ -73,7 +83,7 @@ export function Topbar() {
               aria-haspopup="menu"
               aria-expanded={open}
             >
-              {(practiceName || "?").charAt(0).toUpperCase()}
+              {identity.initial}
             </button>
             {open && (
               <div

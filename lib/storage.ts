@@ -38,6 +38,7 @@ export type Intake = {
 };
 
 export type Account = {
+  firstName?: string;
   practiceName: string;
   primaryEmail: string;
   billingEmail: string;

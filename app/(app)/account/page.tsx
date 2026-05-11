@@ -7,6 +7,7 @@ import { Account, account as accountStore, auth } from "@/lib/storage";
 export default function AccountPage() {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
+  const [firstName, setFirstName] = useState("");
   const [practiceName, setPracticeName] = useState("");
   const [primaryEmail, setPrimaryEmail] = useState("");
   const [billingEmail, setBillingEmail] = useState("");
@@ -17,6 +18,7 @@ export default function AccountPage() {
   useEffect(() => {
     const a = accountStore.get();
     if (a) {
+      setFirstName(a.firstName ?? "");
       setPracticeName(a.practiceName);
       setPrimaryEmail(a.primaryEmail);
       setBillingEmail(a.billingEmail);
@@ -29,6 +31,7 @@ export default function AccountPage() {
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     const payload: Account = {
+      firstName: firstName.trim() || undefined,
       practiceName: practiceName.trim(),
       primaryEmail: primaryEmail.trim(),
       billingEmail: (billingMatchesPrimary ? primaryEmail : billingEmail).trim(),
@@ -60,13 +63,22 @@ export default function AccountPage() {
           </p>
         </div>
 
-        <Field
-          id="practiceName"
-          label="Practice name"
-          value={practiceName}
-          onChange={setPracticeName}
-          placeholder="Calderwood Dental"
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            id="firstName"
+            label="First name"
+            value={firstName}
+            onChange={setFirstName}
+            placeholder="Finley"
+          />
+          <Field
+            id="practiceName"
+            label="Practice name"
+            value={practiceName}
+            onChange={setPracticeName}
+            placeholder="Calderwood Dental"
+          />
+        </div>
         <Field
           id="primaryEmail"
           label="Primary email"
