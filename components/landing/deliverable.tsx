@@ -7,7 +7,7 @@ const items = [
   {
     label: "02",
     title: "The 10 codes losing you the most money",
-    body: "Your underpaid codes ranked by annual dollar impact — the gap to the 75th percentile multiplied by how often you bill the code. You’ll know which renegotiation moves the needle and which ones aren’t worth the call.",
+    body: "Your underpaid codes ranked by annual dollar impact: the gap to the 75th percentile multiplied by how often you bill the code. You’ll know which renegotiation moves the needle and which ones aren’t worth the call.",
   },
   {
     label: "03",

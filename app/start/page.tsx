@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Start your assessment — Calderwood",
+  title: "Start your assessment | Calderwood",
 };
 
 export default function StartPlaceholder() {
@@ -17,7 +17,7 @@ export default function StartPlaceholder() {
       </div>
       <div className="flex flex-1 flex-col justify-center py-20">
         <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent">
-          Intake — coming next
+          Intake, coming next
         </p>
         <h1 className="mt-5 max-w-2xl text-balance text-4xl font-semibold tracking-tighter2 text-ink-900 sm:text-5xl">
           The intake form ships in the next checkpoint.

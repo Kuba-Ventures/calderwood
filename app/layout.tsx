@@ -9,11 +9,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Calderwood — How much is each carrier underpaying you?",
+  title: "Calderwood: How much is each carrier underpaying you?",
   description:
     "A code-by-code benchmark of your dental fee schedule against UCR data in your zip code, delivered within 24 hours. $199 flat. No sales call.",
   openGraph: {
-    title: "Calderwood — How much is each carrier underpaying you?",
+    title: "Calderwood: How much is each carrier underpaying you?",
     description:
       "A code-by-code benchmark of your dental fee schedule against UCR data in your zip code, delivered within 24 hours. $199 flat. No sales call.",
     type: "website",

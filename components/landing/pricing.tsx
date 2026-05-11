@@ -17,7 +17,7 @@ export function Pricing() {
             One price. One report. No subscription.
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-ink-700">
-            The independent consultancies offering this same analysis charge $6,000 to $7,800 per provider as part of a multi-week engagement. We sell only the benchmark — the part that tells you which carriers are underpaying you and by how much — as a one-time written report.
+            The independent consultancies offering this same analysis charge $6,000 to $7,800 per provider as part of a multi-week engagement. We sell only the benchmark, the part that tells you which carriers are underpaying you and by how much, as a one-time written report.
           </p>
         </div>
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms — Calderwood",
+  title: "Terms | Calderwood",
 };
 
 export default function TermsStub() {

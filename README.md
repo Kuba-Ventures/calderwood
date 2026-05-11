@@ -6,11 +6,11 @@ Landing page and intake flow for Calderwood Tech's $199 dental fee-schedule asse
 
 - Next.js 14 (App Router) + TypeScript
 - Tailwind CSS
-- Stripe Checkout (hosted) — Phase 3
-- Supabase (Postgres) — Phase 3
-- Resend — Phase 3
-- PostHog — Phase 1+
-- Puppeteer + `@sparticuz/chromium` for PDF reports — Phase 4
+- Stripe Checkout (hosted), wired in Phase 3
+- Supabase (Postgres), wired in Phase 3
+- Resend, wired in Phase 3
+- PostHog, wired in Phase 1+
+- Puppeteer + `@sparticuz/chromium` for PDF reports, wired in Phase 4
 - Deployed on Vercel
 
 ## Local development
@@ -28,7 +28,7 @@ Dev server runs at http://localhost:3000.
 app/                    Next.js App Router pages
   page.tsx              Landing page (composes /components/landing/*)
   start/                Intake flow placeholder (Phase 2)
-  privacy/, terms/      Legal stubs — required before Stripe live
+  privacy/, terms/      Legal stubs, required before Stripe live
 components/landing/     Landing page sections
 public/                 Static assets
 ```
@@ -44,10 +44,10 @@ Copy `.env.example` to `.env.local` and fill values as each phase comes online. 
 
 ## Phase plan
 
-1. **Landing page** — current
-2. **Multi-step intake** — zip → providers → fees → carriers → contact
-3. **Stripe + Supabase + Resend** — payment, persistence, transactional email
-4. **PDF report scaffold** — template + Puppeteer rendering; ADA matching logic stays a TODO until there's demand signal
+1. **Landing page** (current)
+2. **Multi-step intake**: zip, providers, fees, carriers, contact
+3. **Stripe + Supabase + Resend**: payment, persistence, transactional email
+4. **PDF report scaffold**: template + Puppeteer rendering. ADA matching logic stays a TODO until there's demand signal.
 
 ## Manual fulfillment runbook
 

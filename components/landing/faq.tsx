@@ -1,7 +1,7 @@
 const faqs = [
   {
     q: "Are you a consultancy?",
-    a: "No. We’re a software product. You upload your fees, we send back a report. There’s no kickoff call, no engagement letter, no monthly retainer, and no upsell sequence. If you want a consultant to actually run the renegotiation, hire one — we can tell you what to ask them, but we don’t do that work.",
+    a: "No. We’re a software product. You upload your fees, we send back a report. There’s no kickoff call, no engagement letter, no monthly retainer, and no upsell sequence. If you want a consultant to actually run the renegotiation, hire one. We can tell you what to ask them, but we don’t do that work.",
   },
   {
     q: "Where does your data come from?",
@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "What if I’m already in an umbrella or shared network?",
-    a: "Still useful. The report ranks each underlying carrier separately so you can see which umbrella participations are pulling your weighted reimbursement down. Sometimes the answer is to drop the umbrella entirely — the report will tell you when that math works.",
+    a: "Still useful. The report ranks each underlying carrier separately so you can see which umbrella participations are pulling your weighted reimbursement down. Sometimes the answer is to drop the umbrella entirely. The report will tell you when that math works.",
   },
   {
     q: "Can I do this myself?",
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "What happens after I pay?",
-    a: "You’ll get an immediate email confirming receipt and an estimated delivery time. Your report arrives within 24 hours — most arrive the same business day. If you have a question after reading it, reply to that email and a human will answer.",
+    a: "You’ll get an immediate email confirming receipt and an estimated delivery time. Your report arrives within 24 hours. Most arrive the same business day. If you have a question after reading it, reply to that email and a human will answer.",
   },
 ];
 

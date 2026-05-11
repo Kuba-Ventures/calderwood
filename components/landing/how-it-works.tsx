@@ -12,7 +12,7 @@ const steps = [
   {
     n: "3",
     title: "Give us your current fee schedule",
-    body: "Upload a CSV, paste a table, or hand-enter your top 20 CDT codes — whichever is least friction for you.",
+    body: "Upload a CSV, paste a table, or hand-enter your top 20 CDT codes, whichever is least friction for you.",
   },
   {
     n: "4",
@@ -47,7 +47,7 @@ export function HowItWorks() {
           ))}
         </ol>
         <p className="mt-12 max-w-2xl text-base text-ink-700">
-          Your report lands in your inbox within 24 hours of payment — most arrive the same business day.
+          Your report lands in your inbox within 24 hours of payment. Most arrive the same business day.
         </p>
       </div>
     </section>
