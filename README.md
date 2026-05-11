@@ -1,4 +1,4 @@
-# calderwood-landing
+# calderwood
 
 Landing page and intake flow for Calderwood Tech's $199 dental fee-schedule assessment.
 
@@ -39,7 +39,7 @@ Copy `.env.example` to `.env.local` and fill values as each phase comes online. 
 
 ## Deployment
 
-- Repo: `https://github.com/kubatopia/calderwood-landing`
+- Repo: `https://github.com/kubatopia/calderwood`
 - Auto-deploys to Vercel on push to `main`
 
 ## Phase plan
