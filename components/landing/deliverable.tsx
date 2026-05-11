@@ -35,12 +35,12 @@ export function Deliverable() {
           {items.map(({ label, title, body, Visual }) => (
             <div
               key={label}
-              className="flex flex-col rounded-xl border border-canvas-border bg-canvas-tint"
+              className="flex h-full flex-col rounded-xl border border-canvas-border bg-canvas-tint"
             >
-              <div className="border-b border-canvas-border">
+              <div className="border-b border-canvas-border bg-white lg:flex lg:h-[300px] lg:flex-col lg:justify-center">
                 <Visual />
               </div>
-              <div className="p-6 sm:p-7">
+              <div className="flex-1 p-6 sm:p-7">
                 <span className="font-mono text-xs text-ink-400">
                   {label}
                 </span>
@@ -67,7 +67,7 @@ function PercentileVisual() {
     { code: "D3310", percentile: 48 },
   ];
   return (
-    <div className="bg-white px-6 py-7 sm:px-7">
+    <div className="px-6 py-7 sm:px-7">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
         Percentile rank in your ZIP
       </p>
@@ -120,7 +120,7 @@ function CodeTableVisual() {
     { code: "D3310", desc: "Endo, anterior", gap: "$42", impact: "$1,596" },
   ];
   return (
-    <div className="bg-white px-6 py-7 sm:px-7">
+    <div className="px-6 py-7 sm:px-7">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
         Top codes by annual impact
       </p>
@@ -173,7 +173,7 @@ function CarrierBarsVisual() {
     { name: "Other", value: 8400, pct: 26 },
   ];
   return (
-    <div className="bg-white px-6 py-7 sm:px-7">
+    <div className="px-6 py-7 sm:px-7">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
         Recoverable revenue by carrier
       </p>
