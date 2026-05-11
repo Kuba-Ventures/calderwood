@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function ReportMockup() {
   return (
     <div className="relative mx-auto aspect-[8.5/11] w-full max-w-[420px]">
@@ -7,7 +9,13 @@ export function ReportMockup() {
         <div className="flex h-full flex-col p-5 sm:p-6">
           <div className="flex items-start justify-between border-b border-canvas-border pb-3">
             <div className="flex items-center gap-1.5">
-              <div className="h-2.5 w-2.5 rounded-sm bg-accent" />
+              <Image
+                src="/logo.png"
+                alt=""
+                width={161}
+                height={187}
+                className="h-4 w-auto"
+              />
               <span className="text-[11px] font-semibold tracking-tightish text-ink-900">
                 Calderwood
               </span>
