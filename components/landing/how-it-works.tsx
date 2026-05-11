@@ -1,4 +1,13 @@
-const steps = [
+import { Fragment } from "react";
+
+type Step = {
+  n: string;
+  title: string;
+  body: React.ReactNode;
+  Icon?: React.ComponentType;
+};
+
+const steps: Step[] = [
   {
     n: "1",
     title: "Enter your practice zip code",
@@ -20,8 +29,7 @@ const steps = [
   {
     n: "4",
     title: "Pick your contracted carriers",
-    body: "Delta, Aetna, Cigna, MetLife, UnitedHealthcare, Guardian, BCBS, Humana, or other.",
-    Icon: CarrierMark,
+    body: <CarrierWordmarks />,
   },
 ];
 
@@ -49,17 +57,19 @@ export function HowItWorks() {
                 {n}
               </div>
               <div className="flex items-start justify-between gap-6">
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <h3 className="text-lg font-semibold tracking-tightish text-ink-900">
                     {title}
                   </h3>
-                  <p className="mt-2 max-w-readable text-[15px] leading-relaxed text-ink-700">
+                  <div className="mt-2 max-w-readable text-[15px] leading-relaxed text-ink-700">
                     {body}
-                  </p>
+                  </div>
                 </div>
-                <div className="hidden flex-none pt-1 text-ink-400 sm:block">
-                  <Icon />
-                </div>
+                {Icon && (
+                  <div className="hidden flex-none pt-1 text-ink-400 sm:block">
+                    <Icon />
+                  </div>
+                )}
               </div>
             </li>
           ))}
@@ -70,6 +80,36 @@ export function HowItWorks() {
         </p>
       </div>
     </section>
+  );
+}
+
+function CarrierWordmarks() {
+  const carriers = [
+    "Delta",
+    "Aetna",
+    "Cigna",
+    "MetLife",
+    "UnitedHealthcare",
+    "Guardian",
+    "BCBS",
+    "Humana",
+    "Other",
+  ];
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      {carriers.map((name, i) => (
+        <Fragment key={name}>
+          <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ink-500">
+            {name}
+          </span>
+          {i < carriers.length - 1 && (
+            <span className="text-ink-300" aria-hidden>
+              ·
+            </span>
+          )}
+        </Fragment>
+      ))}
+    </div>
   );
 }
 
@@ -128,14 +168,5 @@ function DocIcon() {
       <path d="M14 3v5h5" />
       <path d="M9 13h6M9 17h4" />
     </svg>
-  );
-}
-
-function CarrierMark() {
-  return (
-    <div className="flex flex-col items-end gap-1 text-[10px] font-semibold tracking-[0.12em] text-ink-400">
-      <span>DELTA  ·  AETNA</span>
-      <span>CIGNA  ·  UHC</span>
-    </div>
   );
 }
