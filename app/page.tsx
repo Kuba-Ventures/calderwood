@@ -1,20 +1,22 @@
 import { Hero } from "@/components/landing/hero";
-import { AudienceStrip } from "@/components/landing/audience-strip";
+import { ProofBar } from "@/components/landing/proof-bar";
 import { Deliverable } from "@/components/landing/deliverable";
+import { Methodology } from "@/components/landing/methodology";
 import { HowItWorks } from "@/components/landing/how-it-works";
-import { Pricing } from "@/components/landing/pricing";
 import { Faq } from "@/components/landing/faq";
+import { FinalCta } from "@/components/landing/final-cta";
 import { Footer } from "@/components/landing/footer";
 
 export default function Home() {
   return (
     <main>
       <Hero />
-      <AudienceStrip />
+      <ProofBar />
       <Deliverable />
+      <Methodology />
       <HowItWorks />
-      <Pricing />
       <Faq />
+      <FinalCta />
       <Footer />
     </main>
   );

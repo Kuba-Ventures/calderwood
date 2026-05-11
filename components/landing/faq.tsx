@@ -1,40 +1,36 @@
 const faqs = [
   {
-    q: "Are you a consultancy?",
-    a: "No. We’re a software product. You upload your fees, we send back a report. There’s no kickoff call, no engagement letter, no monthly retainer, and no upsell sequence. If you want a consultant to actually run the renegotiation, hire one. We can tell you what to ask them, but we don’t do that work.",
+    q: "Where does the UCR data come from?",
+    a: "The most recent ADA Survey of Dental Fees, FAIR Health UCR data, and state-level reimbursement disclosures. No crowdsourced fees, no modeled estimates. Where confidence is low for a specific code or zip (low-volume codes, rural markets), we flag it on the report instead of reporting a false-precision number.",
   },
   {
-    q: "Where does your data come from?",
-    a: "The most recent ADA Survey of Dental Fees, supplemented with state-level reimbursement disclosures and FAIR Health UCR data. We don’t use crowdsourced fees or modeled estimates. Where confidence is low for a specific code or zip (low-volume codes, rural markets), we flag it on the report instead of reporting a false-precision number.",
+    q: "What if I don’t have my fee schedule in a clean format?",
+    a: "Upload whatever you have. We accept CSVs from Dentrix, Eaglesoft, and Open Dental directly. We also work with PDFs or screenshots. If you only know your top 20 codes off the top of your head, that’s enough to run the assessment.",
   },
   {
-    q: "Is this HIPAA-relevant?",
-    a: "No. We never see patient data. Fee schedules and CDT codes are not protected health information. The intake form is built to refuse anything that looks like PHI.",
+    q: "Do you contact my carriers?",
+    a: "No. We never contact your carriers, your patients, or anyone else. The report is for you. What you do with it (renegotiate yourself, hire a consultant, drop a contract) is your decision.",
   },
   {
-    q: "What if I’m already in an umbrella or shared network?",
-    a: "Still useful. The report ranks each underlying carrier separately so you can see which umbrella participations are pulling your weighted reimbursement down. Sometimes the answer is to drop the umbrella entirely. The report will tell you when that math works.",
+    q: "What if my codes aren’t standard CDT?",
+    a: "We benchmark against the standard ADA CDT code set. If you use custom codes for internal tracking, map them to their CDT equivalent before uploading. If you’re not sure, paste your code list as-is. For the first batch of customers we’re handling code mapping manually.",
   },
   {
-    q: "Can I do this myself?",
-    a: "Yes. Buy the latest ADA fee survey (~$400), normalize your fee schedule against the 75th percentile for your zip, weight each code by your annual volume, then rank by carrier. Plan on roughly 20 hours. We do it in 24 hours for $199 because the data work is already done.",
+    q: "Is my data confidential?",
+    a: "Yes. Fee schedules are proprietary practice data and we treat them that way. We don’t share, sell, or aggregate practice-level information. We never see patient data and the intake form is built to refuse PHI.",
   },
   {
-    q: "How is the report delivered?",
-    a: "A PDF, by email. Roughly 12–18 pages depending on how many carriers you list: cover page, executive summary, full code-by-code table, carrier-by-carrier ranking, and a recommended next-steps section. Designed to be readable in 15 minutes or forwarded directly to your office manager.",
-  },
-  {
-    q: "What happens after I pay?",
-    a: "You’ll get an immediate email confirming receipt and an estimated delivery time. Your report arrives within 24 hours. Most arrive the same business day. If you have a question after reading it, reply to that email and a human will answer.",
+    q: "What happens after I get the report?",
+    a: "Read it. Identify the two or three carriers with the largest gap. The report tells you which codes to lead with in a renegotiation conversation and what fee to ask for. If you want a consultant to actually run the renegotiation, we don’t sell that work, but you’ll know enough from the report to brief one.",
   },
 ];
 
 export function Faq() {
   return (
     <section className="border-t border-canvas-border bg-canvas-tint">
-      <div className="mx-auto max-w-container px-6 sm:px-8 py-20 sm:py-28">
+      <div className="mx-auto max-w-container px-6 py-24 sm:px-8 sm:py-28">
         <div className="max-w-2xl">
-          <p className="text-xs sm:text-sm font-medium uppercase tracking-[0.14em] text-accent">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent sm:text-sm">
             FAQ
           </p>
           <h2 className="mt-5 text-3xl font-semibold tracking-tightish text-ink-900 sm:text-4xl">
@@ -50,7 +46,7 @@ export function Faq() {
                   <PlusIcon />
                 </span>
               </summary>
-              <p className="mt-3 max-w-prose text-[15px] leading-relaxed text-ink-700">
+              <p className="mt-3 max-w-readable text-[15px] leading-relaxed text-ink-700">
                 {item.a}
               </p>
             </details>
@@ -68,7 +64,7 @@ function PlusIcon() {
       height="16"
       viewBox="0 0 16 16"
       fill="none"
-      aria-hidden="true"
+      aria-hidden
     >
       <path
         d="M8 1.5V14.5M1.5 8H14.5"
