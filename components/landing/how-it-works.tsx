@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-
 type Step = {
   n: string;
   title: string;
@@ -29,7 +27,8 @@ const steps: Step[] = [
   {
     n: "4",
     title: "Pick your contracted carriers",
-    body: <CarrierWordmarks />,
+    body: "Delta, Aetna, Cigna, MetLife, UnitedHealthcare, Guardian, BCBS, Humana, or other.",
+    Icon: ShieldIcon,
   },
 ];
 
@@ -83,33 +82,22 @@ export function HowItWorks() {
   );
 }
 
-function CarrierWordmarks() {
-  const carriers = [
-    "Delta",
-    "Aetna",
-    "Cigna",
-    "MetLife",
-    "UnitedHealthcare",
-    "Guardian",
-    "BCBS",
-    "Humana",
-    "Other",
-  ];
+function ShieldIcon() {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      {carriers.map((name, i) => (
-        <Fragment key={name}>
-          <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ink-500">
-            {name}
-          </span>
-          {i < carriers.length - 1 && (
-            <span className="text-ink-300" aria-hidden>
-              ·
-            </span>
-          )}
-        </Fragment>
-      ))}
-    </div>
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
   );
 }
 
