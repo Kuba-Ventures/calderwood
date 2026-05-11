@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function Header() {
@@ -6,12 +7,15 @@ export function Header() {
       <div className="mx-auto flex max-w-container items-center justify-between gap-4 px-6 py-4 sm:px-8 sm:py-5">
         <Link
           href="/"
-          className="group flex items-center gap-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-900 rounded-sm"
-          aria-label="Calderwood, home"
+          className="flex items-center gap-2.5 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-900"
         >
-          <span
-            className="block h-5 w-5 rounded-sm bg-accent transition group-hover:bg-accent-ink"
-            aria-hidden="true"
+          <Image
+            src="/logo.png"
+            alt=""
+            width={161}
+            height={187}
+            priority
+            className="h-7 w-auto sm:h-8"
           />
           <span className="text-base font-semibold tracking-tightish text-ink-900 sm:text-lg">
             Calderwood
