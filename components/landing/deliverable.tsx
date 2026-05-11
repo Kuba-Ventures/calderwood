@@ -168,7 +168,7 @@ function CarrierBarsVisual() {
   const carriers = [
     { name: "Cigna", value: 32180, pct: 100 },
     { name: "Aetna", value: 20400, pct: 63 },
-    { name: "Delta Dental", value: 16150, pct: 50 },
+    { name: "UnitedHealthcare", value: 16150, pct: 50 },
     { name: "MetLife", value: 10290, pct: 32 },
     { name: "Other", value: 8400, pct: 26 },
   ];
