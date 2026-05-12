@@ -146,7 +146,11 @@ function StatePending({
   }, []);
 
   const elapsed = Math.max(0, now - new Date(submittedAt).getTime());
-  const progress = Math.min(0.99, elapsed / totalMs);
+  // Intake is "received" the instant the user submits, so the bar starts
+  // 25% in and grows the remaining 75% across the 24h window. Makes
+  // submission feel like real progress instead of a fresh empty bar.
+  const BASE = 1 / PIPELINE_STAGES.length;
+  const progress = Math.min(0.99, BASE + (1 - BASE) * (elapsed / totalMs));
   const activeIndex = Math.min(
     PIPELINE_STAGES.length - 1,
     Math.floor(progress * PIPELINE_STAGES.length)

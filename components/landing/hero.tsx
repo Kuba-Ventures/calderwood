@@ -14,7 +14,7 @@ export function Hero() {
             </h1>
             <p className="mt-6 max-w-readable text-pretty text-lg leading-relaxed text-ink-700 sm:text-xl">
               A code-by-code benchmark of your fee schedule against UCR data in your zip code, delivered within 24 hours. Most independent practices are reimbursed 15–35% below the 75th percentile in their metro. The gap typically runs{" "}
-              <span className="font-serif font-medium text-accent-ink">
+              <span className="font-serif font-medium text-red-800">
                 $40,000 to $120,000
               </span>{" "}
               per provider per year.

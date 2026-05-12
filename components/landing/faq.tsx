@@ -29,7 +29,7 @@ export function Faq() {
   return (
     <section className="border-t border-canvas-border bg-canvas-tint">
       <div className="mx-auto max-w-container px-6 py-24 sm:px-8 sm:py-28">
-        <div className="max-w-2xl">
+        <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent sm:text-sm">
             FAQ
           </p>
@@ -37,7 +37,7 @@ export function Faq() {
             Questions worth answering up front.
           </h2>
         </div>
-        <div className="mt-12 max-w-3xl divide-y divide-canvas-border border-y border-canvas-border">
+        <div className="mx-auto mt-12 max-w-3xl divide-y divide-canvas-border border-y border-canvas-border">
           {faqs.map((item) => (
             <details key={item.q} className="group py-5">
               <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-left text-base font-medium text-ink-900 sm:text-lg">
