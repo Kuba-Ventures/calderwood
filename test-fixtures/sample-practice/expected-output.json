@@ -1,0 +1,1126 @@
+{
+  "codeRows": [
+    {
+      "code": "D0120",
+      "description": "Periodic oral evaluation",
+      "practiceFee": 55,
+      "p50": 52,
+      "p75": 62,
+      "p90": 72,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 7,
+      "percentileRank": 57.5,
+      "annualFrequency": 340,
+      "annualRecoverableMarket": 2380,
+      "carrierFees": {
+        "Delta": 50,
+        "Aetna": 48,
+        "Cigna": 44,
+        "MetLife": 52,
+        "UnitedHealthcare": 46
+      },
+      "carrierGaps": {
+        "Delta": 12,
+        "Aetna": 14,
+        "Cigna": 18,
+        "MetLife": 10,
+        "UnitedHealthcare": 16
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 4080,
+        "Aetna": 4760,
+        "Cigna": 6120,
+        "MetLife": 3400,
+        "UnitedHealthcare": 5440
+      }
+    },
+    {
+      "code": "D0150",
+      "description": "Comprehensive oral evaluation",
+      "practiceFee": 72,
+      "p50": 68,
+      "p75": 82,
+      "p90": 95,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 10,
+      "percentileRank": 57.142857142857146,
+      "annualFrequency": 98,
+      "annualRecoverableMarket": 980,
+      "carrierFees": {
+        "Delta": 68,
+        "Aetna": 65,
+        "Cigna": 58,
+        "MetLife": 70,
+        "UnitedHealthcare": 62
+      },
+      "carrierGaps": {
+        "Delta": 14,
+        "Aetna": 17,
+        "Cigna": 24,
+        "MetLife": 12,
+        "UnitedHealthcare": 20
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 1372,
+        "Aetna": 1666,
+        "Cigna": 2352,
+        "MetLife": 1176,
+        "UnitedHealthcare": 1960
+      }
+    },
+    {
+      "code": "D0210",
+      "description": "Intraoral, complete series of radiographs",
+      "practiceFee": 148,
+      "p50": 145,
+      "p75": 172,
+      "p90": 195,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 24,
+      "percentileRank": 52.77777777777778,
+      "annualFrequency": 186,
+      "annualRecoverableMarket": 4464,
+      "carrierFees": {
+        "Delta": 140,
+        "Aetna": 135,
+        "Cigna": 122,
+        "MetLife": 145,
+        "UnitedHealthcare": 128
+      },
+      "carrierGaps": {
+        "Delta": 32,
+        "Aetna": 37,
+        "Cigna": 50,
+        "MetLife": 27,
+        "UnitedHealthcare": 44
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 5952,
+        "Aetna": 6882,
+        "Cigna": 9300,
+        "MetLife": 5022,
+        "UnitedHealthcare": 8184
+      }
+    },
+    {
+      "code": "D0220",
+      "description": "Intraoral periapical, first radiographic image",
+      "practiceFee": 32,
+      "p50": 30,
+      "p75": 38,
+      "p90": 44,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 6,
+      "percentileRank": 56.25,
+      "annualFrequency": 425,
+      "annualRecoverableMarket": 2550,
+      "carrierFees": {
+        "Delta": 32,
+        "Aetna": 30,
+        "Cigna": 28,
+        "MetLife": 33,
+        "UnitedHealthcare": 30
+      },
+      "carrierGaps": {
+        "Delta": 6,
+        "Aetna": 8,
+        "Cigna": 10,
+        "MetLife": 5,
+        "UnitedHealthcare": 8
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 2550,
+        "Aetna": 3400,
+        "Cigna": 4250,
+        "MetLife": 2125,
+        "UnitedHealthcare": 3400
+      }
+    },
+    {
+      "code": "D1110",
+      "description": "Prophylaxis, adult",
+      "practiceFee": 98,
+      "p50": 95,
+      "p75": 115,
+      "p90": 132,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 17,
+      "percentileRank": 53.75,
+      "annualFrequency": 412,
+      "annualRecoverableMarket": 7004,
+      "carrierFees": {
+        "Delta": 105,
+        "Aetna": 102,
+        "Cigna": 95,
+        "MetLife": 107,
+        "UnitedHealthcare": 98
+      },
+      "carrierGaps": {
+        "Delta": 10,
+        "Aetna": 13,
+        "Cigna": 20,
+        "MetLife": 8,
+        "UnitedHealthcare": 17
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 4120,
+        "Aetna": 5356,
+        "Cigna": 8240,
+        "MetLife": 3296,
+        "UnitedHealthcare": 7004
+      }
+    },
+    {
+      "code": "D1120",
+      "description": "Prophylaxis, child",
+      "practiceFee": 72,
+      "p50": 70,
+      "p75": 86,
+      "p90": 98,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 14,
+      "percentileRank": 53.125,
+      "annualFrequency": 98,
+      "annualRecoverableMarket": 1372,
+      "carrierFees": {
+        "Delta": 78,
+        "Aetna": 75,
+        "Cigna": 70,
+        "MetLife": 80,
+        "UnitedHealthcare": 72
+      },
+      "carrierGaps": {
+        "Delta": 8,
+        "Aetna": 11,
+        "Cigna": 16,
+        "MetLife": 6,
+        "UnitedHealthcare": 14
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 784,
+        "Aetna": 1078,
+        "Cigna": 1568,
+        "MetLife": 588,
+        "UnitedHealthcare": 1372
+      }
+    },
+    {
+      "code": "D1206",
+      "description": "Topical fluoride varnish",
+      "practiceFee": 38,
+      "p50": 36,
+      "p75": 47,
+      "p90": 54,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 9,
+      "percentileRank": 54.54545454545455,
+      "annualFrequency": 485,
+      "annualRecoverableMarket": 4365,
+      "carrierFees": {
+        "Delta": 38,
+        "Aetna": 36,
+        "Cigna": 32,
+        "MetLife": 40,
+        "UnitedHealthcare": 35
+      },
+      "carrierGaps": {
+        "Delta": 9,
+        "Aetna": 11,
+        "Cigna": 15,
+        "MetLife": 7,
+        "UnitedHealthcare": 12
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 4365,
+        "Aetna": 5335,
+        "Cigna": 7275,
+        "MetLife": 3395,
+        "UnitedHealthcare": 5820
+      }
+    },
+    {
+      "code": "D2150",
+      "description": "Amalgam, two surfaces",
+      "practiceFee": 148,
+      "p50": 152,
+      "p75": 178,
+      "p90": 202,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 30,
+      "percentileRank": 48.68421052631579,
+      "annualFrequency": 62,
+      "annualRecoverableMarket": 1860,
+      "carrierFees": {
+        "Delta": 158,
+        "Aetna": 152,
+        "Cigna": 138,
+        "MetLife": 160,
+        "UnitedHealthcare": 144
+      },
+      "carrierGaps": {
+        "Delta": 20,
+        "Aetna": 26,
+        "Cigna": 40,
+        "MetLife": 18,
+        "UnitedHealthcare": 34
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 1240,
+        "Aetna": 1612,
+        "Cigna": 2480,
+        "MetLife": 1116,
+        "UnitedHealthcare": 2108
+      }
+    },
+    {
+      "code": "D2330",
+      "description": "Resin, one surface anterior",
+      "practiceFee": 165,
+      "p50": 168,
+      "p75": 192,
+      "p90": 218,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 27,
+      "percentileRank": 49.107142857142854,
+      "annualFrequency": 88,
+      "annualRecoverableMarket": 2376,
+      "carrierFees": {
+        "Delta": 175,
+        "Aetna": 168,
+        "Cigna": 152,
+        "MetLife": 178,
+        "UnitedHealthcare": 160
+      },
+      "carrierGaps": {
+        "Delta": 17,
+        "Aetna": 24,
+        "Cigna": 40,
+        "MetLife": 14,
+        "UnitedHealthcare": 32
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 1496,
+        "Aetna": 2112,
+        "Cigna": 3520,
+        "MetLife": 1232,
+        "UnitedHealthcare": 2816
+      }
+    },
+    {
+      "code": "D2391",
+      "description": "Resin, one surface posterior",
+      "practiceFee": 178,
+      "p50": 182,
+      "p75": 208,
+      "p90": 235,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 30,
+      "percentileRank": 48.9010989010989,
+      "annualFrequency": 142,
+      "annualRecoverableMarket": 4260,
+      "carrierFees": {
+        "Delta": 188,
+        "Aetna": 180,
+        "Cigna": 165,
+        "MetLife": 190,
+        "UnitedHealthcare": 172
+      },
+      "carrierGaps": {
+        "Delta": 20,
+        "Aetna": 28,
+        "Cigna": 43,
+        "MetLife": 18,
+        "UnitedHealthcare": 36
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 2840,
+        "Aetna": 3976,
+        "Cigna": 6106,
+        "MetLife": 2556,
+        "UnitedHealthcare": 5112
+      }
+    },
+    {
+      "code": "D2740",
+      "description": "Crown, porcelain/ceramic",
+      "practiceFee": 185,
+      "p50": 192,
+      "p75": 215,
+      "p90": 245,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 30,
+      "percentileRank": 48.17708333333333,
+      "annualFrequency": 142,
+      "annualRecoverableMarket": 4260,
+      "carrierFees": {
+        "Delta": 192,
+        "Aetna": 178,
+        "Cigna": 157,
+        "MetLife": 195,
+        "UnitedHealthcare": 168
+      },
+      "carrierGaps": {
+        "Delta": 23,
+        "Aetna": 37,
+        "Cigna": 58,
+        "MetLife": 20,
+        "UnitedHealthcare": 47
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 3266,
+        "Aetna": 5254,
+        "Cigna": 8236,
+        "MetLife": 2840,
+        "UnitedHealthcare": 6674
+      }
+    },
+    {
+      "code": "D2750",
+      "description": "Crown, porcelain fused to metal",
+      "practiceFee": 172,
+      "p50": 178,
+      "p75": 200,
+      "p90": 228,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 28,
+      "percentileRank": 48.31460674157304,
+      "annualFrequency": 98,
+      "annualRecoverableMarket": 2744,
+      "carrierFees": {
+        "Delta": 178,
+        "Aetna": 165,
+        "Cigna": 144,
+        "MetLife": 180,
+        "UnitedHealthcare": 156
+      },
+      "carrierGaps": {
+        "Delta": 22,
+        "Aetna": 35,
+        "Cigna": 56,
+        "MetLife": 20,
+        "UnitedHealthcare": 44
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 2156,
+        "Aetna": 3430,
+        "Cigna": 5488,
+        "MetLife": 1960,
+        "UnitedHealthcare": 4312
+      }
+    },
+    {
+      "code": "D2950",
+      "description": "Core buildup, including pins",
+      "practiceFee": 155,
+      "p50": 160,
+      "p75": 180,
+      "p90": 208,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 25,
+      "percentileRank": 48.4375,
+      "annualFrequency": 152,
+      "annualRecoverableMarket": 3800,
+      "carrierFees": {
+        "Delta": 162,
+        "Aetna": 148,
+        "Cigna": 132,
+        "MetLife": 165,
+        "UnitedHealthcare": 142
+      },
+      "carrierGaps": {
+        "Delta": 18,
+        "Aetna": 32,
+        "Cigna": 48,
+        "MetLife": 15,
+        "UnitedHealthcare": 38
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 2736,
+        "Aetna": 4864,
+        "Cigna": 7296,
+        "MetLife": 2280,
+        "UnitedHealthcare": 5776
+      }
+    },
+    {
+      "code": "D3310",
+      "description": "Endodontic therapy, anterior",
+      "practiceFee": 695,
+      "p50": 720,
+      "p75": 737,
+      "p90": 815,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 42,
+      "percentileRank": 48.26388888888889,
+      "annualFrequency": 38,
+      "annualRecoverableMarket": 1596,
+      "carrierFees": {
+        "Delta": 660,
+        "Aetna": 623,
+        "Cigna": 580,
+        "MetLife": 670,
+        "UnitedHealthcare": 605
+      },
+      "carrierGaps": {
+        "Delta": 77,
+        "Aetna": 114,
+        "Cigna": 157,
+        "MetLife": 67,
+        "UnitedHealthcare": 132
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 2926,
+        "Aetna": 4332,
+        "Cigna": 5966,
+        "MetLife": 2546,
+        "UnitedHealthcare": 5016
+      }
+    },
+    {
+      "code": "D3320",
+      "description": "Endodontic therapy, premolar",
+      "practiceFee": 825,
+      "p50": 850,
+      "p75": 875,
+      "p90": 960,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 50,
+      "percentileRank": 48.529411764705884,
+      "annualFrequency": 52,
+      "annualRecoverableMarket": 2600,
+      "carrierFees": {
+        "Delta": 780,
+        "Aetna": 740,
+        "Cigna": 695,
+        "MetLife": 790,
+        "UnitedHealthcare": 720
+      },
+      "carrierGaps": {
+        "Delta": 95,
+        "Aetna": 135,
+        "Cigna": 180,
+        "MetLife": 85,
+        "UnitedHealthcare": 155
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 4940,
+        "Aetna": 7020,
+        "Cigna": 9360,
+        "MetLife": 4420,
+        "UnitedHealthcare": 8060
+      }
+    },
+    {
+      "code": "D3330",
+      "description": "Endodontic therapy, molar",
+      "practiceFee": 945,
+      "p50": 980,
+      "p75": 1003,
+      "p90": 1120,
+      "geoLevelUsed": "state",
+      "confidence": "medium",
+      "marketGap": 58,
+      "percentileRank": 48.214285714285715,
+      "annualFrequency": 62,
+      "annualRecoverableMarket": 3596,
+      "carrierFees": {
+        "Delta": 895,
+        "Aetna": 845,
+        "Cigna": 790,
+        "MetLife": 905,
+        "UnitedHealthcare": 825
+      },
+      "carrierGaps": {
+        "Delta": 108,
+        "Aetna": 158,
+        "Cigna": 213,
+        "MetLife": 98,
+        "UnitedHealthcare": 178
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 6696,
+        "Aetna": 9796,
+        "Cigna": 13206,
+        "MetLife": 6076,
+        "UnitedHealthcare": 11036
+      }
+    },
+    {
+      "code": "D4341",
+      "description": "Periodontal scaling, four or more teeth",
+      "practiceFee": 258,
+      "p50": 262,
+      "p75": 295,
+      "p90": 335,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 37,
+      "percentileRank": 49.23664122137404,
+      "annualFrequency": 176,
+      "annualRecoverableMarket": 6512,
+      "carrierFees": {
+        "Delta": 258,
+        "Aetna": 240,
+        "Cigna": 220,
+        "MetLife": 262,
+        "UnitedHealthcare": 232
+      },
+      "carrierGaps": {
+        "Delta": 37,
+        "Aetna": 55,
+        "Cigna": 75,
+        "MetLife": 33,
+        "UnitedHealthcare": 63
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 6512,
+        "Aetna": 9680,
+        "Cigna": 13200,
+        "MetLife": 5808,
+        "UnitedHealthcare": 11088
+      }
+    },
+    {
+      "code": "D4910",
+      "description": "Periodontal maintenance",
+      "practiceFee": 135,
+      "p50": 140,
+      "p75": 158,
+      "p90": 180,
+      "geoLevelUsed": "state",
+      "confidence": "medium",
+      "marketGap": 23,
+      "percentileRank": 48.214285714285715,
+      "annualFrequency": 220,
+      "annualRecoverableMarket": 5060,
+      "carrierFees": {
+        "Delta": 135,
+        "Aetna": 128,
+        "Cigna": 118,
+        "MetLife": 138,
+        "UnitedHealthcare": 124
+      },
+      "carrierGaps": {
+        "Delta": 23,
+        "Aetna": 30,
+        "Cigna": 40,
+        "MetLife": 20,
+        "UnitedHealthcare": 34
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 5060,
+        "Aetna": 6600,
+        "Cigna": 8800,
+        "MetLife": 4400,
+        "UnitedHealthcare": 7480
+      }
+    },
+    {
+      "code": "D7140",
+      "description": "Extraction, erupted tooth",
+      "practiceFee": 178,
+      "p50": 182,
+      "p75": 196,
+      "p90": 220,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 18,
+      "percentileRank": 48.9010989010989,
+      "annualFrequency": 160,
+      "annualRecoverableMarket": 2880,
+      "carrierFees": {
+        "Delta": 180,
+        "Aetna": 172,
+        "Cigna": 158,
+        "MetLife": 184,
+        "UnitedHealthcare": 164
+      },
+      "carrierGaps": {
+        "Delta": 16,
+        "Aetna": 24,
+        "Cigna": 38,
+        "MetLife": 12,
+        "UnitedHealthcare": 32
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 2560,
+        "Aetna": 3840,
+        "Cigna": 6080,
+        "MetLife": 1920,
+        "UnitedHealthcare": 5120
+      }
+    },
+    {
+      "code": "D7210",
+      "description": "Surgical removal of erupted tooth",
+      "practiceFee": 298,
+      "p50": 305,
+      "p75": 342,
+      "p90": 388,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 44,
+      "percentileRank": 48.85245901639344,
+      "annualFrequency": 68,
+      "annualRecoverableMarket": 2992,
+      "carrierFees": {
+        "Delta": 305,
+        "Aetna": 285,
+        "Cigna": 262,
+        "MetLife": 308,
+        "UnitedHealthcare": 275
+      },
+      "carrierGaps": {
+        "Delta": 37,
+        "Aetna": 57,
+        "Cigna": 80,
+        "MetLife": 34,
+        "UnitedHealthcare": 67
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 2516,
+        "Aetna": 3876,
+        "Cigna": 5440,
+        "MetLife": 2312,
+        "UnitedHealthcare": 4556
+      }
+    }
+  ],
+  "executiveSummary": {
+    "totalAnnualUnderpayment": 468121,
+    "codesBelowP75InTop20": {
+      "count": 20,
+      "total": 20
+    },
+    "topCarrier": {
+      "name": "Cigna",
+      "recoverable": 134283
+    },
+    "underpaymentBasis": "carrier"
+  },
+  "top10ByImpact": [
+    {
+      "code": "D3330",
+      "description": "Endodontic therapy, molar",
+      "practiceFee": 945,
+      "p50": 980,
+      "p75": 1003,
+      "p90": 1120,
+      "geoLevelUsed": "state",
+      "confidence": "medium",
+      "marketGap": 58,
+      "percentileRank": 48.214285714285715,
+      "annualFrequency": 62,
+      "annualRecoverableMarket": 3596,
+      "carrierFees": {
+        "Delta": 895,
+        "Aetna": 845,
+        "Cigna": 790,
+        "MetLife": 905,
+        "UnitedHealthcare": 825
+      },
+      "carrierGaps": {
+        "Delta": 108,
+        "Aetna": 158,
+        "Cigna": 213,
+        "MetLife": 98,
+        "UnitedHealthcare": 178
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 6696,
+        "Aetna": 9796,
+        "Cigna": 13206,
+        "MetLife": 6076,
+        "UnitedHealthcare": 11036
+      }
+    },
+    {
+      "code": "D4341",
+      "description": "Periodontal scaling, four or more teeth",
+      "practiceFee": 258,
+      "p50": 262,
+      "p75": 295,
+      "p90": 335,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 37,
+      "percentileRank": 49.23664122137404,
+      "annualFrequency": 176,
+      "annualRecoverableMarket": 6512,
+      "carrierFees": {
+        "Delta": 258,
+        "Aetna": 240,
+        "Cigna": 220,
+        "MetLife": 262,
+        "UnitedHealthcare": 232
+      },
+      "carrierGaps": {
+        "Delta": 37,
+        "Aetna": 55,
+        "Cigna": 75,
+        "MetLife": 33,
+        "UnitedHealthcare": 63
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 6512,
+        "Aetna": 9680,
+        "Cigna": 13200,
+        "MetLife": 5808,
+        "UnitedHealthcare": 11088
+      }
+    },
+    {
+      "code": "D3320",
+      "description": "Endodontic therapy, premolar",
+      "practiceFee": 825,
+      "p50": 850,
+      "p75": 875,
+      "p90": 960,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 50,
+      "percentileRank": 48.529411764705884,
+      "annualFrequency": 52,
+      "annualRecoverableMarket": 2600,
+      "carrierFees": {
+        "Delta": 780,
+        "Aetna": 740,
+        "Cigna": 695,
+        "MetLife": 790,
+        "UnitedHealthcare": 720
+      },
+      "carrierGaps": {
+        "Delta": 95,
+        "Aetna": 135,
+        "Cigna": 180,
+        "MetLife": 85,
+        "UnitedHealthcare": 155
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 4940,
+        "Aetna": 7020,
+        "Cigna": 9360,
+        "MetLife": 4420,
+        "UnitedHealthcare": 8060
+      }
+    },
+    {
+      "code": "D0210",
+      "description": "Intraoral, complete series of radiographs",
+      "practiceFee": 148,
+      "p50": 145,
+      "p75": 172,
+      "p90": 195,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 24,
+      "percentileRank": 52.77777777777778,
+      "annualFrequency": 186,
+      "annualRecoverableMarket": 4464,
+      "carrierFees": {
+        "Delta": 140,
+        "Aetna": 135,
+        "Cigna": 122,
+        "MetLife": 145,
+        "UnitedHealthcare": 128
+      },
+      "carrierGaps": {
+        "Delta": 32,
+        "Aetna": 37,
+        "Cigna": 50,
+        "MetLife": 27,
+        "UnitedHealthcare": 44
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 5952,
+        "Aetna": 6882,
+        "Cigna": 9300,
+        "MetLife": 5022,
+        "UnitedHealthcare": 8184
+      }
+    },
+    {
+      "code": "D4910",
+      "description": "Periodontal maintenance",
+      "practiceFee": 135,
+      "p50": 140,
+      "p75": 158,
+      "p90": 180,
+      "geoLevelUsed": "state",
+      "confidence": "medium",
+      "marketGap": 23,
+      "percentileRank": 48.214285714285715,
+      "annualFrequency": 220,
+      "annualRecoverableMarket": 5060,
+      "carrierFees": {
+        "Delta": 135,
+        "Aetna": 128,
+        "Cigna": 118,
+        "MetLife": 138,
+        "UnitedHealthcare": 124
+      },
+      "carrierGaps": {
+        "Delta": 23,
+        "Aetna": 30,
+        "Cigna": 40,
+        "MetLife": 20,
+        "UnitedHealthcare": 34
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 5060,
+        "Aetna": 6600,
+        "Cigna": 8800,
+        "MetLife": 4400,
+        "UnitedHealthcare": 7480
+      }
+    },
+    {
+      "code": "D1110",
+      "description": "Prophylaxis, adult",
+      "practiceFee": 98,
+      "p50": 95,
+      "p75": 115,
+      "p90": 132,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 17,
+      "percentileRank": 53.75,
+      "annualFrequency": 412,
+      "annualRecoverableMarket": 7004,
+      "carrierFees": {
+        "Delta": 105,
+        "Aetna": 102,
+        "Cigna": 95,
+        "MetLife": 107,
+        "UnitedHealthcare": 98
+      },
+      "carrierGaps": {
+        "Delta": 10,
+        "Aetna": 13,
+        "Cigna": 20,
+        "MetLife": 8,
+        "UnitedHealthcare": 17
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 4120,
+        "Aetna": 5356,
+        "Cigna": 8240,
+        "MetLife": 3296,
+        "UnitedHealthcare": 7004
+      }
+    },
+    {
+      "code": "D2740",
+      "description": "Crown, porcelain/ceramic",
+      "practiceFee": 185,
+      "p50": 192,
+      "p75": 215,
+      "p90": 245,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 30,
+      "percentileRank": 48.17708333333333,
+      "annualFrequency": 142,
+      "annualRecoverableMarket": 4260,
+      "carrierFees": {
+        "Delta": 192,
+        "Aetna": 178,
+        "Cigna": 157,
+        "MetLife": 195,
+        "UnitedHealthcare": 168
+      },
+      "carrierGaps": {
+        "Delta": 23,
+        "Aetna": 37,
+        "Cigna": 58,
+        "MetLife": 20,
+        "UnitedHealthcare": 47
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 3266,
+        "Aetna": 5254,
+        "Cigna": 8236,
+        "MetLife": 2840,
+        "UnitedHealthcare": 6674
+      }
+    },
+    {
+      "code": "D2950",
+      "description": "Core buildup, including pins",
+      "practiceFee": 155,
+      "p50": 160,
+      "p75": 180,
+      "p90": 208,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 25,
+      "percentileRank": 48.4375,
+      "annualFrequency": 152,
+      "annualRecoverableMarket": 3800,
+      "carrierFees": {
+        "Delta": 162,
+        "Aetna": 148,
+        "Cigna": 132,
+        "MetLife": 165,
+        "UnitedHealthcare": 142
+      },
+      "carrierGaps": {
+        "Delta": 18,
+        "Aetna": 32,
+        "Cigna": 48,
+        "MetLife": 15,
+        "UnitedHealthcare": 38
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 2736,
+        "Aetna": 4864,
+        "Cigna": 7296,
+        "MetLife": 2280,
+        "UnitedHealthcare": 5776
+      }
+    },
+    {
+      "code": "D1206",
+      "description": "Topical fluoride varnish",
+      "practiceFee": 38,
+      "p50": 36,
+      "p75": 47,
+      "p90": 54,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 9,
+      "percentileRank": 54.54545454545455,
+      "annualFrequency": 485,
+      "annualRecoverableMarket": 4365,
+      "carrierFees": {
+        "Delta": 38,
+        "Aetna": 36,
+        "Cigna": 32,
+        "MetLife": 40,
+        "UnitedHealthcare": 35
+      },
+      "carrierGaps": {
+        "Delta": 9,
+        "Aetna": 11,
+        "Cigna": 15,
+        "MetLife": 7,
+        "UnitedHealthcare": 12
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 4365,
+        "Aetna": 5335,
+        "Cigna": 7275,
+        "MetLife": 3395,
+        "UnitedHealthcare": 5820
+      }
+    },
+    {
+      "code": "D0120",
+      "description": "Periodic oral evaluation",
+      "practiceFee": 55,
+      "p50": 52,
+      "p75": 62,
+      "p90": 72,
+      "geoLevelUsed": "metro",
+      "confidence": "high",
+      "marketGap": 7,
+      "percentileRank": 57.5,
+      "annualFrequency": 340,
+      "annualRecoverableMarket": 2380,
+      "carrierFees": {
+        "Delta": 50,
+        "Aetna": 48,
+        "Cigna": 44,
+        "MetLife": 52,
+        "UnitedHealthcare": 46
+      },
+      "carrierGaps": {
+        "Delta": 12,
+        "Aetna": 14,
+        "Cigna": 18,
+        "MetLife": 10,
+        "UnitedHealthcare": 16
+      },
+      "annualRecoverableByCarrier": {
+        "Delta": 4080,
+        "Aetna": 4760,
+        "Cigna": 6120,
+        "MetLife": 3400,
+        "UnitedHealthcare": 5440
+      }
+    }
+  ],
+  "recoverableByCarrier": [
+    {
+      "carrier": "Cigna",
+      "recoverable": 134283
+    },
+    {
+      "carrier": "UnitedHealthcare",
+      "recoverable": 112334
+    },
+    {
+      "carrier": "Aetna",
+      "recoverable": 94869
+    },
+    {
+      "carrier": "Delta",
+      "recoverable": 68167
+    },
+    {
+      "carrier": "MetLife",
+      "recoverable": 58468
+    }
+  ],
+  "workedExample": {
+    "code": "D4341",
+    "description": "Periodontal scaling, four or more teeth",
+    "practiceFee": 258,
+    "p50": 262,
+    "p75": 295,
+    "p90": 335,
+    "geoLevelUsed": "metro",
+    "confidence": "high",
+    "marketGap": 37,
+    "percentileRank": 49.23664122137404,
+    "annualFrequency": 176,
+    "annualRecoverableMarket": 6512,
+    "carrierFees": {
+      "Delta": 258,
+      "Aetna": 240,
+      "Cigna": 220,
+      "MetLife": 262,
+      "UnitedHealthcare": 232
+    },
+    "carrierGaps": {
+      "Delta": 37,
+      "Aetna": 55,
+      "Cigna": 75,
+      "MetLife": 33,
+      "UnitedHealthcare": 63
+    },
+    "annualRecoverableByCarrier": {
+      "Delta": 6512,
+      "Aetna": 9680,
+      "Cigna": 13200,
+      "MetLife": 5808,
+      "UnitedHealthcare": 11088
+    }
+  },
+  "flags": []
+}

@@ -1,0 +1,22 @@
+[
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D0120", "p50": 52,   "p75": 62,   "p90": 72,   "sample_size": 2100, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D0150", "p50": 68,   "p75": 82,   "p90": 95,   "sample_size": 1980, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D0210", "p50": 145,  "p75": 172,  "p90": 195,  "sample_size": 1620, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D0220", "p50": 30,   "p75": 38,   "p90": 44,   "sample_size": 2450, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D1110", "p50": 95,   "p75": 115,  "p90": 132,  "sample_size": 2380, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D1120", "p50": 70,   "p75": 86,   "p90": 98,   "sample_size": 1840, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D1206", "p50": 36,   "p75": 47,   "p90": 54,   "sample_size": 2120, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D2150", "p50": 152,  "p75": 178,  "p90": 202,  "sample_size": 1740, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D2330", "p50": 168,  "p75": 192,  "p90": 218,  "sample_size": 1690, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D2391", "p50": 182,  "p75": 208,  "p90": 235,  "sample_size": 1720, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D2740", "p50": 192,  "p75": 215,  "p90": 245,  "sample_size": 1850, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D2750", "p50": 178,  "p75": 200,  "p90": 228,  "sample_size": 1610, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D2950", "p50": 160,  "p75": 180,  "p90": 208,  "sample_size": 1580, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D3310", "p50": 720,  "p75": 737,  "p90": 815,  "sample_size": 880,  "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D3320", "p50": 850,  "p75": 875,  "p90": 960,  "sample_size": 820,  "source_version": "fixture-v1" },
+  { "geo_level": "state", "geo_id": "MA",      "cdt_code": "D3330", "p50": 980,  "p75": 1003, "p90": 1120, "sample_size": 1240, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D4341", "p50": 262,  "p75": 295,  "p90": 335,  "sample_size": 1480, "source_version": "fixture-v1" },
+  { "geo_level": "state", "geo_id": "MA",      "cdt_code": "D4910", "p50": 140,  "p75": 158,  "p90": 180,  "sample_size": 1620, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D7140", "p50": 182,  "p75": 196,  "p90": 220,  "sample_size": 1920, "source_version": "fixture-v1" },
+  { "geo_level": "metro", "geo_id": "14460", "cdt_code": "D7210", "p50": 305,  "p75": 342,  "p90": 388,  "sample_size": 1340, "source_version": "fixture-v1" }
+]

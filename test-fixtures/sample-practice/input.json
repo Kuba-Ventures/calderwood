@@ -1,0 +1,39 @@
+{
+  "zip5": "02446",
+  "contractedCarriers": ["Delta", "Aetna", "Cigna", "MetLife", "UnitedHealthcare"],
+  "masterSchedule": [
+    { "code": "D0120", "fee": 55 },
+    { "code": "D0150", "fee": 72 },
+    { "code": "D0210", "fee": 148 },
+    { "code": "D0220", "fee": 32 },
+    { "code": "D1110", "fee": 98 },
+    { "code": "D1120", "fee": 72 },
+    { "code": "D1206", "fee": 38 },
+    { "code": "D2150", "fee": 148 },
+    { "code": "D2330", "fee": 165 },
+    { "code": "D2391", "fee": 178 },
+    { "code": "D2740", "fee": 185 },
+    { "code": "D2750", "fee": 172 },
+    { "code": "D2950", "fee": 155 },
+    { "code": "D3310", "fee": 695 },
+    { "code": "D3320", "fee": 825 },
+    { "code": "D3330", "fee": 945 },
+    { "code": "D4341", "fee": 258 },
+    { "code": "D4910", "fee": 135 },
+    { "code": "D7140", "fee": 178 },
+    { "code": "D7210", "fee": 298 }
+  ],
+  "carrierSchedules": {
+    "Delta":            [{"code":"D0120","fee":50},{"code":"D0150","fee":68},{"code":"D0210","fee":140},{"code":"D0220","fee":32},{"code":"D1110","fee":105},{"code":"D1120","fee":78},{"code":"D1206","fee":38},{"code":"D2150","fee":158},{"code":"D2330","fee":175},{"code":"D2391","fee":188},{"code":"D2740","fee":192},{"code":"D2750","fee":178},{"code":"D2950","fee":162},{"code":"D3310","fee":660},{"code":"D3320","fee":780},{"code":"D3330","fee":895},{"code":"D4341","fee":258},{"code":"D4910","fee":135},{"code":"D7140","fee":180},{"code":"D7210","fee":305}],
+    "Aetna":            [{"code":"D0120","fee":48},{"code":"D0150","fee":65},{"code":"D0210","fee":135},{"code":"D0220","fee":30},{"code":"D1110","fee":102},{"code":"D1120","fee":75},{"code":"D1206","fee":36},{"code":"D2150","fee":152},{"code":"D2330","fee":168},{"code":"D2391","fee":180},{"code":"D2740","fee":178},{"code":"D2750","fee":165},{"code":"D2950","fee":148},{"code":"D3310","fee":623},{"code":"D3320","fee":740},{"code":"D3330","fee":845},{"code":"D4341","fee":240},{"code":"D4910","fee":128},{"code":"D7140","fee":172},{"code":"D7210","fee":285}],
+    "Cigna":            [{"code":"D0120","fee":44},{"code":"D0150","fee":58},{"code":"D0210","fee":122},{"code":"D0220","fee":28},{"code":"D1110","fee":95},{"code":"D1120","fee":70},{"code":"D1206","fee":32},{"code":"D2150","fee":138},{"code":"D2330","fee":152},{"code":"D2391","fee":165},{"code":"D2740","fee":157},{"code":"D2750","fee":144},{"code":"D2950","fee":132},{"code":"D3310","fee":580},{"code":"D3320","fee":695},{"code":"D3330","fee":790},{"code":"D4341","fee":220},{"code":"D4910","fee":118},{"code":"D7140","fee":158},{"code":"D7210","fee":262}],
+    "MetLife":          [{"code":"D0120","fee":52},{"code":"D0150","fee":70},{"code":"D0210","fee":145},{"code":"D0220","fee":33},{"code":"D1110","fee":107},{"code":"D1120","fee":80},{"code":"D1206","fee":40},{"code":"D2150","fee":160},{"code":"D2330","fee":178},{"code":"D2391","fee":190},{"code":"D2740","fee":195},{"code":"D2750","fee":180},{"code":"D2950","fee":165},{"code":"D3310","fee":670},{"code":"D3320","fee":790},{"code":"D3330","fee":905},{"code":"D4341","fee":262},{"code":"D4910","fee":138},{"code":"D7140","fee":184},{"code":"D7210","fee":308}],
+    "UnitedHealthcare": [{"code":"D0120","fee":46},{"code":"D0150","fee":62},{"code":"D0210","fee":128},{"code":"D0220","fee":30},{"code":"D1110","fee":98},{"code":"D1120","fee":72},{"code":"D1206","fee":35},{"code":"D2150","fee":144},{"code":"D2330","fee":160},{"code":"D2391","fee":172},{"code":"D2740","fee":168},{"code":"D2750","fee":156},{"code":"D2950","fee":142},{"code":"D3310","fee":605},{"code":"D3320","fee":720},{"code":"D3330","fee":825},{"code":"D4341","fee":232},{"code":"D4910","fee":124},{"code":"D7140","fee":164},{"code":"D7210","fee":275}]
+  },
+  "frequencies": {
+    "D0120": 340, "D0150": 98, "D0210": 186, "D0220": 425, "D1110": 412,
+    "D1120": 98,  "D1206": 485, "D2150": 62,  "D2330": 88,  "D2391": 142,
+    "D2740": 142, "D2750": 98,  "D2950": 152, "D3310": 38,  "D3320": 52,
+    "D3330": 62,  "D4341": 176, "D4910": 220, "D7140": 160, "D7210": 68
+  }
+}

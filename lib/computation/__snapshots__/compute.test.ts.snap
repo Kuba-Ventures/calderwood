@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compute — Underwood Family Dental fixture > snapshot: total under brief's spec produces stable headline numbers 1`] = `
+{
+  "below_p75": {
+    "count": 20,
+    "total": 20,
+  },
+  "cigna": 134283,
+  "total": 468121,
+}
+`;
