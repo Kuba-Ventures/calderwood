@@ -4,12 +4,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
+  Account,
   CARRIERS,
   Carrier,
   FeeEntry,
   Intake,
+  account as accountStore,
   intake as intakeStore,
 } from "@/lib/storage";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const TOP_CDT: { code: string; label: string }[] = [
   { code: "D0120", label: "Periodic oral evaluation" },
@@ -46,6 +50,10 @@ export default function IntakePage() {
   const [existing, setExisting] = useState<Intake | null>(null);
 
   const [step, setStep] = useState<Step>(0);
+  const [firstName, setFirstName] = useState("");
+  const [practiceName, setPracticeName] = useState("");
+  const [primaryEmail, setPrimaryEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [zip, setZip] = useState("");
   const [providerCount, setProviderCount] = useState<number>(1);
   const [feeMethod, setFeeMethod] = useState<FeeMethod>("manual");
@@ -58,6 +66,15 @@ export default function IntakePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Prefill identity from any existing account record so the user only
+    // edits what's missing.
+    const a = accountStore.get();
+    if (a) {
+      setFirstName(a.firstName ?? "");
+      setPracticeName(a.practiceName ?? "");
+      setPrimaryEmail(a.primaryEmail ?? "");
+      setPhone(a.phone ?? "");
+    }
     const e = intakeStore.get();
     setExisting(e);
     if (e && viewMode) {
@@ -106,18 +123,28 @@ export default function IntakePage() {
   function next() {
     setError(null);
     if (step === 0) {
+      if (!firstName.trim()) {
+        setError("Enter your first name.");
+        return;
+      }
+      if (!practiceName.trim()) {
+        setError("Enter your practice name.");
+        return;
+      }
+      if (!EMAIL_RE.test(primaryEmail.trim())) {
+        setError("Enter a valid email address.");
+        return;
+      }
       if (!/^\d{5}$/.test(zip.trim())) {
         setError("Enter a 5-digit ZIP code.");
         return;
       }
-    }
-    if (step === 1) {
       if (!Number.isFinite(providerCount) || providerCount < 1) {
         setError("Provider count must be at least 1.");
         return;
       }
     }
-    if (step === 2) {
+    if (step === 1) {
       if (feeMethod === "csv" && !feeFile) {
         setError("Choose a CSV file or switch input method.");
         return;
@@ -131,13 +158,13 @@ export default function IntakePage() {
         return;
       }
     }
-    if (step === 3) {
+    if (step === 2) {
       if (carriers.length === 0) {
         setError("Select at least one carrier.");
         return;
       }
     }
-    setStep((s) => Math.min(4, s + 1));
+    setStep((s) => Math.min(3, s + 1));
   }
 
   function back() {
@@ -160,6 +187,20 @@ export default function IntakePage() {
       submittedAt: new Date().toISOString(),
     };
     intakeStore.set(payload);
+
+    // Intake doubles as account onboarding. Persist identity to cw_account so
+    // the topbar, dashboard email banner, and report wording all reflect it
+    // without forcing the user to also visit /account.
+    const existingAccount = accountStore.get();
+    const accountPayload: Account = {
+      firstName: firstName.trim() || undefined,
+      practiceName: practiceName.trim(),
+      primaryEmail: primaryEmail.trim(),
+      billingEmail: existingAccount?.billingEmail || primaryEmail.trim(),
+      phone: phone.trim() || existingAccount?.phone || undefined,
+    };
+    accountStore.set(accountPayload);
+
     router.push("/dashboard");
   }
 
@@ -168,15 +209,22 @@ export default function IntakePage() {
       <Stepper current={step} />
       <div className="mt-8 rounded-xl border border-canvas-border bg-canvas px-8 py-10 shadow-sm sm:px-12">
         {step === 0 && (
-          <StepZip zip={zip} setZip={setZip} />
-        )}
-        {step === 1 && (
-          <StepProviders
+          <StepPracticeDetails
+            firstName={firstName}
+            setFirstName={setFirstName}
+            practiceName={practiceName}
+            setPracticeName={setPracticeName}
+            primaryEmail={primaryEmail}
+            setPrimaryEmail={setPrimaryEmail}
+            phone={phone}
+            setPhone={setPhone}
+            zip={zip}
+            setZip={setZip}
             providerCount={providerCount}
             setProviderCount={setProviderCount}
           />
         )}
-        {step === 2 && (
+        {step === 1 && (
           <StepFees
             feeMethod={feeMethod}
             setFeeMethod={setFeeMethod}
@@ -188,11 +236,15 @@ export default function IntakePage() {
             setFeeManual={setFeeManual}
           />
         )}
-        {step === 3 && (
+        {step === 2 && (
           <StepCarriers carriers={carriers} setCarriers={setCarriers} />
         )}
-        {step === 4 && (
+        {step === 3 && (
           <StepReview
+            firstName={firstName}
+            practiceName={practiceName}
+            primaryEmail={primaryEmail}
+            phone={phone}
             zip={zip}
             providerCount={providerCount}
             feeMethod={feeMethod}
@@ -218,7 +270,7 @@ export default function IntakePage() {
           >
             Back
           </button>
-          {step < 4 ? (
+          {step < 3 ? (
             <button
               type="button"
               onClick={next}
@@ -241,13 +293,7 @@ export default function IntakePage() {
   );
 }
 
-const STEP_LABELS = [
-  "ZIP",
-  "Providers",
-  "Fee schedule",
-  "Carriers",
-  "Review",
-];
+const STEP_LABELS = ["Practice", "Fee schedule", "Carriers", "Review"];
 
 function Stepper({ current }: { current: Step }) {
   return (
@@ -287,57 +333,157 @@ function Stepper({ current }: { current: Step }) {
   );
 }
 
-function StepZip({
+function StepPracticeDetails({
+  firstName,
+  setFirstName,
+  practiceName,
+  setPracticeName,
+  primaryEmail,
+  setPrimaryEmail,
+  phone,
+  setPhone,
   zip,
   setZip,
-}: {
-  zip: string;
-  setZip: (v: string) => void;
-}) {
-  return (
-    <div>
-      <h2 className="text-2xl font-semibold tracking-tighter2 text-ink-900">
-        What ZIP code is your practice in?
-      </h2>
-      <p className="mt-2 text-sm text-ink-500">
-        We benchmark against UCR data in your immediate area, so this needs to
-        match your physical office, not your billing address.
-      </p>
-      <input
-        type="text"
-        inputMode="numeric"
-        maxLength={5}
-        value={zip}
-        onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))}
-        placeholder="94110"
-        className="mt-6 w-40 rounded-md border border-canvas-border bg-canvas px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-400 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900"
-      />
-    </div>
-  );
-}
-
-function StepProviders({
   providerCount,
   setProviderCount,
 }: {
+  firstName: string;
+  setFirstName: (v: string) => void;
+  practiceName: string;
+  setPracticeName: (v: string) => void;
+  primaryEmail: string;
+  setPrimaryEmail: (v: string) => void;
+  phone: string;
+  setPhone: (v: string) => void;
+  zip: string;
+  setZip: (v: string) => void;
   providerCount: number;
   setProviderCount: (n: number) => void;
 }) {
   return (
     <div>
       <h2 className="text-2xl font-semibold tracking-tighter2 text-ink-900">
-        How many providers bill under your TIN?
+        Tell us about your practice.
       </h2>
       <p className="mt-2 text-sm text-ink-500">
-        Count anyone whose production goes through this practice: owners,
-        associates, hygienists who bill independently.
+        How to label your report and where to send it.
       </p>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field
+          id="firstName"
+          label="Your first name"
+          value={firstName}
+          onChange={setFirstName}
+          placeholder="Finley"
+          autoComplete="given-name"
+        />
+        <Field
+          id="practiceName"
+          label="Practice name"
+          value={practiceName}
+          onChange={setPracticeName}
+          placeholder="Calderwood Dental"
+          autoComplete="organization"
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field
+          id="primaryEmail"
+          label="Email for the report"
+          type="email"
+          value={primaryEmail}
+          onChange={setPrimaryEmail}
+          placeholder="owner@practice.com"
+          autoComplete="email"
+        />
+        <Field
+          id="phone"
+          label="Phone (optional)"
+          value={phone}
+          onChange={setPhone}
+          placeholder="(415) 555-0123"
+          autoComplete="tel"
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="zip" className="block text-sm font-medium text-ink-700">
+            Practice ZIP
+          </label>
+          <input
+            id="zip"
+            type="text"
+            inputMode="numeric"
+            maxLength={5}
+            value={zip}
+            onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))}
+            placeholder="94110"
+            autoComplete="postal-code"
+            className="mt-1.5 w-full rounded-md border border-canvas-border bg-canvas px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-400 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900"
+          />
+          <p className="mt-1.5 text-xs text-ink-400">
+            UCR is benchmarked locally. Use your office address, not billing.
+          </p>
+        </div>
+        <div>
+          <label
+            htmlFor="providerCount"
+            className="block text-sm font-medium text-ink-700"
+          >
+            Providers billing under your TIN
+          </label>
+          <input
+            id="providerCount"
+            type="number"
+            min={1}
+            value={providerCount}
+            onChange={(e) =>
+              setProviderCount(parseInt(e.target.value || "1", 10))
+            }
+            className="mt-1.5 w-full rounded-md border border-canvas-border bg-canvas px-3 py-2.5 text-base text-ink-900 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900"
+          />
+          <p className="mt-1.5 text-xs text-ink-400">
+            Owners, associates, hygienists who bill independently.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  autoComplete,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+  autoComplete?: string;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-ink-700">
+        {label}
+      </label>
       <input
-        type="number"
-        min={1}
-        value={providerCount}
-        onChange={(e) => setProviderCount(parseInt(e.target.value || "1", 10))}
-        className="mt-6 w-32 rounded-md border border-canvas-border bg-canvas px-3 py-2.5 text-base text-ink-900 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900"
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        className="mt-1.5 w-full rounded-md border border-canvas-border bg-canvas px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-400 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900"
       />
     </div>
   );
@@ -542,6 +688,10 @@ function StepCarriers({
 }
 
 function StepReview({
+  firstName,
+  practiceName,
+  primaryEmail,
+  phone,
   zip,
   providerCount,
   feeMethod,
@@ -550,6 +700,10 @@ function StepReview({
   feeManual,
   carriers,
 }: {
+  firstName: string;
+  practiceName: string;
+  primaryEmail: string;
+  phone: string;
   zip: string;
   providerCount: number;
   feeMethod: FeeMethod;
@@ -565,9 +719,14 @@ function StepReview({
         Review and submit.
       </h2>
       <p className="mt-2 text-sm text-ink-500">
-        Double-check the ZIP. A wrong one wastes the 24-hour turnaround.
+        Double-check the ZIP and email. Wrong values waste your 24-hour
+        turnaround.
       </p>
       <dl className="mt-6 divide-y divide-canvas-border rounded-md border border-canvas-border bg-canvas-tint">
+        <Row label="Your name" value={firstName || "(not set)"} />
+        <Row label="Practice" value={practiceName || "(not set)"} />
+        <Row label="Report email" value={primaryEmail || "(not set)"} />
+        {phone && <Row label="Phone" value={phone} />}
         <Row label="ZIP code" value={zip} />
         <Row
           label="Providers"
@@ -604,6 +763,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 function SubmittedView({ intake }: { intake: Intake }) {
+  const a = accountStore.get();
   return (
     <div className="mx-auto max-w-2xl">
       <Link
@@ -620,6 +780,12 @@ function SubmittedView({ intake }: { intake: Intake }) {
           Submitted {new Date(intake.submittedAt).toLocaleString()}
         </p>
         <dl className="mt-6 divide-y divide-canvas-border rounded-md border border-canvas-border bg-canvas-tint">
+          {a?.firstName && <Row label="Your name" value={a.firstName} />}
+          {a?.practiceName && <Row label="Practice" value={a.practiceName} />}
+          {a?.primaryEmail && (
+            <Row label="Report email" value={a.primaryEmail} />
+          )}
+          {a?.phone && <Row label="Phone" value={a.phone} />}
           <Row label="ZIP code" value={intake.zip} />
           <Row
             label="Providers"
