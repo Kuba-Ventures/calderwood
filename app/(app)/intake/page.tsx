@@ -201,7 +201,7 @@ export default function IntakePage() {
     };
     accountStore.set(accountPayload);
 
-    router.push("/dashboard");
+    router.push("/reports");
   }
 
   return (
