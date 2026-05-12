@@ -1,37 +1,48 @@
 "use client";
 
-// Placeholder client-side gate. Password "calderwood" lets anyone in.
-// Real auth via Supabase replaces this; the rest of the app shell stays.
+// Supabase email-password sign-in. The placeholder localStorage gate is
+// retired. Auth + intake/dashboard data now live in Supabase.
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { auth } from "@/lib/storage";
-
-const PLACEHOLDER_PASSWORD = "calderwood";
+import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const params = useSearchParams();
+  const nextPath = params.get("next") || "/dashboard";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!email.trim()) {
-      setError("Enter the email you used at checkout.");
+    if (!email.trim() || !password) {
+      setError("Email and password are required.");
       return;
     }
-    if (password !== PLACEHOLDER_PASSWORD) {
-      setError("That password isn't right.");
+    if (!hasSupabaseEnv()) {
+      setError("Sign-in is not yet configured. Email hello@calderwoodtech.com.");
       return;
     }
     setSubmitting(true);
-    auth.signIn();
-    router.push("/dashboard");
+    const sb = browserSupabase();
+    const { error: authError } = await sb.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (authError) {
+      setError(authError.message);
+      setSubmitting(false);
+      return;
+    }
+    router.push(nextPath);
+    router.refresh();
   }
 
   return (
@@ -49,30 +60,10 @@ export default function LoginPage() {
           Calderwood
         </h1>
         <p className="mt-3 text-center text-base text-ink-500">
-          Get your fee assessment
+          Sign in to your fee assessment
         </p>
 
-        <div className="mt-10 w-full">
-          <Link
-            href="/start"
-            className="inline-flex w-full items-center justify-center rounded-md bg-ink-900 px-6 py-4 text-base font-medium text-white shadow-sm transition hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900"
-          >
-            Get started
-          </Link>
-          <p className="mt-3 text-center text-sm text-ink-500">
-            No account needed. Email captured at checkout.
-          </p>
-        </div>
-
-        <div className="my-10 flex w-full items-center gap-4">
-          <div className="h-px flex-1 bg-canvas-border" />
-          <p className="text-xs uppercase tracking-[0.14em] text-ink-400">
-            Returning customer
-          </p>
-          <div className="h-px flex-1 bg-canvas-border" />
-        </div>
-
-        <form className="w-full space-y-4" onSubmit={onSubmit}>
+        <form className="mt-10 w-full space-y-4" onSubmit={onSubmit}>
           <div>
             <label
               htmlFor="email"
@@ -110,7 +101,7 @@ export default function LoginPage() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="********"
               autoComplete="current-password"
               className="mt-1.5 w-full rounded-md border border-canvas-border bg-canvas px-3 py-2.5 text-base text-ink-700 placeholder:text-ink-400 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900"
             />
@@ -125,9 +116,24 @@ export default function LoginPage() {
             disabled={submitting}
             className="w-full rounded-md bg-ink-900 px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900 disabled:opacity-60"
           >
-            {submitting ? "Signing in…" : "Sign in"}
+            {submitting ? "Signing in..." : "Sign in"}
           </button>
         </form>
+
+        <div className="my-10 flex w-full items-center gap-4">
+          <div className="h-px flex-1 bg-canvas-border" />
+          <p className="text-xs uppercase tracking-[0.14em] text-ink-400">
+            Or
+          </p>
+          <div className="h-px flex-1 bg-canvas-border" />
+        </div>
+
+        <Link
+          href="/signup"
+          className="inline-flex w-full items-center justify-center rounded-md border border-canvas-border bg-canvas px-6 py-3 text-base font-medium text-ink-900 transition hover:bg-canvas-tint"
+        >
+          Create an account
+        </Link>
 
         <p className="mt-6 text-center text-sm leading-relaxed text-ink-500">
           Need help? Email{" "}

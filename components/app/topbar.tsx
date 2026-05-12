@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { account, auth, clearAll } from "@/lib/storage";
+import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 
 const TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -24,11 +25,39 @@ export function Topbar() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const a = account.get();
-    const firstName = a?.firstName?.trim() ?? "";
-    const practiceName = a?.practiceName?.trim() ?? "";
-    const initial = (firstName || practiceName || "?").charAt(0).toUpperCase();
-    setIdentity({ firstName, practiceName, initial });
+    let cancelled = false;
+    async function load() {
+      if (hasSupabaseEnv()) {
+        const sb = browserSupabase();
+        const { data: { user } } = await sb.auth.getUser();
+        if (user) {
+          const { data: practice } = await sb
+            .from("practices")
+            .select("practice_name, email")
+            .eq("email", user.email ?? "")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (cancelled) return;
+          const practiceName = (practice?.practice_name ?? "").trim();
+          const firstName = (user.email ?? "").split("@")[0] ?? "";
+          const initial = (firstName || practiceName || "?").charAt(0).toUpperCase();
+          setIdentity({ firstName, practiceName, initial });
+          return;
+        }
+      }
+      // Local fallback
+      const a = account.get();
+      if (cancelled) return;
+      const firstName = a?.firstName?.trim() ?? "";
+      const practiceName = a?.practiceName?.trim() ?? "";
+      const initial = (firstName || practiceName || "?").charAt(0).toUpperCase();
+      setIdentity({ firstName, practiceName, initial });
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [pathname]);
 
   useEffect(() => {
@@ -41,9 +70,14 @@ export function Topbar() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
-  function signOut() {
+  async function signOut() {
+    if (hasSupabaseEnv()) {
+      const sb = browserSupabase();
+      await sb.auth.signOut();
+    }
     auth.signOut();
     router.replace("/login");
+    router.refresh();
   }
 
   function resetEverything() {

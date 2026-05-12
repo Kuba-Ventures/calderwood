@@ -27,6 +27,7 @@ import {
 } from "@/lib/storage";
 import { getSampleReportData } from "@/lib/sample-report-data";
 import { GlanceTiles } from "@/components/dashboard/glance-tiles";
+import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -37,29 +38,87 @@ export default function DashboardPage() {
   const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
-    if (params.get("ready") === "1") {
-      const data =
-        params.get("demo") === "1"
-          ? getSampleReportData(intake.get()?.zip || "94110")
-          : undefined;
-      report.markDelivered(data);
-      router.replace("/dashboard");
-      return;
+    let cancelled = false;
+
+    async function load() {
+      // Supabase-backed path: fetch the signed-in user's practice + report.
+      if (hasSupabaseEnv()) {
+        const sb = browserSupabase();
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user?.email) {
+          if (!cancelled) setHydrated(true);
+          return;
+        }
+        const { data: practiceRow } = await sb
+          .from("practices")
+          .select("*")
+          .eq("email", user.email)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (cancelled) return;
+        if (!practiceRow) {
+          setHydrated(true);
+          return;
+        }
+        const intakeShape: Intake = {
+          zip: practiceRow.zip5,
+          providerCount: 1,
+          feeMethod: "manual",
+          carriers: practiceRow.contracted_carriers as Intake["carriers"],
+          submittedAt: practiceRow.created_at,
+        };
+        setCurrentIntake(intakeShape);
+        setFirstName((practiceRow.practice_name ?? user.email.split("@")[0]).split(" ")[0]);
+        if (practiceRow.status === "delivered") {
+          const { data: reportRow } = await sb
+            .from("reports")
+            .select("*")
+            .eq("practice_id", practiceRow.id)
+            .maybeSingle();
+          if (cancelled) return;
+          setCurrentReport({
+            state: "delivered",
+            deliveredAt: reportRow?.delivered_at ?? undefined,
+            data: (reportRow?.computation_output ?? null) as Report["data"],
+          });
+        } else {
+          setCurrentReport({ state: "pending" });
+        }
+        setHydrated(true);
+        return;
+      }
+
+      // Local fallback (pre-Supabase) keeps existing URL-param flow alive.
+      if (params.get("ready") === "1") {
+        const data =
+          params.get("demo") === "1"
+            ? getSampleReportData(intake.get()?.zip || "94110")
+            : undefined;
+        report.markDelivered(data);
+        router.replace("/dashboard");
+        return;
+      }
+      if (params.get("demo") === "1") {
+        const data = getSampleReportData(intake.get()?.zip || "94110");
+        report.set({
+          state: "delivered",
+          deliveredAt: new Date().toISOString(),
+          data,
+        });
+        router.replace("/dashboard");
+        return;
+      }
+      setCurrentIntake(intake.get());
+      setCurrentReport(report.get());
+      setFirstName(account.get()?.firstName?.trim() ?? "");
+      setHydrated(true);
     }
-    if (params.get("demo") === "1") {
-      const data = getSampleReportData(intake.get()?.zip || "94110");
-      report.set({
-        state: "delivered",
-        deliveredAt: new Date().toISOString(),
-        data,
-      });
-      router.replace("/dashboard");
-      return;
-    }
-    setCurrentIntake(intake.get());
-    setCurrentReport(report.get());
-    setFirstName(account.get()?.firstName?.trim() ?? "");
-    setHydrated(true);
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [params, router]);
 
   if (!hydrated) {
