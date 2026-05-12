@@ -26,7 +26,7 @@ function buildResolver(rows: UcrBenchmarkRow[]) {
   return resolveBenchmarkWith(src, geo);
 }
 
-describe("compute — Underwood Family Dental fixture", () => {
+describe("compute -- Underwood Family Dental fixture", () => {
   const input = loadFixture<ComputationInput>("input.json");
   const benchmarks = loadFixture<UcrBenchmarkRow[]>("benchmarks.json");
   const resolve = buildResolver(benchmarks);

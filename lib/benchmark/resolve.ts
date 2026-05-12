@@ -1,7 +1,7 @@
 // resolveBenchmark cascades through geo levels: zip3 → metro → state →
 // region → national. Levels with sample_size < 30 are skipped; the cascade
 // falls through to the next level. The function never averages or blends
-// across levels — it picks one level per code, end of story.
+// across levels -- it picks one level per code, end of story.
 //
 // The function is parameterized over a BenchmarkSource so unit tests can
 // inject fixture data and production can wire in Supabase.

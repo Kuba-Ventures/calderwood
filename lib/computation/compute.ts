@@ -127,7 +127,7 @@ export async function compute(
     }
   }
 
-  // Codes below p75 in top 20 — sort by practice volume, exclude no_data.
+  // Codes below p75 in top 20 -- sort by practice volume, exclude no_data.
   const scoredCodes = codeRows.filter((r) => r.confidence !== "no_data");
   const byVolume = [...scoredCodes].sort(
     (a, b) => b.practiceFee * b.annualFrequency - a.practiceFee * a.annualFrequency
@@ -139,7 +139,7 @@ export async function compute(
     total: top20.length,
   };
 
-  // Top carrier — only meaningful if basis is carrier.
+  // Top carrier -- only meaningful if basis is carrier.
   let topCarrier: ComputationOutput["executiveSummary"]["topCarrier"] = null;
   if (haveCarrierData) {
     const carrierTotals: Record<string, number> = {};
@@ -168,7 +168,7 @@ export async function compute(
     .slice(0, 10)
     .map((x) => x.row);
 
-  // Recoverable by carrier — total per carrier, descending.
+  // Recoverable by carrier -- total per carrier, descending.
   const recoverableByCarrier: ComputationOutput["recoverableByCarrier"] = [];
   if (haveCarrierData) {
     const totals: Record<string, number> = {};

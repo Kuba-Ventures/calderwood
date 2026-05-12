@@ -52,7 +52,7 @@ export const ZIP_TO_METRO: Record<string, string> = {
   "98101": "42660", "98109": "42660",
   // Miami-Fort Lauderdale-Pompano Beach MSA: 33100
   "33101": "33100", "33139": "33100",
-  // Wyoming non-metro zips intentionally absent — tests rely on the cascade
+  // Wyoming non-metro zips intentionally absent -- tests rely on the cascade
   // dropping to state.
 };
 
