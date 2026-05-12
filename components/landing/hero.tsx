@@ -25,7 +25,7 @@ export function Hero() {
                 className="group inline-flex items-center justify-center rounded-md bg-ink-900 px-6 py-4 text-base font-medium text-white shadow-sm transition hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900"
               >
                 <span className="border-b-2 border-transparent transition group-hover:border-gain">
-                  Find out what you&rsquo;re leaving on the table for $199
+                  Find out what you&rsquo;re leaving on the table
                 </span>
               </a>
               <p className="text-sm text-ink-500">
