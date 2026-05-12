@@ -152,7 +152,7 @@ function CodeTableVisual() {
                 <td className="px-3 py-2.5 text-right font-serif text-ink-700 tabular-nums">
                   {row.gap}
                 </td>
-                <td className="px-3 py-2.5 text-right font-serif font-medium text-gain-ink tabular-nums">
+                <td className="px-3 py-2.5 text-right font-serif font-medium text-accent-ink tabular-nums">
                   {row.impact}
                 </td>
               </tr>
@@ -186,11 +186,11 @@ function CarrierBarsVisual() {
             <span className="text-[11px] text-ink-700">{carrier.name}</span>
             <div className="h-3 rounded-sm bg-canvas-border">
               <div
-                className="h-full rounded-sm bg-gain"
+                className="h-full rounded-sm bg-accent"
                 style={{ width: `${carrier.pct}%` }}
               />
             </div>
-            <span className="text-right font-serif text-xs font-medium text-gain-ink tabular-nums">
+            <span className="text-right font-serif text-xs font-medium text-accent-ink tabular-nums">
               ${carrier.value.toLocaleString()}
             </span>
           </div>

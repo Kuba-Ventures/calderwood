@@ -77,7 +77,7 @@ function Stat({
       <p className="text-[9px] uppercase tracking-wider text-ink-500">
         {label}
       </p>
-      <p className="mt-1 font-serif text-[26px] font-medium leading-none text-gain-ink tabular-nums">
+      <p className="mt-1 font-serif text-[26px] font-medium leading-none text-accent-ink tabular-nums">
         {value}
       </p>
       <p className="mt-1 text-[9px] leading-relaxed text-ink-500">{note}</p>
