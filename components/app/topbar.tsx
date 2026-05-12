@@ -15,10 +15,11 @@ const TITLES: Record<string, string> = {
 export function Topbar() {
   const pathname = usePathname() ?? "/dashboard";
   const router = useRouter();
-  const [identity, setIdentity] = useState<{ label: string; initial: string }>({
-    label: "Your practice",
-    initial: "?",
-  });
+  const [identity, setIdentity] = useState<{
+    firstName: string;
+    practiceName: string;
+    initial: string;
+  }>({ firstName: "", practiceName: "", initial: "?" });
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -26,12 +27,8 @@ export function Topbar() {
     const a = account.get();
     const firstName = a?.firstName?.trim() ?? "";
     const practiceName = a?.practiceName?.trim() ?? "";
-    let label = "Your practice";
-    if (firstName && practiceName) label = `${firstName} at ${practiceName}`;
-    else if (firstName) label = firstName;
-    else if (practiceName) label = practiceName;
     const initial = (firstName || practiceName || "?").charAt(0).toUpperCase();
-    setIdentity({ label, initial });
+    setIdentity({ firstName, practiceName, initial });
   }, [pathname]);
 
   useEffect(() => {
@@ -71,9 +68,29 @@ export function Topbar() {
         <div className="flex items-center gap-3">
           <Link
             href="/account"
-            className="hidden text-sm text-ink-500 hover:text-ink-900 sm:inline"
+            className="group hidden text-sm sm:inline"
           >
-            {identity.label}
+            {identity.firstName || identity.practiceName ? (
+              <>
+                {identity.firstName && (
+                  <span className="font-medium text-accent group-hover:text-accent-ink">
+                    {identity.firstName}
+                  </span>
+                )}
+                {identity.firstName && identity.practiceName && (
+                  <span className="text-ink-400"> at </span>
+                )}
+                {identity.practiceName && (
+                  <span className="font-medium text-accent group-hover:text-accent-ink">
+                    {identity.practiceName}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-ink-500 group-hover:text-ink-900">
+                Your practice
+              </span>
+            )}
           </Link>
           <div className="relative" ref={menuRef}>
             <button
