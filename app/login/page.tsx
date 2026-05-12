@@ -6,10 +6,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const nextPath = params.get("next") || "/dashboard";
