@@ -57,7 +57,43 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, results });
+  // Return a compact summary by default. Hit with ?full=1 for everything.
+  const reqUrl = new URL(request.url);
+  if (reqUrl.searchParams.get("full") === "1") {
+    return NextResponse.json({ ok: true, results });
+  }
+
+  const summary: Array<Record<string, unknown>> = [];
+  for (const [email, data] of Object.entries(results)) {
+    const d = data as {
+      error?: string;
+      practicesCount?: number;
+      reportsCount?: number;
+      reports?: Array<{
+        executiveSummary?: {
+          totalAnnualUnderpayment?: number;
+          topCarrier?: { name: string } | null;
+          codesBelowP75InTop20?: { count: number; total: number };
+        };
+      }>;
+    };
+    if (d.error) {
+      summary.push({ user: email, error: d.error });
+      continue;
+    }
+    const exec = d.reports?.[0]?.executiveSummary;
+    summary.push({
+      user: email,
+      p: d.practicesCount ?? 0,
+      r: d.reportsCount ?? 0,
+      total: exec?.totalAnnualUnderpayment ?? null,
+      top: exec?.topCarrier?.name ?? null,
+      below_p75: exec?.codesBelowP75InTop20
+        ? `${exec.codesBelowP75InTop20.count}/${exec.codesBelowP75InTop20.total}`
+        : null,
+    });
+  }
+  return NextResponse.json({ ok: true, summary });
 }
 
 async function verifyOne(
