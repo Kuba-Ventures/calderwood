@@ -37,26 +37,28 @@ export default function SignupPage() {
     }
 
     setSubmitting(true);
-    const sb = browserSupabase();
-    const { data, error: authError } = await sb.auth.signUp({
-      email: email.trim(),
-      password,
-    });
-    if (authError) {
-      setError(authError.message);
+    try {
+      const sb = browserSupabase();
+      const { data, error: authError } = await sb.auth.signUp({
+        email: email.trim(),
+        password,
+      });
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+      if (!data.session) {
+        setInfo(
+          "Check your inbox for a confirmation link, then sign in to continue."
+        );
+        return;
+      }
+      window.location.href = "/intake";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign up failed.");
+    } finally {
       setSubmitting(false);
-      return;
     }
-    // If email confirmation is required, Supabase returns user but no session.
-    if (!data.session) {
-      setInfo(
-        "Check your inbox for a confirmation link, then sign in to continue."
-      );
-      setSubmitting(false);
-      return;
-    }
-    router.push("/intake");
-    router.refresh();
   }
 
   return (

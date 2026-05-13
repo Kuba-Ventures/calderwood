@@ -39,18 +39,23 @@ function LoginForm() {
       return;
     }
     setSubmitting(true);
-    const sb = browserSupabase();
-    const { error: authError } = await sb.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-    if (authError) {
-      setError(authError.message);
+    try {
+      const sb = browserSupabase();
+      const { error: authError } = await sb.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+      // Hard navigation so middleware re-reads the freshly-set cookies.
+      window.location.href = nextPath;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed.");
+    } finally {
       setSubmitting(false);
-      return;
     }
-    router.push(nextPath);
-    router.refresh();
   }
 
   return (
