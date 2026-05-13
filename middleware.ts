@@ -10,6 +10,13 @@ const PUBLIC_PATHS = ["/", "/login", "/signup", "/start", "/privacy", "/terms"];
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
+  // Auth pages must never be edge-cached; if a stale HTML cache references
+  // an old script bundle without the inlined env values, sign-in breaks.
+  const path = request.nextUrl.pathname;
+  if (path === "/login" || path === "/signup") {
+    response.headers.set("Cache-Control", "no-store, must-revalidate");
+  }
+
   // If Supabase isn't configured yet, let the request through. The pages
   // fall back to the localStorage gate until env vars land.
   if (
@@ -38,7 +45,6 @@ export async function middleware(request: NextRequest) {
   );
 
   const { data } = await supabase.auth.getUser();
-  const path = request.nextUrl.pathname;
   const isAppPath = APP_PREFIXES.some(
     (p) => path === p || path.startsWith(p + "/")
   );

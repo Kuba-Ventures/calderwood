@@ -2,6 +2,10 @@
 
 // Supabase email-password sign-in. The placeholder localStorage gate is
 // retired. Auth + intake/dashboard data now live in Supabase.
+//
+// force-dynamic prevents Vercel's edge from caching the HTML, so newly
+// deployed bundles take effect immediately instead of waiting for cache
+// expiry.
 
 import Image from "next/image";
 import Link from "next/link";
