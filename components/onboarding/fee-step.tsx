@@ -1,27 +1,31 @@
 "use client";
 
 // Flexible fee-schedule input — "meet the dentist where it's easiest".
-// Four methods sharing one segmented control: Upload (CSV/XLSX, default,
-// drag-and-drop, auto column-mapping), Paste, Top 20 grid, EOB image (OCR stub).
+// One unified upload box (drop a CSV, XLSX, PDF report, or EOB image — we
+// auto-route by file type) plus two tabs for Paste and the Top-20 grid.
 //
 // The component is controlled: the parent holds a FeeDraft and passes setDraft.
 // Helpers here (emptyFeeDraft / isFeeValid / buildFeePayload) turn the draft
-// into the JSON payload /api/onboard expects. Styling mirrors the existing
-// intake fee step exactly — no new tokens.
+// into the JSON payload /api/onboard expects. uploadedKind records which file
+// type landed in the unified box, so the validity/payload helpers know how to
+// treat it.
 
-import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useEffect, useRef, useState } from "react";
 import { parseCsv } from "@/lib/parser/csv";
 import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 import { TOP_CDT } from "@/lib/data/top-cdt";
 
-export type FeeTab = "upload" | "pdf" | "paste" | "manual" | "eob";
+export type FeeTab = "upload" | "paste" | "manual";
 export type FeeMethod = "csv" | "xlsx" | "pdf" | "paste" | "manual" | "eob";
+export type UploadedKind = "csv" | "xlsx" | "pdf" | "eob" | null;
 
 export type ManualRow = { code: string; fee: string };
 
 export type FeeDraft = {
   tab: FeeTab;
-  // upload
+  // unified upload box: which file type currently occupies it
+  uploadedKind: UploadedKind;
+  // csv/xlsx
   file: File | null;
   uploadKind: "csv" | "xlsx" | null;
   csvText: string | null;
@@ -61,6 +65,7 @@ export type FeePayload =
 export function emptyFeeDraft(): FeeDraft {
   return {
     tab: "upload",
+    uploadedKind: null,
     file: null,
     uploadKind: null,
     csvText: null,
@@ -100,33 +105,50 @@ export function parsePasteRows(text: string): ManualRow[] {
 export function isFeeValid(d: FeeDraft): boolean {
   switch (d.tab) {
     case "upload":
-      return !!d.csvText && (d.previewCount ?? 0) > 0;
-    case "pdf":
-      return d.pdfStatus === "done" && d.pdfRows.length > 0;
+      switch (d.uploadedKind) {
+        case "csv":
+        case "xlsx":
+          return !!d.csvText && (d.previewCount ?? 0) > 0;
+        case "pdf":
+          return d.pdfStatus === "done" && d.pdfRows.length > 0;
+        case "eob":
+          return d.eobStatus === "done" && !!d.eobPath;
+        default:
+          return false;
+      }
     case "paste":
       return parsePasteRows(d.pasteText).length > 0;
     case "manual":
       return d.manual.some((r) => r.fee.trim());
-    case "eob":
-      return d.eobStatus === "done" && !!d.eobPath;
   }
 }
 
 export function buildFeePayload(d: FeeDraft): FeePayload | null {
   switch (d.tab) {
     case "upload":
-      if (!d.csvText || !d.uploadKind) return null;
-      return { method: d.uploadKind, csvText: d.csvText, filename: d.file?.name };
-    case "pdf":
-      return d.pdfRows.length
-        ? {
-            method: "pdf",
-            rows: d.pdfRows,
-            frequencies: d.pdfFrequencies,
-            pdfPath: d.pdfPath ?? undefined,
-            filename: d.pdfFile?.name,
-          }
-        : null;
+      switch (d.uploadedKind) {
+        case "csv":
+        case "xlsx":
+          return d.csvText && d.uploadKind
+            ? { method: d.uploadKind, csvText: d.csvText, filename: d.file?.name }
+            : null;
+        case "pdf":
+          return d.pdfRows.length
+            ? {
+                method: "pdf",
+                rows: d.pdfRows,
+                frequencies: d.pdfFrequencies,
+                pdfPath: d.pdfPath ?? undefined,
+                filename: d.pdfFile?.name,
+              }
+            : null;
+        case "eob":
+          return d.eobPath
+            ? { method: "eob", eobPath: d.eobPath, filename: d.eobFile?.name }
+            : null;
+        default:
+          return null;
+      }
     case "paste": {
       const rows = parsePasteRows(d.pasteText);
       return rows.length ? { method: "paste", rows } : null;
@@ -135,17 +157,13 @@ export function buildFeePayload(d: FeeDraft): FeePayload | null {
       const rows = d.manual.filter((r) => r.fee.trim());
       return rows.length ? { method: "manual", rows } : null;
     }
-    case "eob":
-      return d.eobPath ? { method: "eob", eobPath: d.eobPath, filename: d.eobFile?.name } : null;
   }
 }
 
 const TABS: [FeeTab, string][] = [
-  ["upload", "Upload CSV/XLSX"],
-  ["pdf", "PDF report"],
+  ["upload", "Upload a file"],
   ["paste", "Paste"],
   ["manual", "Top 20 codes"],
-  ["eob", "EOB image"],
 ];
 
 export function FeeStep({
@@ -185,7 +203,6 @@ export function FeeStep({
 
       <div className="mt-6">
         {draft.tab === "upload" && <UploadPane draft={draft} patch={patch} />}
-        {draft.tab === "pdf" && <PdfPane draft={draft} patch={patch} />}
         {draft.tab === "paste" && (
           <PastePane
             value={draft.pasteText}
@@ -198,12 +215,62 @@ export function FeeStep({
             onChange={(rows) => patch({ manual: rows })}
           />
         )}
-        {draft.tab === "eob" && <EobPane draft={draft} patch={patch} />}
       </div>
     </div>
   );
 }
 
+// Staged, time-driven progress for the PDF extract. It's a single long Claude
+// call with no sub-progress, so we advance the stage by elapsed time to give
+// the dentist reassurance that something is happening rather than a frozen line.
+const PDF_STAGES = ["Uploading file", "Reading the report", "Extracting fees", "Matching annual volumes"];
+
+function ExtractionProgress({
+  status,
+  elapsed,
+}: {
+  status: "uploading" | "parsing";
+  elapsed: number;
+}) {
+  const stage =
+    status === "uploading" ? 0 : elapsed < 8 ? 1 : elapsed < 25 ? 2 : 3;
+  // Indeterminate-ish bar that eases toward (not to) 100% as time passes.
+  const pct = Math.min(95, 10 + elapsed * 3);
+  return (
+    <div className="mt-3 rounded-md border border-accent/20 bg-accent/5 px-4 py-3">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-medium text-accent-ink">
+          {PDF_STAGES[stage]}…
+        </span>
+        <span className="tabular-nums text-ink-400">{elapsed}s</span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-canvas-tint2">
+        <div
+          className="h-full rounded-full bg-accent transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+        {PDF_STAGES.map((label, i) => (
+          <span
+            key={label}
+            className={`text-[11px] ${
+              i < stage
+                ? "text-ink-400 line-through"
+                : i === stage
+                  ? "font-medium text-accent-ink"
+                  : "text-ink-300"
+            }`}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// One box that accepts CSV / XLSX / PDF / EOB image and routes by file type.
 function UploadPane({
   draft,
   patch,
@@ -213,21 +280,28 @@ function UploadPane({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
 
-  async function ingest(file: File) {
-    const lower = file.name.toLowerCase();
-    const isXlsx = lower.endsWith(".xlsx") || lower.endsWith(".xls");
-    const isCsv = lower.endsWith(".csv") || file.type === "text/csv";
-    if (!isXlsx && !isCsv) {
-      patch({
-        file,
-        uploadError: "Use a .csv or .xlsx file, or switch to Paste.",
-        csvText: null,
-        previewCount: null,
-        uploadKind: null,
-      });
+  const pdfBusy =
+    draft.uploadedKind === "pdf" &&
+    (draft.pdfStatus === "uploading" || draft.pdfStatus === "parsing");
+  const eobBusy = draft.uploadedKind === "eob" && draft.eobStatus === "uploading";
+  const busy = pdfBusy || eobBusy;
+
+  useEffect(() => {
+    if (!busy) {
+      setElapsed(0);
       return;
     }
+    const start = Date.now();
+    const id = setInterval(
+      () => setElapsed(Math.floor((Date.now() - start) / 1000)),
+      500
+    );
+    return () => clearInterval(id);
+  }, [busy]);
+
+  async function csvIngest(file: File, isXlsx: boolean) {
     try {
       let text: string;
       if (isXlsx) {
@@ -242,88 +316,265 @@ function UploadPane({
       }
       const preview = parseCsv(text);
       patch({
+        uploadedKind: isXlsx ? "xlsx" : "csv",
         file,
         uploadKind: isXlsx ? "xlsx" : "csv",
         csvText: text,
         previewCount: preview.valid.length,
         uploadError:
           preview.valid.length === 0
-            ? "We couldn't find a code + fee column. Check the file or switch methods."
+            ? "We couldn't find a code + fee column. Check the file or switch to Paste."
             : null,
       });
     } catch {
       patch({
+        uploadedKind: isXlsx ? "xlsx" : "csv",
         file,
-        uploadError: "Couldn't read that file. Try CSV, or switch methods.",
+        uploadKind: null,
         csvText: null,
         previewCount: null,
-        uploadKind: null,
+        uploadError: "Couldn't read that file. Try CSV, or switch methods.",
       });
     }
+  }
+
+  async function pdfIngest(file: File) {
+    if (!hasSupabaseEnv()) {
+      patch({
+        uploadedKind: "pdf",
+        pdfFile: file,
+        pdfStatus: "error",
+        pdfMessage: "Uploads aren't configured yet.",
+      });
+      return;
+    }
+    patch({
+      uploadedKind: "pdf",
+      pdfFile: file,
+      pdfStatus: "uploading",
+      pdfMessage: null,
+      pdfRows: [],
+      pdfFrequencies: {},
+      pdfCount: null,
+      pdfPath: null,
+    });
+    try {
+      // 1. Signed upload URL → straight to storage (skips Vercel's body cap).
+      const urlRes = await fetch("/api/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name }),
+      });
+      const urlJson = await urlRes.json();
+      if (!urlRes.ok || !urlJson.token) {
+        patch({ pdfStatus: "error", pdfMessage: urlJson.error || "Upload failed." });
+        return;
+      }
+      const sb = browserSupabase();
+      const up = await sb.storage
+        .from(urlJson.bucket)
+        .uploadToSignedUrl(urlJson.path, urlJson.token, file);
+      if (up.error) {
+        patch({ pdfStatus: "error", pdfMessage: "Upload failed. Try again." });
+        return;
+      }
+
+      // 2. Extract fees + volumes with Claude.
+      patch({ pdfStatus: "parsing", pdfPath: urlJson.path });
+      const parseRes = await fetch("/api/parse-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: urlJson.path }),
+      });
+      const parseJson = await parseRes.json();
+      if (
+        !parseRes.ok ||
+        !Array.isArray(parseJson.rows) ||
+        parseJson.rows.length === 0
+      ) {
+        patch({
+          pdfStatus: "error",
+          pdfMessage:
+            parseJson.error === "no_codes_found"
+              ? "We couldn't find any fee rows in that PDF. Try a Procedure Summary / production report, or another method."
+              : parseJson.error || "Couldn't read that PDF.",
+        });
+        return;
+      }
+      const rows: ManualRow[] = parseJson.rows.map(
+        (r: { code: string; fee: number }) => ({ code: r.code, fee: String(r.fee) })
+      );
+      const freqCount = Object.keys(parseJson.frequencies ?? {}).length;
+      patch({
+        pdfStatus: "done",
+        pdfRows: rows,
+        pdfFrequencies: parseJson.frequencies ?? {},
+        pdfCount: parseJson.count ?? rows.length,
+        pdfMessage:
+          `${rows.length} code${rows.length === 1 ? "" : "s"} found` +
+          (freqCount > 0 ? `, with real annual volumes for ${freqCount}.` : "."),
+      });
+    } catch {
+      patch({ pdfStatus: "error", pdfMessage: "Something went wrong. Try again." });
+    }
+  }
+
+  async function eobUpload(file: File) {
+    patch({
+      uploadedKind: "eob",
+      eobFile: file,
+      eobStatus: "uploading",
+      eobMessage: null,
+      eobPath: null,
+    });
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/eob-ocr", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.eobPath) {
+        patch({
+          eobStatus: "error",
+          eobMessage: json.error || "Upload failed. Try a clearer photo.",
+        });
+        return;
+      }
+      patch({ eobStatus: "done", eobPath: json.eobPath, eobMessage: json.message });
+    } catch {
+      patch({ eobStatus: "error", eobMessage: "Upload failed. Try again." });
+    }
+  }
+
+  function dispatch(file: File) {
+    if (busy) return;
+    const lower = file.name.toLowerCase();
+    const isPdf = lower.endsWith(".pdf") || file.type === "application/pdf";
+    const isXlsx = lower.endsWith(".xlsx") || lower.endsWith(".xls");
+    const isCsv = lower.endsWith(".csv") || file.type === "text/csv";
+    const isImage =
+      file.type.startsWith("image/") || /\.(png|jpe?g|webp|heic)$/.test(lower);
+    if (isPdf) return void pdfIngest(file);
+    if (isCsv || isXlsx) return void csvIngest(file, isXlsx);
+    if (isImage) return void eobUpload(file);
+    patch({
+      uploadedKind: "csv",
+      file,
+      uploadKind: null,
+      csvText: null,
+      previewCount: null,
+      uploadError:
+        "Unsupported file. Upload a CSV, Excel, PDF, or image — or use the Paste / Top 20 tabs.",
+    });
   }
 
   function onDrop(e: DragEvent<HTMLDivElement>) {
     e.preventDefault();
     setDragging(false);
     const f = e.dataTransfer.files?.[0];
-    if (f) void ingest(f);
+    if (f) dispatch(f);
   }
 
   function onFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
-    if (f) void ingest(f);
+    if (f) dispatch(f);
   }
+
+  const k = draft.uploadedKind;
 
   return (
     <div>
       <label className="block text-sm font-medium text-ink-700">
-        Fee schedule file
+        Upload your fee schedule
       </label>
       <div
         onDragOver={(e) => {
           e.preventDefault();
-          setDragging(true);
+          if (!busy) setDragging(true);
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => !busy && inputRef.current?.click()}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
+          if (!busy && (e.key === "Enter" || e.key === " "))
+            inputRef.current?.click();
         }}
         className={`mt-1.5 flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed px-6 py-10 text-center transition ${
           dragging
             ? "border-ink-900 bg-canvas-tint"
             : "border-canvas-border bg-canvas hover:border-ink-200"
-        }`}
+        } ${busy ? "cursor-default opacity-60" : ""}`}
       >
         <input
           ref={inputRef}
           type="file"
-          accept=".csv,.xlsx,.xls,text/csv"
+          accept=".csv,.xlsx,.xls,text/csv,application/pdf,.pdf,image/png,image/jpeg,image/webp"
           onChange={onFile}
           className="hidden"
         />
         <UploadIcon />
         <p className="mt-3 text-sm font-medium text-ink-700">
-          Drag &amp; drop your CSV or Excel file
+          Drag &amp; drop your fee schedule
         </p>
-        <p className="mt-1 text-xs text-ink-400">or click to browse</p>
+        <p className="mt-1 text-xs text-ink-400">
+          CSV, Excel, a PDF production report, or a photo of an EOB
+        </p>
       </div>
 
-      {draft.file && !draft.uploadError && draft.previewCount !== null && (
-        <p className="mt-2 text-xs text-gain-ink">
-          {draft.file.name}: {draft.previewCount} fee
-          {draft.previewCount === 1 ? "" : "s"} detected.
-        </p>
+      {/* CSV / XLSX result */}
+      {(k === "csv" || k === "xlsx") && (
+        <>
+          {draft.file && !draft.uploadError && draft.previewCount !== null && (
+            <p className="mt-2 text-xs text-gain-ink">
+              {draft.file.name}: {draft.previewCount} fee
+              {draft.previewCount === 1 ? "" : "s"} detected.
+            </p>
+          )}
+          {draft.uploadError && (
+            <p className="mt-2 text-xs text-red-600">{draft.uploadError}</p>
+          )}
+        </>
       )}
-      {draft.uploadError && (
-        <p className="mt-2 text-xs text-red-600">{draft.uploadError}</p>
+
+      {/* PDF result */}
+      {k === "pdf" && (
+        <>
+          {(draft.pdfStatus === "uploading" || draft.pdfStatus === "parsing") && (
+            <ExtractionProgress status={draft.pdfStatus} elapsed={elapsed} />
+          )}
+          {draft.pdfStatus === "done" && (
+            <p className="mt-2 text-xs text-gain-ink">{draft.pdfMessage}</p>
+          )}
+          {draft.pdfStatus === "error" && (
+            <p className="mt-2 text-xs text-red-600">{draft.pdfMessage}</p>
+          )}
+        </>
       )}
+
+      {/* EOB result */}
+      {k === "eob" && (
+        <>
+          {draft.eobStatus === "uploading" && (
+            <p className="mt-2 text-xs text-ink-500">
+              Uploading {draft.eobFile?.name}…
+            </p>
+          )}
+          {draft.eobStatus === "done" && (
+            <p className="mt-2 text-xs text-gain-ink">
+              {draft.eobMessage ?? "EOB received."}
+            </p>
+          )}
+          {draft.eobStatus === "error" && (
+            <p className="mt-2 text-xs text-red-600">{draft.eobMessage}</p>
+          )}
+        </>
+      )}
+
       <p className="mt-3 text-xs text-ink-400">
-        Two columns: CDT code and fee. We auto-detect the columns and handle most
-        exports from Dentrix, Eaglesoft, Open Dental, etc.
+        Master fees, not contracted rates. A PDF production report (Dentrix,
+        Eaglesoft, Open Dental) also gives us your real annual volumes. EOB photos
+        are read by hand. Or switch to Paste / Top 20.
       </p>
     </div>
   );
@@ -411,258 +662,6 @@ function ManualPane({
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
-
-function EobPane({
-  draft,
-  patch,
-}: {
-  draft: FeeDraft;
-  patch: (p: Partial<FeeDraft>) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false);
-
-  async function upload(file: File) {
-    patch({ eobFile: file, eobStatus: "uploading", eobMessage: null, eobPath: null });
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/eob-ocr", { method: "POST", body: fd });
-      const json = await res.json();
-      if (!res.ok || !json.eobPath) {
-        patch({
-          eobStatus: "error",
-          eobMessage: json.error || "Upload failed. Try a clearer photo.",
-        });
-        return;
-      }
-      patch({ eobStatus: "done", eobPath: json.eobPath, eobMessage: json.message });
-    } catch {
-      patch({ eobStatus: "error", eobMessage: "Upload failed. Try again." });
-    }
-  }
-
-  return (
-    <div>
-      <label className="block text-sm font-medium text-ink-700">
-        EOB image
-      </label>
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragging(false);
-          const f = e.dataTransfer.files?.[0];
-          if (f) void upload(f);
-        }}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
-        }}
-        className={`mt-1.5 flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed px-6 py-10 text-center transition ${
-          dragging
-            ? "border-ink-900 bg-canvas-tint"
-            : "border-canvas-border bg-canvas hover:border-ink-200"
-        }`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,application/pdf"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void upload(f);
-          }}
-          className="hidden"
-        />
-        <UploadIcon />
-        <p className="mt-3 text-sm font-medium text-ink-700">
-          Drop a photo or scan of a recent EOB
-        </p>
-        <p className="mt-1 text-xs text-ink-400">PNG, JPG, or PDF</p>
-      </div>
-
-      {draft.eobStatus === "uploading" && (
-        <p className="mt-2 text-xs text-ink-500">Uploading {draft.eobFile?.name}…</p>
-      )}
-      {draft.eobStatus === "done" && (
-        <p className="mt-2 text-xs text-gain-ink">
-          {draft.eobMessage ?? "EOB received."}
-        </p>
-      )}
-      {draft.eobStatus === "error" && (
-        <p className="mt-2 text-xs text-red-600">{draft.eobMessage}</p>
-      )}
-      <p className="mt-3 text-xs text-ink-400">
-        We&rsquo;ll read your fees off the EOB by hand for now. Your report
-        follows once we&rsquo;ve extracted them.
-      </p>
-    </div>
-  );
-}
-
-function PdfPane({
-  draft,
-  patch,
-}: {
-  draft: FeeDraft;
-  patch: (p: Partial<FeeDraft>) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false);
-
-  async function ingest(file: File) {
-    if (!file.name.toLowerCase().endsWith(".pdf")) {
-      patch({ pdfStatus: "error", pdfMessage: "Please upload a PDF.", pdfFile: file });
-      return;
-    }
-    if (!hasSupabaseEnv()) {
-      patch({ pdfStatus: "error", pdfMessage: "Uploads aren't configured yet." });
-      return;
-    }
-    patch({
-      pdfFile: file,
-      pdfStatus: "uploading",
-      pdfMessage: null,
-      pdfRows: [],
-      pdfFrequencies: {},
-      pdfCount: null,
-      pdfPath: null,
-    });
-    try {
-      // 1. Signed upload URL → upload straight to storage (skips Vercel's body cap).
-      const urlRes = await fetch("/api/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name }),
-      });
-      const urlJson = await urlRes.json();
-      if (!urlRes.ok || !urlJson.token) {
-        patch({ pdfStatus: "error", pdfMessage: urlJson.error || "Upload failed." });
-        return;
-      }
-      const sb = browserSupabase();
-      const up = await sb.storage
-        .from(urlJson.bucket)
-        .uploadToSignedUrl(urlJson.path, urlJson.token, file);
-      if (up.error) {
-        patch({ pdfStatus: "error", pdfMessage: "Upload failed. Try again." });
-        return;
-      }
-
-      // 2. Extract fees + volumes with Claude.
-      patch({ pdfStatus: "parsing", pdfPath: urlJson.path });
-      const parseRes = await fetch("/api/parse-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path: urlJson.path }),
-      });
-      const parseJson = await parseRes.json();
-      if (!parseRes.ok || !Array.isArray(parseJson.rows) || parseJson.rows.length === 0) {
-        patch({
-          pdfStatus: "error",
-          pdfMessage:
-            parseJson.error === "no_codes_found"
-              ? "We couldn't find any fee rows in that PDF. Try a Procedure Summary / production report, or another method."
-              : parseJson.error || "Couldn't read that PDF.",
-        });
-        return;
-      }
-      const rows: ManualRow[] = parseJson.rows.map(
-        (r: { code: string; fee: number }) => ({ code: r.code, fee: String(r.fee) })
-      );
-      const freqCount = Object.keys(parseJson.frequencies ?? {}).length;
-      patch({
-        pdfStatus: "done",
-        pdfRows: rows,
-        pdfFrequencies: parseJson.frequencies ?? {},
-        pdfCount: parseJson.count ?? rows.length,
-        pdfMessage:
-          `${rows.length} code${rows.length === 1 ? "" : "s"} found` +
-          (freqCount > 0 ? `, with real annual volumes for ${freqCount}.` : "."),
-      });
-    } catch {
-      patch({ pdfStatus: "error", pdfMessage: "Something went wrong. Try again." });
-    }
-  }
-
-  const busy = draft.pdfStatus === "uploading" || draft.pdfStatus === "parsing";
-
-  return (
-    <div>
-      <label className="block text-sm font-medium text-ink-700">
-        Procedure summary / production report (PDF)
-      </label>
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          if (!busy) setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragging(false);
-          if (busy) return;
-          const f = e.dataTransfer.files?.[0];
-          if (f) void ingest(f);
-        }}
-        onClick={() => !busy && inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (!busy && (e.key === "Enter" || e.key === " ")) inputRef.current?.click();
-        }}
-        className={`mt-1.5 flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed px-6 py-10 text-center transition ${
-          dragging
-            ? "border-ink-900 bg-canvas-tint"
-            : "border-canvas-border bg-canvas hover:border-ink-200"
-        } ${busy ? "opacity-60" : ""}`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept="application/pdf,.pdf"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void ingest(f);
-          }}
-          className="hidden"
-        />
-        <UploadIcon />
-        <p className="mt-3 text-sm font-medium text-ink-700">
-          Drag &amp; drop your fee/production report PDF
-        </p>
-        <p className="mt-1 text-xs text-ink-400">or click to browse</p>
-      </div>
-
-      {draft.pdfStatus === "uploading" && (
-        <p className="mt-2 text-xs text-ink-500">Uploading {draft.pdfFile?.name}…</p>
-      )}
-      {draft.pdfStatus === "parsing" && (
-        <p className="mt-2 text-xs text-ink-500">
-          Reading your fees and volumes. This can take up to a minute…
-        </p>
-      )}
-      {draft.pdfStatus === "done" && (
-        <p className="mt-2 text-xs text-gain-ink">{draft.pdfMessage}</p>
-      )}
-      {draft.pdfStatus === "error" && (
-        <p className="mt-2 text-xs text-red-600">{draft.pdfMessage}</p>
-      )}
-      <p className="mt-3 text-xs text-ink-400">
-        Upload a Procedure Summary / production report straight from your practice
-        software (Dentrix, Eaglesoft, Open Dental). We read each code&rsquo;s
-        average fee and annual volume automatically.
-      </p>
     </div>
   );
 }

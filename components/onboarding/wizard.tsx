@@ -49,10 +49,15 @@ export default function OnboardingWizard() {
       if (!Number.isFinite(providerCount) || providerCount < 1)
         return "Provider count must be at least 1.";
     }
-    if (s === 1 && !isFeeValid(fee))
-      return fee.tab === "eob"
-        ? "Upload your EOB image, or switch to another method."
-        : "Add your fee schedule, or switch input method.";
+    if (s === 1 && !isFeeValid(fee)) {
+      if (
+        fee.tab === "upload" &&
+        fee.uploadedKind === "pdf" &&
+        (fee.pdfStatus === "uploading" || fee.pdfStatus === "parsing")
+      )
+        return "Still reading your file. Give it a moment, then continue.";
+      return "Add your fee schedule, or switch to Paste / Top 20.";
+    }
     if (s === 2 && carriers.length === 0) return "Select at least one carrier.";
     return null;
   }

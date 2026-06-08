@@ -64,11 +64,15 @@ export default function IntakePage() {
 
   function next() {
     if (step === 0 && !isFeeValid(fee)) {
-      setError(
-        fee.tab === "eob"
-          ? "Upload your EOB image, or switch to another method."
-          : "Add your fee schedule, or switch input method."
-      );
+      if (
+        fee.tab === "upload" &&
+        fee.uploadedKind === "pdf" &&
+        (fee.pdfStatus === "uploading" || fee.pdfStatus === "parsing")
+      ) {
+        setError("Still reading your file. Give it a moment, then continue.");
+      } else {
+        setError("Add your fee schedule, or switch to Paste / Top 20.");
+      }
       return;
     }
     setError(null);
