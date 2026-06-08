@@ -83,6 +83,87 @@ export function LockCard({
   );
 }
 
+function CheckIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className={className}>
+      <circle cx="10" cy="10" r="9" fill="currentColor" opacity="0.15" />
+      <path
+        d="M6 10.5l2.5 2.5L14 7.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function Spinner({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className={`animate-spin ${className}`}
+    >
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.2" opacity="0.2" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Post-checkout confirmation, shown only when returning from Stripe (?paid=1).
+// The unlock itself is webhook-driven, so there's a brief window where payment
+// is captured but paid_at isn't stamped yet — we surface that state instead of
+// leaving the buyer staring at a silent page. Flips to success automatically
+// once useReport's poll sees unlocked.
+export function PaymentConfirmation({ unlocked }: { unlocked: boolean }) {
+  if (unlocked) {
+    return (
+      <div
+        role="status"
+        className="rounded-xl border border-gain/30 bg-gain-soft px-6 py-4 shadow-sm"
+      >
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 text-gain-ink">
+            <CheckIcon />
+          </span>
+          <div>
+            <p className="text-base font-semibold text-gain-ink">
+              Payment successful — your full report is unlocked.
+            </p>
+            <p className="mt-0.5 text-sm text-ink-600">
+              Every carrier and code-level number is now live below, and your PDF
+              is ready to download.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div
+      role="status"
+      className="rounded-xl border border-accent/20 bg-accent/5 px-6 py-4 shadow-sm"
+    >
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 text-accent-ink">
+          <Spinner />
+        </span>
+        <div>
+          <p className="text-base font-semibold text-accent-ink">
+            Payment received — finalizing your report…
+          </p>
+          <p className="mt-0.5 text-sm text-ink-500">
+            This takes a few seconds. Your full numbers will appear
+            automatically — no need to refresh.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function UnlockBanner({
   teaserUsd,
   onUnlock,

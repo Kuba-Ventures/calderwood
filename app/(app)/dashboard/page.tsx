@@ -10,12 +10,21 @@
 // figures pre-payment.
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useReport } from "@/lib/client/use-report";
 import { GlanceTiles } from "@/components/dashboard/glance-tiles";
-import { UnlockBanner } from "@/components/report/lock-overlay";
+import {
+  PaymentConfirmation,
+  UnlockBanner,
+} from "@/components/report/lock-overlay";
 
 export default function DashboardPage() {
   const { state, loading, checkingOut, startCheckout } = useReport();
+  // Read once on mount (not during render) so SSR/CSR markup matches.
+  const [justPaid, setJustPaid] = useState(false);
+  useEffect(() => {
+    setJustPaid(new URLSearchParams(window.location.search).get("paid") === "1");
+  }, []);
 
   if (loading || !state) {
     return <div className="text-sm text-ink-400">Loading…</div>;
@@ -35,6 +44,7 @@ export default function DashboardPage() {
         unlocked={state.unlocked}
         onUnlock={startCheckout}
         checkingOut={checkingOut}
+        justPaid={justPaid}
       />
     );
   }
@@ -142,12 +152,14 @@ function StateDelivered({
   unlocked,
   onUnlock,
   checkingOut,
+  justPaid,
 }: {
   greeting: string;
   report: import("@/lib/report/gate").GatedReport;
   unlocked: boolean;
   onUnlock: () => void;
   checkingOut: boolean;
+  justPaid: boolean;
 }) {
   return (
     <div className="space-y-8">
@@ -159,12 +171,19 @@ function StateDelivered({
           </Link>
         }
       />
-      {!unlocked && (
-        <UnlockBanner
-          teaserUsd={report.teaserUsd}
-          onUnlock={onUnlock}
-          busy={checkingOut}
-        />
+      {/* Returning from checkout: show the payment confirmation (success once
+          the webhook lands, "finalizing" while it's pending). Otherwise, the
+          standard unlock prompt while still gated. */}
+      {justPaid ? (
+        <PaymentConfirmation unlocked={unlocked} />
+      ) : (
+        !unlocked && (
+          <UnlockBanner
+            teaserUsd={report.teaserUsd}
+            onUnlock={onUnlock}
+            busy={checkingOut}
+          />
+        )
       )}
       <div>
         <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-ink-400">
