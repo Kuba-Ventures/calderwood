@@ -401,9 +401,12 @@ function UploadPane({
         });
         return;
       }
-      const rows: ManualRow[] = parseJson.rows.map(
-        (r: { code: string; fee: number }) => ({ code: r.code, fee: String(r.fee) })
-      );
+      const rows: ManualRow[] = parseJson.rows
+        .map((r: { code: string; fee: number }) => ({
+          code: r.code,
+          fee: String(r.fee),
+        }))
+        .sort((a: ManualRow, b: ManualRow) => a.code.localeCompare(b.code));
       const freqCount = Object.keys(parseJson.frequencies ?? {}).length;
       patch({
         pdfStatus: "done",
@@ -544,7 +547,7 @@ function UploadPane({
             <ExtractionProgress status={draft.pdfStatus} elapsed={elapsed} />
           )}
           {draft.pdfStatus === "done" && (
-            <p className="mt-2 text-xs text-gain-ink">{draft.pdfMessage}</p>
+            <PdfReview draft={draft} patch={patch} />
           )}
           {draft.pdfStatus === "error" && (
             <p className="mt-2 text-xs text-red-600">{draft.pdfMessage}</p>
@@ -661,6 +664,170 @@ function ManualPane({
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// Post-extraction review: the dentist eyeballs what we pulled and can edit a
+// fee/volume, remove a wrong row, or add a code we missed — before generating.
+function PdfReview({
+  draft,
+  patch,
+}: {
+  draft: FeeDraft;
+  patch: (p: Partial<FeeDraft>) => void;
+}) {
+  const [newCode, setNewCode] = useState("");
+  const [newFee, setNewFee] = useState("");
+  const [newVol, setNewVol] = useState("");
+
+  function setFee(i: number, val: string) {
+    const rows = draft.pdfRows.slice();
+    rows[i] = { ...rows[i], fee: val.replace(/[^\d.]/g, "") };
+    patch({ pdfRows: rows });
+  }
+  function setVolume(code: string, val: string) {
+    const n = parseInt(val.replace(/[^\d]/g, ""), 10);
+    const freq = { ...draft.pdfFrequencies };
+    if (Number.isFinite(n) && n > 0) freq[code] = n;
+    else delete freq[code];
+    patch({ pdfFrequencies: freq });
+  }
+  function removeRow(i: number) {
+    const code = draft.pdfRows[i].code;
+    const freq = { ...draft.pdfFrequencies };
+    delete freq[code];
+    const rows = draft.pdfRows.filter((_, idx) => idx !== i);
+    patch({ pdfRows: rows, pdfFrequencies: freq, pdfCount: rows.length });
+  }
+  function addRow() {
+    const code = newCode.trim().toUpperCase();
+    if (!/^D\d{4}$/.test(code) || draft.pdfRows.some((r) => r.code === code)) return;
+    const rows = [...draft.pdfRows, { code, fee: newFee.replace(/[^\d.]/g, "") }].sort(
+      (a, b) => a.code.localeCompare(b.code)
+    );
+    const freq = { ...draft.pdfFrequencies };
+    const n = parseInt(newVol.replace(/[^\d]/g, ""), 10);
+    if (Number.isFinite(n) && n > 0) freq[code] = n;
+    patch({ pdfRows: rows, pdfFrequencies: freq, pdfCount: rows.length });
+    setNewCode("");
+    setNewFee("");
+    setNewVol("");
+  }
+  function reset() {
+    patch({
+      uploadedKind: null,
+      pdfFile: null,
+      pdfStatus: "idle",
+      pdfRows: [],
+      pdfFrequencies: {},
+      pdfCount: null,
+      pdfMessage: null,
+      pdfPath: null,
+    });
+  }
+
+  const canAdd = /^D\d{4}$/.test(newCode.trim().toUpperCase()) && !!newFee.trim();
+  const cellInput =
+    "rounded border border-canvas-border bg-canvas px-2 py-1 text-sm text-ink-900 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900";
+
+  return (
+    <div className="mt-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-medium text-gain-ink">{draft.pdfMessage}</p>
+        <button
+          type="button"
+          onClick={reset}
+          className="shrink-0 text-xs font-medium text-accent hover:underline"
+        >
+          Upload a different file
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-ink-500">
+        Review what we pulled from your report. Edit a fee or volume, remove a row,
+        or add a code we missed. This is what your report is built from.
+      </p>
+      <div className="mt-2 max-h-80 overflow-y-auto rounded-md border border-canvas-border">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-canvas-tint text-left text-[11px] uppercase tracking-wide text-ink-400">
+            <tr>
+              <th className="px-3 py-2 font-medium">Code</th>
+              <th className="px-3 py-2 text-right font-medium">Fee</th>
+              <th className="px-3 py-2 text-right font-medium">Annual volume</th>
+              <th className="w-8 px-2 py-2" />
+            </tr>
+          </thead>
+          <tbody>
+            {draft.pdfRows.map((row, i) => (
+              <tr key={row.code} className="border-t border-canvas-border">
+                <td className="px-3 py-1.5 font-mono text-xs text-ink-700">
+                  {row.code}
+                </td>
+                <td className="px-3 py-1.5 text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <span className="text-ink-400">$</span>
+                    <input
+                      value={row.fee}
+                      inputMode="decimal"
+                      onChange={(e) => setFee(i, e.target.value)}
+                      className={`w-20 text-right ${cellInput}`}
+                    />
+                  </div>
+                </td>
+                <td className="px-3 py-1.5 text-right">
+                  <input
+                    value={draft.pdfFrequencies[row.code]?.toString() ?? ""}
+                    inputMode="numeric"
+                    onChange={(e) => setVolume(row.code, e.target.value)}
+                    className={`w-24 text-right ${cellInput}`}
+                  />
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => removeRow(i)}
+                    aria-label={`Remove ${row.code}`}
+                    className="text-base leading-none text-ink-300 transition hover:text-red-600"
+                  >
+                    ×
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <span className="text-xs text-ink-400">Add a missing code:</span>
+        <input
+          value={newCode}
+          onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+          placeholder="D0120"
+          className={`w-24 font-mono text-xs ${cellInput}`}
+        />
+        <input
+          value={newFee}
+          onChange={(e) => setNewFee(e.target.value)}
+          placeholder="Fee"
+          inputMode="decimal"
+          className={`w-20 ${cellInput}`}
+        />
+        <input
+          value={newVol}
+          onChange={(e) => setNewVol(e.target.value)}
+          placeholder="Volume"
+          inputMode="numeric"
+          className={`w-24 ${cellInput}`}
+        />
+        <button
+          type="button"
+          disabled={!canAdd}
+          onClick={addRow}
+          className="rounded-md border border-canvas-border bg-canvas px-3 py-1 text-xs font-medium text-ink-700 transition hover:bg-canvas-tint disabled:opacity-50"
+        >
+          Add code
+        </button>
       </div>
     </div>
   );
