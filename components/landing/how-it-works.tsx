@@ -21,7 +21,7 @@ const steps: Step[] = [
   {
     n: "3",
     title: "Give us your current fee schedule",
-    body: "Upload a CSV, paste a table, or hand-enter your top 20 CDT codes, whichever is least friction for you.",
+    body: "Upload a CSV or Excel export, paste a table, snap a photo of an EOB, or hand-enter your top 20 CDT codes, whichever is least friction for you.",
     Icon: DocIcon,
   },
   {
@@ -41,7 +41,7 @@ export function HowItWorks() {
             How it works
           </p>
           <h2 className="mt-5 text-3xl font-semibold tracking-tightish text-ink-900 sm:text-4xl">
-            Five minutes of your time. A report in 24 hours.
+            Five minutes of your time. Your report in minutes.
           </h2>
         </div>
 
@@ -75,7 +75,9 @@ export function HowItWorks() {
         </ol>
 
         <p className="mt-6 max-w-readable pl-12 text-base text-ink-700">
-          Your report lands in your inbox within 24 hours of payment. Most arrive the same business day.
+          Your benchmarked report is ready within minutes. Review the
+          opportunity we found, then pay $199 to unlock the full breakdown and
+          PDF — no charge until your report is ready.
         </p>
       </div>
     </section>

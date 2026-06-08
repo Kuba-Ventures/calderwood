@@ -13,7 +13,7 @@ export function Hero() {
               How much is each carrier underpaying you?
             </h1>
             <p className="mt-6 max-w-readable text-pretty text-lg leading-relaxed text-ink-700 sm:text-xl">
-              A code-by-code benchmark of your fee schedule against UCR data in your zip code, delivered within 24 hours. Most independent practices are reimbursed 15–35% below the 75th percentile in their metro. The gap typically runs{" "}
+              A code-by-code benchmark of your fee schedule against UCR data in your zip code, in minutes. Most independent practices are reimbursed 15–35% below the 75th percentile in their metro. The gap typically runs{" "}
               <span className="font-serif font-medium text-red-800">
                 $40,000 to $120,000
               </span>{" "}
@@ -21,7 +21,7 @@ export function Hero() {
             </p>
             <div className="mt-10 flex flex-col items-start gap-3">
               <a
-                href="/login"
+                href="/signup"
                 className="group inline-flex items-center justify-center rounded-md bg-ink-900 px-6 py-4 text-base font-medium text-white shadow-sm transition hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900"
               >
                 <span className="border-b-2 border-transparent transition group-hover:border-gain">
@@ -29,7 +29,7 @@ export function Hero() {
                 </span>
               </a>
               <p className="text-sm text-ink-500">
-                $199 flat. No sales call. Report in your inbox in 24 hours.
+                See your opportunity in minutes. Pay $199 only to unlock the full breakdown.
               </p>
             </div>
           </div>

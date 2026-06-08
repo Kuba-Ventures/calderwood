@@ -1,148 +1,45 @@
 "use client";
 
-// Dashboard is the at-a-glance home. Three states:
-//   1. No intake yet         -> hero CTA + empty placeholder tiles
-//   2. Pending report        -> brief status banner (link to /reports for
-//                               the live tracker) + empty placeholder tiles
-//   3. Delivered             -> populated tiles + "View full report" link
+// Dashboard is the at-a-glance home, driven by the real report job (useReport):
+//   1. No practice yet  -> hero CTA into onboarding + empty placeholder tiles
+//   2. Processing        -> status banner (live tracker on /reports) + skeletons
+//   3. Report ready      -> glance tiles, gated until paid, with an unlock banner
 //
-// The pipeline tracker and full deep-dive (carrier ranking, code-level
-// table) live on /reports. Submit on /intake redirects there.
-//
-// State 3 is unlocked by visiting /dashboard?ready=1. Append &demo=1 to
-// load sample chart data. Real backend ownership replaces this.
+// The deep-dive (carrier ranking, code table) lives on /reports. All gated
+// numbers come from /api/report already redacted; this page never sees the raw
+// figures pre-payment.
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import {
-  Intake,
-  Report,
-  ReportData,
-  account,
-  expectedDelivery,
-  formatDateTime,
-  intake,
-  report,
-} from "@/lib/storage";
-import { getSampleReportData } from "@/lib/sample-report-data";
+import { useReport } from "@/lib/client/use-report";
 import { GlanceTiles } from "@/components/dashboard/glance-tiles";
-import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
+import { UnlockBanner } from "@/components/report/lock-overlay";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const params = useSearchParams();
-  const [hydrated, setHydrated] = useState(false);
-  const [currentIntake, setCurrentIntake] = useState<Intake | null>(null);
-  const [currentReport, setCurrentReport] = useState<Report | null>(null);
-  const [firstName, setFirstName] = useState("");
+  const { state, loading, checkingOut, startCheckout } = useReport();
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      // Supabase-backed path: fetch the signed-in user's practice + report.
-      if (hasSupabaseEnv()) {
-        const sb = browserSupabase();
-        const { data: { user } } = await sb.auth.getUser();
-        if (!user?.email) {
-          if (!cancelled) setHydrated(true);
-          return;
-        }
-        const { data: practiceRow } = await sb
-          .from("practices")
-          .select("*")
-          .eq("email", user.email)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (cancelled) return;
-        if (!practiceRow) {
-          setHydrated(true);
-          return;
-        }
-        const intakeShape: Intake = {
-          zip: practiceRow.zip5,
-          providerCount: 1,
-          feeMethod: "manual",
-          carriers: practiceRow.contracted_carriers as Intake["carriers"],
-          submittedAt: practiceRow.created_at,
-        };
-        setCurrentIntake(intakeShape);
-        setFirstName((practiceRow.practice_name ?? user.email.split("@")[0]).split(" ")[0]);
-        if (practiceRow.status === "delivered") {
-          const { data: reportRow } = await sb
-            .from("reports")
-            .select("*")
-            .eq("practice_id", practiceRow.id)
-            .maybeSingle();
-          if (cancelled) return;
-          setCurrentReport({
-            state: "delivered",
-            deliveredAt: reportRow?.delivered_at ?? undefined,
-            data: (reportRow?.computation_output ?? null) as Report["data"],
-          });
-        } else {
-          setCurrentReport({ state: "pending" });
-        }
-        setHydrated(true);
-        return;
-      }
-
-      // Local fallback (pre-Supabase) keeps existing URL-param flow alive.
-      if (params.get("ready") === "1") {
-        const data =
-          params.get("demo") === "1"
-            ? getSampleReportData(intake.get()?.zip || "94110")
-            : undefined;
-        report.markDelivered(data);
-        router.replace("/dashboard");
-        return;
-      }
-      if (params.get("demo") === "1") {
-        const data = getSampleReportData(intake.get()?.zip || "94110");
-        report.set({
-          state: "delivered",
-          deliveredAt: new Date().toISOString(),
-          data,
-        });
-        router.replace("/dashboard");
-        return;
-      }
-      setCurrentIntake(intake.get());
-      setCurrentReport(report.get());
-      setFirstName(account.get()?.firstName?.trim() ?? "");
-      setHydrated(true);
-    }
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [params, router]);
-
-  if (!hydrated) {
-    return <div className="text-sm text-ink-400">Loading...</div>;
+  if (loading || !state) {
+    return <div className="text-sm text-ink-400">Loading…</div>;
   }
 
+  const firstName = state.practice?.practiceName?.trim().split(" ")[0] ?? "";
   const greeting = firstName ? `Welcome back, ${firstName}.` : "Welcome.";
 
-  if (!currentIntake) return <StateNoIntake greeting={greeting} />;
-  if (currentReport?.state === "delivered") {
+  if (state.status === "none") return <StateNoIntake greeting={greeting} />;
+
+  const ready = state.status === "report_ready" || state.status === "delivered";
+  if (ready && state.report) {
     return (
       <StateDelivered
         greeting={greeting}
-        deliveredAt={currentReport.deliveredAt}
-        data={currentReport.data ?? null}
+        report={state.report}
+        unlocked={state.unlocked}
+        onUnlock={startCheckout}
+        checkingOut={checkingOut}
       />
     );
   }
-  return (
-    <StatePending
-      greeting={greeting}
-      submittedAt={currentIntake.submittedAt}
-    />
-  );
+
+  return <StatePending greeting={greeting} />;
 }
 
 function PageHeader({
@@ -168,8 +65,8 @@ function StateNoIntake({ greeting }: { greeting: string }) {
       <PageHeader
         greeting={greeting}
         status={
-          <Link href="/intake" className="text-accent hover:underline">
-            Start your intake →
+          <Link href="/signup" className="text-accent hover:underline">
+            Start your assessment →
           </Link>
         }
       />
@@ -178,11 +75,11 @@ function StateNoIntake({ greeting }: { greeting: string }) {
           Let&rsquo;s build your benchmark report.
         </h3>
         <p className="mt-2 text-sm text-ink-500">
-          Five minutes of intake. Report in 24 hours.
+          Five minutes of intake. Your benchmarked report in minutes.
         </p>
         <div className="mt-5">
           <Link
-            href="/intake"
+            href="/signup"
             className="inline-flex items-center justify-center rounded-md bg-ink-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-ink-700"
           >
             Start intake →
@@ -199,23 +96,13 @@ function StateNoIntake({ greeting }: { greeting: string }) {
   );
 }
 
-function StatePending({
-  greeting,
-  submittedAt,
-}: {
-  greeting: string;
-  submittedAt: string;
-}) {
-  const eta = expectedDelivery(submittedAt);
+function StatePending({ greeting }: { greeting: string }) {
   return (
     <div className="space-y-8">
       <PageHeader
         greeting={greeting}
         status={
-          <Link
-            href="/reports"
-            className="text-accent hover:underline"
-          >
+          <Link href="/reports" className="text-accent hover:underline">
             Track report status →
           </Link>
         }
@@ -227,8 +114,8 @@ function StatePending({
               Your report is being built.
             </p>
             <p className="mt-1 text-sm text-ink-500">
-              Submitted {formatDateTime(submittedAt)} &middot; Expected{" "}
-              {formatDateTime(eta.toISOString())}
+              This usually takes under a minute. No payment until it&rsquo;s
+              ready.
             </p>
           </div>
           <Link
@@ -251,32 +138,44 @@ function StatePending({
 
 function StateDelivered({
   greeting,
-  deliveredAt,
-  data,
+  report,
+  unlocked,
+  onUnlock,
+  checkingOut,
 }: {
   greeting: string;
-  deliveredAt?: string;
-  data: ReportData | null;
+  report: import("@/lib/report/gate").GatedReport;
+  unlocked: boolean;
+  onUnlock: () => void;
+  checkingOut: boolean;
 }) {
   return (
     <div className="space-y-8">
       <PageHeader
         greeting={greeting}
         status={
-          <span>
-            Report delivered{" "}
-            {deliveredAt ? formatDateTime(deliveredAt) : ""}.{" "}
-            <Link href="/reports" className="text-accent hover:underline">
-              View full report →
-            </Link>
-          </span>
+          <Link href="/reports" className="text-accent hover:underline">
+            View full report →
+          </Link>
         }
       />
+      {!unlocked && (
+        <UnlockBanner
+          teaserUsd={report.teaserUsd}
+          onUnlock={onUnlock}
+          busy={checkingOut}
+        />
+      )}
       <div>
         <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-ink-400">
           At a glance
         </p>
-        <GlanceTiles data={data} />
+        <GlanceTiles
+          data={report}
+          unlocked={unlocked}
+          onUnlock={onUnlock}
+          busy={checkingOut}
+        />
       </div>
       <div className="rounded-xl border border-canvas-border bg-canvas px-6 py-6 shadow-sm">
         <h3 className="text-base font-semibold text-ink-900">
@@ -286,9 +185,9 @@ function StateDelivered({
           <li className="flex gap-3">
             <Bullet />
             <span>
-              {data
-                ? `Open ${data.worstCarrier.name} first. They're your single biggest gap.`
-                : "Use the carrier ranking to prioritize your renegotiation call."}{" "}
+              {unlocked
+                ? `Open ${report.worstCarrier.name} first — your single biggest gap.`
+                : "Unlock your report to see which carrier to renegotiate first."}{" "}
               Call your provider rep and ask for the published UCR rates.
             </span>
           </li>
