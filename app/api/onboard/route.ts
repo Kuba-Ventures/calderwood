@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 
   // 1. Create the auth user (pre-confirmed). Surface "already registered" as 409
   //    so the wizard can route them to sign-in instead.
-  const { error: createErr } = await sb.auth.admin.createUser({
+  const { data: created, error: createErr } = await sb.auth.admin.createUser({
     email,
     password: body.password,
     email_confirm: true,
@@ -84,6 +84,14 @@ export async function POST(request: Request) {
       { error: dup ? "account_exists" : createErr.message },
       { status: dup ? 409 : 500 }
     );
+  }
+  const userId = created.user?.id;
+
+  // If anything after account creation fails, delete the just-created auth user
+  // so the email isn't stranded (createUser succeeded but the practice didn't —
+  // a retry would otherwise hit "account_exists" forever).
+  async function rollbackAuthUser() {
+    if (userId) await sb.auth.admin.deleteUser(userId).catch(() => {});
   }
 
   const fee = body.fee;
@@ -132,6 +140,7 @@ export async function POST(request: Request) {
     if (parsed.entries.length === 0) {
       // Roll back so the user can retry cleanly with a different file/method.
       await sb.from("practices").delete().eq("id", practice.id);
+      await rollbackAuthUser();
       return NextResponse.json(
         {
           error: "fee_parse_failed",
@@ -166,6 +175,7 @@ export async function POST(request: Request) {
       parsedCount: parsed.entries.length,
     });
   } catch (err) {
+    await rollbackAuthUser();
     return NextResponse.json(
       { error: err instanceof Error ? err.message : String(err) },
       { status: 500 }
