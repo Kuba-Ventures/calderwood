@@ -21,6 +21,8 @@ export type PracticeRow = {
   recredentialing_dates: Record<string, string> | null;
   created_at: string;
   stripe_payment_id: string | null;
+  paid_at: string | null;
+  fee_input_method: "csv" | "xlsx" | "paste" | "manual" | "eob" | null;
   status: PracticeStatus;
 };
 

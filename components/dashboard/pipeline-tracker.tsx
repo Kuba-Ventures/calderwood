@@ -1,21 +1,63 @@
 "use client";
 
-// Domino's-style horizontal tracker. Bar starts at 25% (Intake received is
-// instant) and grows the remaining 75% over the 24-hour window. Active
-// stage pulses. Auto-ticks every 30s. Real backend status replaces this
-// when Supabase lands.
+// Horizontal pipeline tracker. Preferred mode is status-driven: the `status`
+// prop reflects real practices.status writes from the generation job, so the
+// stages advance with actual work (no fake timer). A legacy timer mode
+// (submittedAt only) is kept for the pre-Supabase localStorage path.
 
 import { useEffect, useMemo, useState } from "react";
 import { expectedDelivery, formatDateTime } from "@/lib/storage";
+import type { PracticeStatus } from "@/lib/types/pipeline";
 
 const PIPELINE_STAGES = [
   { label: "Intake received", short: "Received" },
-  { label: "Benchmarking", short: "Benchmark" },
-  { label: "Code analysis", short: "Analysis" },
-  { label: "PDF generation", short: "PDF" },
+  { label: "Crunching benchmarks", short: "Benchmark" },
+  { label: "Scoring carriers", short: "Scoring" },
+  { label: "Report ready", short: "Ready" },
 ] as const;
 
-export function PipelineTracker({ submittedAt }: { submittedAt: string }) {
+// Real status -> furthest-reached stage. report_ready/delivered = all done.
+const STATUS_INDEX: Record<PracticeStatus, number> = {
+  awaiting_uploads: 0,
+  parsing: 1,
+  review_queue: 2,
+  report_ready: PIPELINE_STAGES.length,
+  delivered: PIPELINE_STAGES.length,
+};
+
+export function PipelineTracker({
+  submittedAt,
+  status,
+}: {
+  submittedAt?: string;
+  status?: PracticeStatus | null;
+}) {
+  if (status) {
+    return <StatusTracker status={status} />;
+  }
+  return <TimerTracker submittedAt={submittedAt ?? new Date(0).toISOString()} />;
+}
+
+function StatusTracker({ status }: { status: PracticeStatus }) {
+  const activeIndex = STATUS_INDEX[status] ?? 0;
+  const done = activeIndex >= PIPELINE_STAGES.length;
+  const progress = done
+    ? 1
+    : (activeIndex + 0.5) / PIPELINE_STAGES.length;
+  const caption = done
+    ? "Your report is ready."
+    : "Crunching your benchmarks — this usually takes under a minute.";
+  return (
+    <div>
+      <p className="text-base text-ink-500">{caption}</p>
+      <div className="mt-10">
+        <TrackerBar activeIndex={activeIndex} progress={progress} />
+      </div>
+    </div>
+  );
+}
+
+function TimerTracker({ submittedAt }: { submittedAt: string }) {
   const eta = useMemo(() => expectedDelivery(submittedAt), [submittedAt]);
   const totalMs = useMemo(
     () => eta.getTime() - new Date(submittedAt).getTime(),
@@ -47,6 +89,21 @@ export function PipelineTracker({ submittedAt }: { submittedAt: string }) {
       </p>
 
       <div className="mt-10">
+        <TrackerBar activeIndex={activeIndex} progress={progress} />
+      </div>
+    </div>
+  );
+}
+
+function TrackerBar({
+  activeIndex,
+  progress,
+}: {
+  activeIndex: number;
+  progress: number;
+}) {
+  return (
+    <>
         <div className="relative px-3 sm:px-5">
           <div className="absolute left-3 right-3 top-1/2 h-2 -translate-y-1/2 overflow-hidden rounded-full bg-canvas-tint2 sm:left-5 sm:right-5" />
           <div
@@ -121,8 +178,7 @@ export function PipelineTracker({ submittedAt }: { submittedAt: string }) {
             );
           })}
         </ol>
-      </div>
-    </div>
+    </>
   );
 }
 

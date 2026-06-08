@@ -4,30 +4,48 @@ import { useMemo, useState } from "react";
 import {
   CarrierRow,
   CodeRow,
-  ReportData,
   formatPct,
   formatUsd,
 } from "@/lib/storage";
+import type { GatedReport } from "@/lib/report/gate";
+import { LockCard, LockedInline } from "@/components/report/lock-overlay";
 
-export function SummaryCards({ data }: { data: ReportData }) {
-  const codesBelow = data.codes.filter((c) => c.gapPerProc > 0).length;
+export function SummaryCards({
+  data,
+  unlocked = true,
+}: {
+  data: GatedReport;
+  unlocked?: boolean;
+}) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <SummaryCard
         label="Estimated annual underpayment"
-        value={formatUsd(data.annualUnderpaymentUsd)}
+        value={
+          <LockedInline unlocked={unlocked}>
+            {formatUsd(data.annualUnderpaymentUsd)}
+          </LockedInline>
+        }
         sublabel="vs UCR median in your ZIP"
         tone="warn"
       />
       <SummaryCard
         label="Biggest opportunity"
-        value={data.worstCarrier.name}
-        sublabel={`${formatUsd(data.worstCarrier.annualGapUsd)} / yr below UCR`}
+        value={
+          <LockedInline unlocked={unlocked} placeholder="••••••">
+            {data.worstCarrier.name}
+          </LockedInline>
+        }
+        sublabel={
+          unlocked
+            ? `${formatUsd(data.worstCarrier.annualGapUsd)} / yr below UCR`
+            : "Unlock to see your biggest carrier gap"
+        }
       />
       <SummaryCard
         label="Codes below UCR"
-        value={`${codesBelow} of ${data.codes.length}`}
-        sublabel="in your fee schedule"
+        value={`${data.codesBelowP75.count} of ${data.codesBelowP75.total}`}
+        sublabel="in your top codes"
       />
     </div>
   );
@@ -40,7 +58,7 @@ function SummaryCard({
   tone = "neutral",
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   sublabel: string;
   tone?: "neutral" | "warn";
 }) {
@@ -63,10 +81,16 @@ export function CarrierRankingChart({
   carriers,
   onSelect,
   selected,
+  unlocked = true,
+  onUnlock,
+  busy,
 }: {
   carriers: CarrierRow[];
   onSelect?: (carrier: CarrierRow | null) => void;
   selected?: string | null;
+  unlocked?: boolean;
+  onUnlock?: () => void;
+  busy?: boolean;
 }) {
   const max = Math.max(...carriers.map((c) => c.annualGapUsd), 1);
   return (
@@ -77,10 +101,12 @@ export function CarrierRankingChart({
             Carriers ranked by annual underpayment
           </h3>
           <p className="mt-1 text-xs text-ink-500">
-            Click a carrier to filter the code table below.
+            {unlocked
+              ? "Click a carrier to filter the code table below."
+              : "Unlock to see what each carrier owes you."}
           </p>
         </div>
-        {selected && (
+        {unlocked && selected && (
           <button
             type="button"
             onClick={() => onSelect?.(null)}
@@ -90,51 +116,58 @@ export function CarrierRankingChart({
           </button>
         )}
       </div>
-      <ul className="mt-5 space-y-2.5">
-        {carriers.map((c) => {
-          const w = (c.annualGapUsd / max) * 100;
-          const isSelected = selected === c.name;
-          const isWorst = c === carriers[0];
-          return (
-            <li key={c.name}>
-              <button
-                type="button"
-                onClick={() => onSelect?.(isSelected ? null : c)}
-                className={`group block w-full rounded-md px-2 py-1.5 text-left transition ${
-                  isSelected ? "bg-canvas-tint" : "hover:bg-canvas-tint"
-                }`}
-              >
-                <div className="flex items-center justify-between text-sm">
-                  <span
-                    className={`font-medium ${
-                      isSelected ? "text-ink-900" : "text-ink-700"
-                    }`}
-                  >
-                    {c.name}
-                    <span className="ml-2 text-xs font-normal text-ink-400">
-                      {formatPct(c.share)} of PPO volume
+      <LockCard unlocked={unlocked} onUnlock={onUnlock} busy={busy}>
+        <ul className="mt-5 space-y-2.5">
+          {carriers.map((c, i) => {
+            const w = unlocked ? (c.annualGapUsd / max) * 100 : 85 - i * 12;
+            const isSelected = selected === c.name;
+            const isWorst = c === carriers[0];
+            return (
+              <li key={c.name}>
+                <button
+                  type="button"
+                  disabled={!unlocked}
+                  onClick={() => onSelect?.(isSelected ? null : c)}
+                  className={`group block w-full rounded-md px-2 py-1.5 text-left transition ${
+                    isSelected ? "bg-canvas-tint" : "hover:bg-canvas-tint"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-sm">
+                    <span
+                      className={`font-medium ${
+                        isSelected ? "text-ink-900" : "text-ink-700"
+                      }`}
+                    >
+                      {c.name}
+                      {unlocked && (
+                        <span className="ml-2 text-xs font-normal text-ink-400">
+                          {formatPct(c.share)} of PPO volume
+                        </span>
+                      )}
                     </span>
-                  </span>
-                  <span className="font-mono text-sm text-ink-900">
-                    {formatUsd(c.annualGapUsd)}
-                  </span>
-                </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-canvas-tint2">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      isWorst ? "bg-accent" : "bg-accent/60"
-                    }`}
-                    style={{ width: `${w}%` }}
-                  />
-                </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-ink-400">
-                  <span>{formatPct(c.gapPct)} below UCR median</span>
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+                    <span className="font-mono text-sm text-ink-900">
+                      {unlocked ? formatUsd(c.annualGapUsd) : "$••,•••"}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-canvas-tint2">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        isWorst ? "bg-accent" : "bg-accent/60"
+                      }`}
+                      style={{ width: `${w}%` }}
+                    />
+                  </div>
+                  {unlocked && c.gapPct > 0 && (
+                    <div className="mt-1 flex items-center justify-between text-xs text-ink-400">
+                      <span>{formatPct(c.gapPct)} below UCR median</span>
+                    </div>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </LockCard>
     </div>
   );
 }
@@ -144,9 +177,11 @@ type SortKey = "annualGap" | "gapPerProc" | "code" | "annualVolume";
 export function CodeGapTable({
   codes,
   filterCarrier,
+  unlocked = true,
 }: {
   codes: CodeRow[];
   filterCarrier?: CarrierRow | null;
+  unlocked?: boolean;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("annualGap");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
@@ -262,9 +297,11 @@ export function CodeGapTable({
                       below ? "text-red-600" : "text-gain-ink"
                     }`}
                   >
-                    {formatUsd(below ? -c.gapPerProc : Math.abs(c.gapPerProc), {
-                      signed: true,
-                    })}
+                    <LockedInline unlocked={unlocked} placeholder="$•••">
+                      {formatUsd(below ? -c.gapPerProc : Math.abs(c.gapPerProc), {
+                        signed: true,
+                      })}
+                    </LockedInline>
                   </td>
                   <td className="px-4 py-3 text-right text-ink-500">
                     {c.annualVolume.toLocaleString()}
@@ -274,9 +311,11 @@ export function CodeGapTable({
                       c.annualGap > 0 ? "text-red-600" : "text-gain-ink"
                     }`}
                   >
-                    {formatUsd(c.annualGap > 0 ? -c.annualGap : Math.abs(c.annualGap), {
-                      signed: true,
-                    })}
+                    <LockedInline unlocked={unlocked}>
+                      {formatUsd(c.annualGap > 0 ? -c.annualGap : Math.abs(c.annualGap), {
+                        signed: true,
+                      })}
+                    </LockedInline>
                   </td>
                 </tr>
               );

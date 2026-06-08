@@ -3,9 +3,13 @@
 import {
   CarrierRow,
   CodeRow,
-  ReportData,
   formatUsd,
 } from "@/lib/storage";
+import { LockCard, LockedInline } from "@/components/report/lock-overlay";
+
+// Structural subset the tiles need — satisfied by both ReportData and the
+// gated report shape (which differs only in worstCarrier, unused here).
+type ReportLike = { codes: CodeRow[]; carriers: CarrierRow[] };
 
 // Estimate where yourFee sits in the local UCR distribution. Median = 50th,
 // p75 = 75th. Linear extrapolation, clamped 1..99. Approximation only,
@@ -17,12 +21,28 @@ function estimatePercentile(row: CodeRow): number {
   return Math.max(1, Math.min(99, Math.round(p)));
 }
 
-export function GlanceTiles({ data }: { data: ReportData | null }) {
+export function GlanceTiles({
+  data,
+  unlocked = true,
+  onUnlock,
+  busy,
+}: {
+  data: ReportLike | null;
+  unlocked?: boolean;
+  onUnlock?: () => void;
+  busy?: boolean;
+}) {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* Percentile is a non-gated teaser — always visible. */}
       <PercentileTile data={data} />
-      <TopCodesTile data={data} />
-      <CarrierRevenueTile data={data} />
+      <TopCodesTile data={data} unlocked={unlocked} />
+      <CarrierRevenueTile
+        data={data}
+        unlocked={unlocked}
+        onUnlock={onUnlock}
+        busy={busy}
+      />
     </div>
   );
 }
@@ -71,7 +91,7 @@ function EmptyTile() {
   );
 }
 
-function PercentileTile({ data }: { data: ReportData | null }) {
+function PercentileTile({ data }: { data: ReportLike | null }) {
   const rows = data?.codes.slice(0, 5) ?? [];
   return (
     <TileShell title="Percentile rank in your ZIP" empty={!data}>
@@ -114,7 +134,13 @@ function PercentileTile({ data }: { data: ReportData | null }) {
   );
 }
 
-function TopCodesTile({ data }: { data: ReportData | null }) {
+function TopCodesTile({
+  data,
+  unlocked,
+}: {
+  data: ReportLike | null;
+  unlocked: boolean;
+}) {
   const rows = data?.codes.slice(0, 5) ?? [];
   return (
     <TileShell title="Top codes by annual impact" empty={!data}>
@@ -137,10 +163,14 @@ function TopCodesTile({ data }: { data: ReportData | null }) {
                 {truncate(row.label, 22)}
               </td>
               <td className="py-2 pr-2 text-right text-xs font-medium text-red-700 tabular-nums">
-                {formatUsd(row.gapPerProc)}
+                <LockedInline unlocked={unlocked} placeholder="$•••">
+                  {formatUsd(row.gapPerProc)}
+                </LockedInline>
               </td>
               <td className="py-2 text-right font-serif text-sm font-medium text-red-700 tabular-nums">
-                {formatUsd(row.annualGap)}
+                <LockedInline unlocked={unlocked}>
+                  {formatUsd(row.annualGap)}
+                </LockedInline>
               </td>
             </tr>
           ))}
@@ -150,32 +180,45 @@ function TopCodesTile({ data }: { data: ReportData | null }) {
   );
 }
 
-function CarrierRevenueTile({ data }: { data: ReportData | null }) {
+function CarrierRevenueTile({
+  data,
+  unlocked,
+  onUnlock,
+  busy,
+}: {
+  data: ReportLike | null;
+  unlocked: boolean;
+  onUnlock?: () => void;
+  busy?: boolean;
+}) {
   const rows: CarrierRow[] = data?.carriers.slice(0, 5) ?? [];
+  // When locked the dollar values are zeroed; show even bars under the blur.
   const max = Math.max(...rows.map((r) => r.annualGapUsd), 1);
   return (
     <TileShell title="Recoverable revenue by carrier" empty={!data}>
-      <ul className="space-y-2.5">
-        {rows.map((c) => {
-          const w = (c.annualGapUsd / max) * 100;
-          return (
-            <li key={c.name}>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-ink-700">{c.name}</span>
-                <span className="font-serif text-sm font-medium text-accent-ink tabular-nums">
-                  {formatUsd(c.annualGapUsd)}
-                </span>
-              </div>
-              <div className="mt-1 h-2 overflow-hidden rounded-full bg-canvas-tint2">
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{ width: `${w}%` }}
-                />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      <LockCard unlocked={unlocked} onUnlock={onUnlock} busy={busy}>
+        <ul className="space-y-2.5">
+          {rows.map((c, i) => {
+            const w = unlocked ? (c.annualGapUsd / max) * 100 : 90 - i * 14;
+            return (
+              <li key={c.name}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-ink-700">{c.name}</span>
+                  <span className="font-serif text-sm font-medium text-accent-ink tabular-nums">
+                    {unlocked ? formatUsd(c.annualGapUsd) : "$••,•••"}
+                  </span>
+                </div>
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-canvas-tint2">
+                  <div
+                    className="h-full rounded-full bg-accent"
+                    style={{ width: `${w}%` }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </LockCard>
     </TileShell>
   );
 }
