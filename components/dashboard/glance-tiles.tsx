@@ -141,7 +141,9 @@ function TopCodesTile({
   data: ReportLike | null;
   unlocked: boolean;
 }) {
-  const rows = data?.codes.slice(0, 5) ?? [];
+  // Benchmarked codes only, top 5 by recoverable. Recoverable is a positive
+  // opportunity, so render it as gain (green), not a red loss.
+  const rows = (data?.codes ?? []).filter((c) => c.ucrP75 > 0).slice(0, 5);
   return (
     <TileShell title="Top codes by annual impact" empty={!data}>
       <table className="w-full text-sm">
@@ -149,7 +151,7 @@ function TopCodesTile({
           <tr>
             <th className="py-1.5 pr-2 font-medium">Code</th>
             <th className="py-1.5 pr-2 font-medium">Procedure</th>
-            <th className="py-1.5 pr-2 text-right font-medium">Gap</th>
+            <th className="py-1.5 pr-2 text-right font-medium">Per proc</th>
             <th className="py-1.5 text-right font-medium">Annual</th>
           </tr>
         </thead>
@@ -162,14 +164,14 @@ function TopCodesTile({
               <td className="py-2 pr-2 text-xs text-ink-700">
                 {truncate(row.label, 22)}
               </td>
-              <td className="py-2 pr-2 text-right text-xs font-medium text-red-700 tabular-nums">
+              <td className="py-2 pr-2 text-right text-xs font-medium text-gain-ink tabular-nums">
                 <LockedInline unlocked={unlocked} placeholder="$•••">
-                  {formatUsd(row.gapPerProc)}
+                  {formatUsd(Math.max(0, row.gapPerProc))}
                 </LockedInline>
               </td>
-              <td className="py-2 text-right font-serif text-sm font-medium text-red-700 tabular-nums">
+              <td className="py-2 text-right font-serif text-sm font-medium text-gain-ink tabular-nums">
                 <LockedInline unlocked={unlocked}>
-                  {formatUsd(row.annualGap)}
+                  {formatUsd(Math.max(0, row.annualGap))}
                 </LockedInline>
               </td>
             </tr>
@@ -192,6 +194,18 @@ function CarrierRevenueTile({
   busy?: boolean;
 }) {
   const rows: CarrierRow[] = data?.carriers.slice(0, 5) ?? [];
+  // Report generated but no per-carrier rates → can't rank carriers. Say so
+  // instead of showing a blank/blurred tile.
+  if (data && rows.length === 0) {
+    return (
+      <TileShell title="Recoverable revenue by carrier" empty={false}>
+        <p className="text-xs leading-relaxed text-ink-500">
+          Upload your per-carrier fee schedules to see which carrier underpays
+          you most. Your code-level opportunity is shown in the other tiles.
+        </p>
+      </TileShell>
+    );
+  }
   // When locked the dollar values are zeroed; show even bars under the blur.
   const max = Math.max(...rows.map((r) => r.annualGapUsd), 1);
   return (

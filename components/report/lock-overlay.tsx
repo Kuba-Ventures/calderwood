@@ -45,7 +45,7 @@ export function LockedInline({
   return (
     <span
       className="select-none text-ink-300 blur-[3px]"
-      aria-label="Locked — unlock to view"
+      aria-label="Locked, unlock to view"
     >
       {placeholder}
     </span>
@@ -130,7 +130,7 @@ export function PaymentConfirmation({ unlocked }: { unlocked: boolean }) {
           </span>
           <div>
             <p className="text-base font-semibold text-gain-ink">
-              Payment successful — your full report is unlocked.
+              Payment successful. Your full report is unlocked.
             </p>
             <p className="mt-0.5 text-sm text-ink-600">
               Every carrier and code-level number is now live below, and your PDF
@@ -152,11 +152,11 @@ export function PaymentConfirmation({ unlocked }: { unlocked: boolean }) {
         </span>
         <div>
           <p className="text-base font-semibold text-accent-ink">
-            Payment received — finalizing your report…
+            Payment received. Finalizing your report…
           </p>
           <p className="mt-0.5 text-sm text-ink-500">
             This takes a few seconds. Your full numbers will appear
-            automatically — no need to refresh.
+            automatically. No need to refresh.
           </p>
         </div>
       </div>
@@ -180,7 +180,7 @@ export function UnlockBanner({
           <p className="text-base font-semibold text-accent-ink">
             Your report is ready
             {teaserUsd > 0
-              ? ` — we found ${formatUsd(teaserUsd)}+ in annual opportunity.`
+              ? `. We found ${formatUsd(teaserUsd)}+ in annual opportunity.`
               : "."}
           </p>
           <p className="mt-1 text-sm text-ink-500">
@@ -194,7 +194,7 @@ export function UnlockBanner({
           className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-ink-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-ink-700 disabled:opacity-60"
         >
           <LockIcon className="h-4 w-4" />
-          {busy ? "Starting checkout…" : "Unlock the full report — $199"}
+          {busy ? "Starting checkout…" : "Unlock the full report · $199"}
         </button>
       </div>
     </div>

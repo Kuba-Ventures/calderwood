@@ -127,7 +127,7 @@ export default function IntakePage() {
           Update your fee schedule
         </h1>
         <p className="mt-1 text-sm text-ink-500">
-          {practiceName ? `${practiceName} — ` : ""}
+          {practiceName ? `${practiceName}: ` : ""}
           submitting new fees rebuilds your report. You won&rsquo;t be re-charged
           if you&rsquo;ve already unlocked.
         </p>

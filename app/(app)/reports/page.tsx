@@ -94,7 +94,7 @@ function PendingView({
         {isEob ? (
           <div className="mt-4 rounded-md border border-accent/20 bg-accent/5 px-4 py-3 text-sm text-accent-ink">
             Your EOB is queued for our team to extract fees by hand. We&rsquo;ll
-            email you the moment your report is ready — no payment until then.
+            email you the moment your report is ready. No payment until then.
           </div>
         ) : (
           <div className="mt-6">
@@ -107,11 +107,6 @@ function PendingView({
             {genError} Please refresh, or email hello@calderwoodtech.com.
           </p>
         )}
-
-        <p className="mt-8 text-sm text-ink-500">
-          We only ask for payment once your report is ready and we&rsquo;ve found
-          a recoverable opportunity.
-        </p>
       </div>
     </div>
   );

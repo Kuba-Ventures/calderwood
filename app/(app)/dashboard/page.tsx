@@ -31,7 +31,7 @@ export default function DashboardPage() {
   }
 
   const firstName = state.practice?.practiceName?.trim().split(" ")[0] ?? "";
-  const greeting = firstName ? `Welcome back, ${firstName}.` : "Welcome.";
+  const greeting = firstName ? `Welcome, ${firstName}.` : "Welcome.";
 
   if (state.status === "none") return <StateNoIntake greeting={greeting} />;
 
@@ -204,9 +204,11 @@ function StateDelivered({
           <li className="flex gap-3">
             <Bullet />
             <span>
-              {unlocked
-                ? `Open ${report.worstCarrier.name} first — your single biggest gap.`
-                : "Unlock your report to see which carrier to renegotiate first."}{" "}
+              {!unlocked
+                ? "Unlock your report to see which carrier to renegotiate first."
+                : report.worstCarrier.name
+                  ? `Open ${report.worstCarrier.name} first. Your single biggest gap.`
+                  : "Start with your highest-recoverable codes in the report."}{" "}
               Call your provider rep and ask for the published UCR rates.
             </span>
           </li>

@@ -314,7 +314,7 @@ function UploadPane({
 
       {draft.file && !draft.uploadError && draft.previewCount !== null && (
         <p className="mt-2 text-xs text-gain-ink">
-          {draft.file.name} — {draft.previewCount} fee
+          {draft.file.name}: {draft.previewCount} fee
           {draft.previewCount === 1 ? "" : "s"} detected.
         </p>
       )}
@@ -503,7 +503,7 @@ function EobPane({
         <p className="mt-2 text-xs text-red-600">{draft.eobMessage}</p>
       )}
       <p className="mt-3 text-xs text-ink-400">
-        We&rsquo;ll read your fees off the EOB by hand for now — your report
+        We&rsquo;ll read your fees off the EOB by hand for now. Your report
         follows once we&rsquo;ve extracted them.
       </p>
     </div>
@@ -649,7 +649,7 @@ function PdfPane({
       )}
       {draft.pdfStatus === "parsing" && (
         <p className="mt-2 text-xs text-ink-500">
-          Reading your fees and volumes — this can take up to a minute…
+          Reading your fees and volumes. This can take up to a minute…
         </p>
       )}
       {draft.pdfStatus === "done" && (

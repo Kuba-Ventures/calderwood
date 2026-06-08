@@ -46,7 +46,7 @@ function StatusTracker({ status }: { status: PracticeStatus }) {
     : (activeIndex + 0.5) / PIPELINE_STAGES.length;
   const caption = done
     ? "Your report is ready."
-    : "Crunching your benchmarks — this usually takes under a minute.";
+    : "Crunching your benchmarks. This usually takes under a minute.";
   return (
     <div>
       <p className="text-base text-ink-500">{caption}</p>

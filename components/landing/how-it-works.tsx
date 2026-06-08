@@ -77,7 +77,7 @@ export function HowItWorks() {
         <p className="mt-6 max-w-readable pl-12 text-base text-ink-700">
           Your benchmarked report is ready within minutes. Review the
           opportunity we found, then pay $199 to unlock the full breakdown and
-          PDF — no charge until your report is ready.
+          PDF. No charge until your report is ready.
         </p>
       </div>
     </section>
