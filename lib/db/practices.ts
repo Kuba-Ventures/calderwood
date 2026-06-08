@@ -23,6 +23,7 @@ export type PracticeRow = {
   stripe_payment_id: string | null;
   paid_at: string | null;
   fee_input_method: "csv" | "xlsx" | "paste" | "manual" | "eob" | "pdf" | null;
+  phone?: string | null;
   status: PracticeStatus;
 };
 
