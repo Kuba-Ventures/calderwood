@@ -748,8 +748,8 @@ function PdfReview({
         Review what we pulled from your report. Edit a fee or volume, remove a row,
         or add a code we missed. This is what your report is built from.
       </p>
-      <div className="mt-2 max-h-80 overflow-y-auto rounded-md border border-canvas-border">
-        <table className="w-full text-sm">
+      <div className="mt-2 max-h-80 overflow-auto rounded-md border border-canvas-border">
+        <table className="w-full min-w-[20rem] text-sm">
           <thead className="sticky top-0 bg-canvas-tint text-left text-[11px] uppercase tracking-wide text-ink-400">
             <tr>
               <th className="px-3 py-2 font-medium">Code</th>

@@ -294,9 +294,9 @@ export function CodeGapTable({
                 dir={sortDir}
                 onClick={() => toggleSort("code")}
               />
-              <th className="px-4 py-2.5 font-medium">Procedure</th>
-              <th className="px-4 py-2.5 text-right font-medium">Your fee</th>
-              <th className="px-4 py-2.5 text-right font-medium">UCR (75th)</th>
+              <th className="px-3 py-2.5 sm:px-4 font-medium">Procedure</th>
+              <th className="px-3 py-2.5 sm:px-4 text-right font-medium">Your fee</th>
+              <th className="px-3 py-2.5 sm:px-4 text-right font-medium">UCR (75th)</th>
               <ThSort
                 label="Underpayment / proc"
                 active={sortKey === "gapPerProc"}
@@ -331,18 +331,18 @@ export function CodeGapTable({
                   key={c.code}
                   className="border-t border-canvas-border align-top"
                 >
-                  <td className="px-4 py-3 font-mono text-xs text-ink-700">
+                  <td className="px-3 py-3 sm:px-4 font-mono text-xs text-ink-700">
                     {c.code}
                   </td>
-                  <td className="px-4 py-3 text-ink-700">{c.label}</td>
-                  <td className="px-4 py-3 text-right text-ink-900">
+                  <td className="px-3 py-3 sm:px-4 text-ink-700">{c.label}</td>
+                  <td className="px-3 py-3 sm:px-4 text-right text-ink-900">
                     {formatUsd(c.yourFee, { cents: true })}
                   </td>
-                  <td className="px-4 py-3 text-right text-ink-500">
+                  <td className="px-3 py-3 sm:px-4 text-right text-ink-500">
                     {formatUsd(c.ucrP75, { cents: true })}
                   </td>
                   <td
-                    className={`px-4 py-3 text-right font-medium ${
+                    className={`px-3 py-3 sm:px-4 text-right font-medium ${
                       recoverablePerProc > 0 ? "text-red-600" : "text-ink-400"
                     }`}
                   >
@@ -350,11 +350,11 @@ export function CodeGapTable({
                       {formatUsd(recoverablePerProc)}
                     </LockedInline>
                   </td>
-                  <td className="px-4 py-3 text-right text-ink-500">
+                  <td className="px-3 py-3 sm:px-4 text-right text-ink-500">
                     {c.annualVolume.toLocaleString()}
                   </td>
                   <td
-                    className={`px-4 py-3 text-right font-medium ${
+                    className={`px-3 py-3 sm:px-4 text-right font-medium ${
                       annualRecoverable > 0 ? "text-red-600" : "text-ink-400"
                     }`}
                   >
@@ -387,7 +387,7 @@ function ThSort({
 }) {
   return (
     <th
-      className={`px-4 py-2.5 font-medium ${
+      className={`px-3 py-2.5 sm:px-4 font-medium ${
         align === "right" ? "text-right" : "text-left"
       }`}
     >
