@@ -336,10 +336,10 @@ export function CodeGapTable({
                   </td>
                   <td className="px-4 py-3 text-ink-700">{c.label}</td>
                   <td className="px-4 py-3 text-right text-ink-900">
-                    {formatUsd(c.yourFee)}
+                    {formatUsd(c.yourFee, { cents: true })}
                   </td>
                   <td className="px-4 py-3 text-right text-ink-500">
-                    {formatUsd(c.ucrP75)}
+                    {formatUsd(c.ucrP75, { cents: true })}
                   </td>
                   <td
                     className={`px-4 py-3 text-right font-medium ${

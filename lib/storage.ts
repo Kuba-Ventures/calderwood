@@ -181,12 +181,17 @@ export function expectedDelivery(submittedAt: string): Date {
   return d;
 }
 
-export function formatUsd(n: number, opts: { signed?: boolean } = {}): string {
-  const abs = Math.abs(Math.round(n));
+export function formatUsd(
+  n: number,
+  opts: { signed?: boolean; cents?: boolean } = {}
+): string {
+  const digits = opts.cents ? 2 : 0;
+  const abs = opts.cents ? Math.abs(n) : Math.abs(Math.round(n));
   const formatted = abs.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
   });
   if (opts.signed) {
     return n < 0 ? `-${formatted}` : `+${formatted}`;
