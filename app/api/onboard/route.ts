@@ -12,7 +12,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { serviceSupabase } from "@/lib/db/server";
-import { insertFeeSchedule, upsertPractice } from "@/lib/db/practices";
+import { insertFeeSchedule, insertFrequencies, upsertPractice } from "@/lib/db/practices";
 import { parseUpload } from "@/lib/parser/dispatch";
 import type { ProviderBucket } from "@/lib/types/pipeline";
 
@@ -30,6 +30,15 @@ const feeSchema = z.discriminatedUnion("method", [
   z.object({ method: z.literal("paste"), rows: rowsSchema }),
   z.object({ method: z.literal("manual"), rows: rowsSchema }),
   z.object({ method: z.literal("eob"), eobPath: z.string().min(1), filename: z.string().optional() }),
+  // PDF was extracted client-side via /api/parse-pdf; we get code+fee rows plus
+  // the real annual volumes pulled from the report's Quantity column.
+  z.object({
+    method: z.literal("pdf"),
+    rows: rowsSchema,
+    frequencies: z.record(z.string(), z.number()).optional(),
+    pdfPath: z.string().optional(),
+    filename: z.string().optional(),
+  }),
 ]);
 
 const bodySchema = z.object({
@@ -137,11 +146,18 @@ export async function POST(request: Request) {
       practice_id: practice.id,
       schedule_type: "master",
       carrier: null,
-      raw_file_url: null,
+      raw_file_url: fee.method === "pdf" ? fee.pdfPath ?? null : null,
       parsed_data: parsed.entries,
       parse_confidence: parsed.confidence,
       parse_notes: parsed.notes.join("; ") || null,
     });
+
+    // PDF reports carry the practice's real annual volumes — persist them so
+    // generateReport uses actual frequencies instead of the per-provider
+    // defaults.
+    if (fee.method === "pdf" && fee.frequencies) {
+      await insertFrequencies(sb, practice.id, fee.frequencies);
+    }
 
     return NextResponse.json({
       ok: true,

@@ -11,10 +11,11 @@
 
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
 import { parseCsv } from "@/lib/parser/csv";
+import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 import { TOP_CDT } from "@/lib/data/top-cdt";
 
-export type FeeTab = "upload" | "paste" | "manual" | "eob";
-export type FeeMethod = "csv" | "xlsx" | "paste" | "manual" | "eob";
+export type FeeTab = "upload" | "pdf" | "paste" | "manual" | "eob";
+export type FeeMethod = "csv" | "xlsx" | "pdf" | "paste" | "manual" | "eob";
 
 export type ManualRow = { code: string; fee: string };
 
@@ -26,6 +27,14 @@ export type FeeDraft = {
   csvText: string | null;
   uploadError: string | null;
   previewCount: number | null;
+  // pdf (PM "Procedure Summary" report — extracted via Claude)
+  pdfFile: File | null;
+  pdfStatus: "idle" | "uploading" | "parsing" | "done" | "error";
+  pdfPath: string | null;
+  pdfRows: ManualRow[];
+  pdfFrequencies: Record<string, number>;
+  pdfCount: number | null;
+  pdfMessage: string | null;
   // paste
   pasteText: string;
   // manual
@@ -40,6 +49,13 @@ export type FeeDraft = {
 export type FeePayload =
   | { method: "csv" | "xlsx"; csvText: string; filename?: string }
   | { method: "paste" | "manual"; rows: ManualRow[] }
+  | {
+      method: "pdf";
+      rows: ManualRow[];
+      frequencies: Record<string, number>;
+      pdfPath?: string;
+      filename?: string;
+    }
   | { method: "eob"; eobPath: string; filename?: string };
 
 export function emptyFeeDraft(): FeeDraft {
@@ -50,6 +66,13 @@ export function emptyFeeDraft(): FeeDraft {
     csvText: null,
     uploadError: null,
     previewCount: null,
+    pdfFile: null,
+    pdfStatus: "idle",
+    pdfPath: null,
+    pdfRows: [],
+    pdfFrequencies: {},
+    pdfCount: null,
+    pdfMessage: null,
     pasteText: "",
     manual: TOP_CDT.map((c) => ({ code: c.code, fee: "" })),
     eobFile: null,
@@ -78,6 +101,8 @@ export function isFeeValid(d: FeeDraft): boolean {
   switch (d.tab) {
     case "upload":
       return !!d.csvText && (d.previewCount ?? 0) > 0;
+    case "pdf":
+      return d.pdfStatus === "done" && d.pdfRows.length > 0;
     case "paste":
       return parsePasteRows(d.pasteText).length > 0;
     case "manual":
@@ -92,6 +117,16 @@ export function buildFeePayload(d: FeeDraft): FeePayload | null {
     case "upload":
       if (!d.csvText || !d.uploadKind) return null;
       return { method: d.uploadKind, csvText: d.csvText, filename: d.file?.name };
+    case "pdf":
+      return d.pdfRows.length
+        ? {
+            method: "pdf",
+            rows: d.pdfRows,
+            frequencies: d.pdfFrequencies,
+            pdfPath: d.pdfPath ?? undefined,
+            filename: d.pdfFile?.name,
+          }
+        : null;
     case "paste": {
       const rows = parsePasteRows(d.pasteText);
       return rows.length ? { method: "paste", rows } : null;
@@ -107,6 +142,7 @@ export function buildFeePayload(d: FeeDraft): FeePayload | null {
 
 const TABS: [FeeTab, string][] = [
   ["upload", "Upload CSV/XLSX"],
+  ["pdf", "PDF report"],
   ["paste", "Paste"],
   ["manual", "Top 20 codes"],
   ["eob", "EOB image"],
@@ -149,6 +185,7 @@ export function FeeStep({
 
       <div className="mt-6">
         {draft.tab === "upload" && <UploadPane draft={draft} patch={patch} />}
+        {draft.tab === "pdf" && <PdfPane draft={draft} patch={patch} />}
         {draft.tab === "paste" && (
           <PastePane
             value={draft.pasteText}
@@ -468,6 +505,163 @@ function EobPane({
       <p className="mt-3 text-xs text-ink-400">
         We&rsquo;ll read your fees off the EOB by hand for now — your report
         follows once we&rsquo;ve extracted them.
+      </p>
+    </div>
+  );
+}
+
+function PdfPane({
+  draft,
+  patch,
+}: {
+  draft: FeeDraft;
+  patch: (p: Partial<FeeDraft>) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  async function ingest(file: File) {
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      patch({ pdfStatus: "error", pdfMessage: "Please upload a PDF.", pdfFile: file });
+      return;
+    }
+    if (!hasSupabaseEnv()) {
+      patch({ pdfStatus: "error", pdfMessage: "Uploads aren't configured yet." });
+      return;
+    }
+    patch({
+      pdfFile: file,
+      pdfStatus: "uploading",
+      pdfMessage: null,
+      pdfRows: [],
+      pdfFrequencies: {},
+      pdfCount: null,
+      pdfPath: null,
+    });
+    try {
+      // 1. Signed upload URL → upload straight to storage (skips Vercel's body cap).
+      const urlRes = await fetch("/api/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name }),
+      });
+      const urlJson = await urlRes.json();
+      if (!urlRes.ok || !urlJson.token) {
+        patch({ pdfStatus: "error", pdfMessage: urlJson.error || "Upload failed." });
+        return;
+      }
+      const sb = browserSupabase();
+      const up = await sb.storage
+        .from(urlJson.bucket)
+        .uploadToSignedUrl(urlJson.path, urlJson.token, file);
+      if (up.error) {
+        patch({ pdfStatus: "error", pdfMessage: "Upload failed. Try again." });
+        return;
+      }
+
+      // 2. Extract fees + volumes with Claude.
+      patch({ pdfStatus: "parsing", pdfPath: urlJson.path });
+      const parseRes = await fetch("/api/parse-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: urlJson.path }),
+      });
+      const parseJson = await parseRes.json();
+      if (!parseRes.ok || !Array.isArray(parseJson.rows) || parseJson.rows.length === 0) {
+        patch({
+          pdfStatus: "error",
+          pdfMessage:
+            parseJson.error === "no_codes_found"
+              ? "We couldn't find any fee rows in that PDF. Try a Procedure Summary / production report, or another method."
+              : parseJson.error || "Couldn't read that PDF.",
+        });
+        return;
+      }
+      const rows: ManualRow[] = parseJson.rows.map(
+        (r: { code: string; fee: number }) => ({ code: r.code, fee: String(r.fee) })
+      );
+      const freqCount = Object.keys(parseJson.frequencies ?? {}).length;
+      patch({
+        pdfStatus: "done",
+        pdfRows: rows,
+        pdfFrequencies: parseJson.frequencies ?? {},
+        pdfCount: parseJson.count ?? rows.length,
+        pdfMessage:
+          `${rows.length} code${rows.length === 1 ? "" : "s"} found` +
+          (freqCount > 0 ? `, with real annual volumes for ${freqCount}.` : "."),
+      });
+    } catch {
+      patch({ pdfStatus: "error", pdfMessage: "Something went wrong. Try again." });
+    }
+  }
+
+  const busy = draft.pdfStatus === "uploading" || draft.pdfStatus === "parsing";
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-ink-700">
+        Procedure summary / production report (PDF)
+      </label>
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (!busy) setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          if (busy) return;
+          const f = e.dataTransfer.files?.[0];
+          if (f) void ingest(f);
+        }}
+        onClick={() => !busy && inputRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (!busy && (e.key === "Enter" || e.key === " ")) inputRef.current?.click();
+        }}
+        className={`mt-1.5 flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed px-6 py-10 text-center transition ${
+          dragging
+            ? "border-ink-900 bg-canvas-tint"
+            : "border-canvas-border bg-canvas hover:border-ink-200"
+        } ${busy ? "opacity-60" : ""}`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void ingest(f);
+          }}
+          className="hidden"
+        />
+        <UploadIcon />
+        <p className="mt-3 text-sm font-medium text-ink-700">
+          Drag &amp; drop your fee/production report PDF
+        </p>
+        <p className="mt-1 text-xs text-ink-400">or click to browse</p>
+      </div>
+
+      {draft.pdfStatus === "uploading" && (
+        <p className="mt-2 text-xs text-ink-500">Uploading {draft.pdfFile?.name}…</p>
+      )}
+      {draft.pdfStatus === "parsing" && (
+        <p className="mt-2 text-xs text-ink-500">
+          Reading your fees and volumes — this can take up to a minute…
+        </p>
+      )}
+      {draft.pdfStatus === "done" && (
+        <p className="mt-2 text-xs text-gain-ink">{draft.pdfMessage}</p>
+      )}
+      {draft.pdfStatus === "error" && (
+        <p className="mt-2 text-xs text-red-600">{draft.pdfMessage}</p>
+      )}
+      <p className="mt-3 text-xs text-ink-400">
+        Upload a Procedure Summary / production report straight from your practice
+        software (Dentrix, Eaglesoft, Open Dental). We read each code&rsquo;s
+        average fee and annual volume automatically.
       </p>
     </div>
   );

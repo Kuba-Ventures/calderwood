@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { serverSupabase, serviceSupabase } from "@/lib/db/server";
-import { getPracticeByEmail, insertFeeSchedule } from "@/lib/db/practices";
+import { getPracticeByEmail, insertFeeSchedule, insertFrequencies } from "@/lib/db/practices";
 import { parseUpload } from "@/lib/parser/dispatch";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +25,12 @@ const feeSchema = z.discriminatedUnion("method", [
   z.object({ method: z.literal("paste"), rows: rowsSchema }),
   z.object({ method: z.literal("manual"), rows: rowsSchema }),
   z.object({ method: z.literal("eob"), eobPath: z.string().min(1) }),
+  z.object({
+    method: z.literal("pdf"),
+    rows: rowsSchema,
+    frequencies: z.record(z.string(), z.number()).optional(),
+    pdfPath: z.string().optional(),
+  }),
 ]);
 
 const bodySchema = z.object({
@@ -91,7 +97,12 @@ export async function POST(request: Request) {
     practice_id: practice.id,
     schedule_type: "master",
     carrier: null,
-    raw_file_url: fee.method === "eob" ? fee.eobPath : null,
+    raw_file_url:
+      fee.method === "eob"
+        ? fee.eobPath
+        : fee.method === "pdf"
+        ? fee.pdfPath ?? null
+        : null,
     parsed_data: fee.method === "eob" ? null : entries,
     parse_confidence: fee.method === "eob" ? "low" : confidence,
     parse_notes:
@@ -99,6 +110,14 @@ export async function POST(request: Request) {
         ? "EOB image uploaded; queued for manual extraction."
         : notes.join("; ") || null,
   });
+
+  // Replace stored frequencies with the report's real volumes on a PDF resubmit.
+  if (fee.method === "pdf") {
+    await service.from("frequency_data").delete().eq("practice_id", practice.id);
+    if (fee.frequencies) {
+      await insertFrequencies(service, practice.id, fee.frequencies);
+    }
+  }
 
   const update: Record<string, unknown> = {
     fee_input_method: fee.method,
