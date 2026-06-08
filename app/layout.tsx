@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, Newsreader } from "next/font/google";
 import { Header } from "@/components/header";
+import {
+  GoogleTagManager,
+  GoogleTagManagerNoScript,
+} from "@/components/analytics/gtm";
 import "./globals.css";
 
 const inter = Inter({
@@ -42,7 +46,11 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${newsreader.variable}`}
     >
+      <head>
+        <GoogleTagManager />
+      </head>
       <body className="font-sans bg-canvas text-ink-900 antialiased">
+        <GoogleTagManagerNoScript />
         <Header />
         {children}
       </body>
