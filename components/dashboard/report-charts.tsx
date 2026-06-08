@@ -36,7 +36,7 @@ export function SummaryCards({
     : hasCarrierData
       ? `${formatUsd(data.worstCarrier.annualGapUsd)} / yr below UCR`
       : topCode
-        ? `${formatUsd(Math.max(0, topCode.annualGap))} / yr recoverable on this code`
+        ? `${formatUsd(Math.max(0, topCode.annualGap))} / yr underpaid on this code`
         : "Add per-carrier rates to rank carriers";
 
   return (
@@ -291,7 +291,7 @@ export function CodeGapTable({
               <th className="px-4 py-2.5 text-right font-medium">Your fee</th>
               <th className="px-4 py-2.5 text-right font-medium">UCR (75th)</th>
               <ThSort
-                label="Recoverable / proc"
+                label="Underpayment / proc"
                 active={sortKey === "gapPerProc"}
                 dir={sortDir}
                 onClick={() => toggleSort("gapPerProc")}
@@ -305,7 +305,7 @@ export function CodeGapTable({
                 align="right"
               />
               <ThSort
-                label="Annual recoverable"
+                label="Annual underpayment"
                 active={sortKey === "annualGap"}
                 dir={sortDir}
                 onClick={() => toggleSort("annualGap")}
@@ -336,7 +336,7 @@ export function CodeGapTable({
                   </td>
                   <td
                     className={`px-4 py-3 text-right font-medium ${
-                      recoverablePerProc > 0 ? "text-gain-ink" : "text-ink-400"
+                      recoverablePerProc > 0 ? "text-red-600" : "text-ink-400"
                     }`}
                   >
                     <LockedInline unlocked={unlocked} placeholder="$•••">
@@ -348,7 +348,7 @@ export function CodeGapTable({
                   </td>
                   <td
                     className={`px-4 py-3 text-right font-medium ${
-                      annualRecoverable > 0 ? "text-gain-ink" : "text-ink-400"
+                      annualRecoverable > 0 ? "text-red-600" : "text-ink-400"
                     }`}
                   >
                     <LockedInline unlocked={unlocked}>

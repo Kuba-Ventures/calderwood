@@ -116,7 +116,7 @@ function PercentileTile({ data }: { data: ReportLike | null }) {
               </div>
               <span className="w-10 text-right font-serif text-sm font-medium text-ink-900 tabular-nums">
                 {pct}
-                <span className="text-xs text-ink-400">th</span>
+                <span className="text-xs text-ink-400">{ordinal(pct)}</span>
               </span>
             </li>
           );
@@ -164,12 +164,12 @@ function TopCodesTile({
               <td className="py-2 pr-2 text-xs text-ink-700">
                 {truncate(row.label, 22)}
               </td>
-              <td className="py-2 pr-2 text-right text-xs font-medium text-gain-ink tabular-nums">
+              <td className="py-2 pr-2 text-right text-xs font-medium text-red-700 tabular-nums">
                 <LockedInline unlocked={unlocked} placeholder="$•••">
                   {formatUsd(Math.max(0, row.gapPerProc))}
                 </LockedInline>
               </td>
-              <td className="py-2 text-right font-serif text-sm font-medium text-gain-ink tabular-nums">
+              <td className="py-2 text-right font-serif text-sm font-medium text-red-700 tabular-nums">
                 <LockedInline unlocked={unlocked}>
                   {formatUsd(Math.max(0, row.annualGap))}
                 </LockedInline>
@@ -239,4 +239,20 @@ function CarrierRevenueTile({
 
 function truncate(s: string, n: number): string {
   return s.length <= n ? s : s.slice(0, n - 1) + "…";
+}
+
+// Ordinal suffix: 1st, 2nd, 3rd, 4th… 11th/12th/13th, 21st, 22nd…
+function ordinal(n: number): string {
+  const tens = n % 100;
+  if (tens >= 11 && tens <= 13) return "th";
+  switch (n % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  }
 }
