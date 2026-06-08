@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   CarrierRow,
   CodeRow,
@@ -121,9 +122,15 @@ export function CarrierRankingChart({
         <p className="mt-2 max-w-xl text-sm text-ink-500">
           Carrier-by-carrier ranking needs your per-carrier fee schedules (what
           each plan actually contracts to pay). Your master fees gave us the
-          code-level opportunity above; upload your per-carrier rates to see
-          which carrier underpays you most.
+          code-level opportunity above; add your per-carrier rates to see which
+          carrier underpays you most.
         </p>
+        <Link
+          href="/intake"
+          className="mt-3 inline-flex items-center text-sm font-medium text-accent hover:underline"
+        >
+          Add carrier schedules →
+        </Link>
       </div>
     );
   }

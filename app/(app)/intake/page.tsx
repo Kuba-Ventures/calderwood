@@ -17,6 +17,7 @@ import {
   isFeeValid,
 } from "@/components/onboarding/fee-step";
 import { CarriersStep } from "@/components/onboarding/carriers-step";
+import { CarrierSchedules } from "@/components/onboarding/carrier-schedules";
 
 export default function IntakePage() {
   const [hydrated, setHydrated] = useState(false);
@@ -181,6 +182,12 @@ export default function IntakePage() {
           )}
         </div>
       </div>
+
+      {carriers.length > 0 && (
+        <div className="mt-6">
+          <CarrierSchedules carriers={carriers} />
+        </div>
+      )}
     </div>
   );
 }

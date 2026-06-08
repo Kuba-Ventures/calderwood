@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   CarrierRow,
   CodeRow,
@@ -200,9 +201,15 @@ function CarrierRevenueTile({
     return (
       <TileShell title="Recoverable revenue by carrier" empty={false}>
         <p className="text-xs leading-relaxed text-ink-500">
-          Upload your per-carrier fee schedules to see which carrier underpays
-          you most. Your code-level opportunity is shown in the other tiles.
+          Add your per-carrier fee schedules to see which carrier underpays you
+          most. Your code-level opportunity is shown in the other tiles.
         </p>
+        <Link
+          href="/intake"
+          className="mt-2 inline-flex text-xs font-medium text-accent hover:underline"
+        >
+          Add carrier schedules →
+        </Link>
       </TileShell>
     );
   }
