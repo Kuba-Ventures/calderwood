@@ -14,6 +14,9 @@ import {
   CodeGapTable,
   SummaryCards,
 } from "@/components/dashboard/report-charts";
+import { CarrierAnalysis } from "@/components/dashboard/carrier-analysis";
+import { CategoryOpportunity } from "@/components/dashboard/category-opportunity";
+import { ReportMethodology } from "@/components/dashboard/report-methodology";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +68,14 @@ export default async function SharedReportPage({
         )}
 
         <SummaryCards data={gated} unlocked={unlocked} />
-        <CarrierRankingChart carriers={gated.carriers} unlocked={unlocked} />
+        {unlocked && gated.carrierGrid?.hasData ? (
+          <CarrierAnalysis grid={gated.carrierGrid} />
+        ) : (
+          <CarrierRankingChart carriers={gated.carriers} unlocked={unlocked} />
+        )}
         <CodeGapTable codes={gated.codes} unlocked={unlocked} />
+        <CategoryOpportunity categories={gated.categories} unlocked={unlocked} />
+        {unlocked && <ReportMethodology />}
 
         <p className="pt-2 text-center text-xs text-ink-400">
           Shared via Calderwood ·{" "}
