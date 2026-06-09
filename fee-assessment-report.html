@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calderwood Fee Assessment</title>
+<style>
+  :root{
+    --navy:#0c4a6e; --navy-dark:#083247;
+    --maroon:#991b1b; --green:#15803d;
+    --track:#e8edf1; --panel:#f8fafc;
+    --label:#6b7a89; --hairline:#e2e8f0;
+    --ink:#0b1220; --ink-muted:#475569;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:Georgia,"Times New Roman",Times,serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:#fff; color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:860px; margin:0 auto; padding:0 46px 64px}
+  a{color:var(--navy)}
+
+  /* ---- shared atoms ---- */
+  .label{font:700 11px/1.3 var(--sans); letter-spacing:.22em; text-transform:uppercase; color:var(--label)}
+  .serif{font-family:var(--serif)}
+  .dollar,.num{font-family:var(--serif); font-variant-numeric:tabular-nums}
+  .maroon{color:var(--maroon)}
+  .navy{color:var(--navy)}
+  .green{color:var(--green)}
+  .muted{color:var(--ink-muted)}
+
+  /* ---- running header ---- */
+  header.brand{display:flex; align-items:center; justify-content:space-between;
+    padding:26px 0 14px; border-bottom:1px solid var(--hairline); margin-bottom:8px}
+  .brand-left{display:flex; align-items:center; gap:9px}
+  .brand-mark{width:18px; height:18px; background:var(--navy); border-radius:3px}
+  .brand-name{font:700 18px/1 var(--sans); letter-spacing:-.01em; color:var(--ink)}
+  .brand-right{font:700 11px/1 var(--sans); letter-spacing:.22em; text-transform:uppercase; color:var(--label)}
+
+  .doc-meta{margin:18px 0 6px}
+  .doc-title{font:700 30px/1.1 var(--sans); letter-spacing:-.02em; margin:0; color:var(--ink)}
+  .doc-sub{margin:8px 0 0; color:var(--ink-muted); font-size:14px}
+  .placeholder-note{margin-top:14px; background:var(--panel); border-left:3px solid var(--navy);
+    padding:10px 14px; font-size:12.5px; color:var(--ink-muted); border-radius:0 4px 4px 0}
+
+  /* ---- section pattern ---- */
+  section{margin-top:46px}
+  .eyebrow{margin:0 0 8px}
+  .headline{font:700 22px/1.2 var(--sans); letter-spacing:-.01em; margin:0; color:var(--ink)}
+  .intro{margin:8px 0 22px; color:var(--ink-muted); font-size:14px; max-width:62ch}
+
+  /* ---- callout ---- */
+  .callout{background:var(--panel); border-left:3px solid var(--navy); border-radius:0 6px 6px 0;
+    padding:18px 22px}
+  .callout h4{margin:0 0 6px; font:700 16px/1.3 var(--sans); color:var(--ink)}
+  .callout p{margin:0; color:var(--ink-muted); font-size:14px}
+  .callout .big{font-family:var(--serif); color:var(--navy); font-weight:700}
+
+  /* ---- exec stat grid ---- */
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--hairline);
+    border:1px solid var(--hairline); border-radius:8px; overflow:hidden}
+  .stat{background:#fff; padding:20px 22px}
+  .stat .label{margin-bottom:10px}
+  .stat .value{font-family:var(--serif); font-size:34px; line-height:1; color:var(--navy)}
+  .stat .value.gap{color:var(--maroon)}
+  .stat .sub{margin-top:7px; font-size:12.5px; color:var(--ink-muted)}
+
+  /* ---- percentile bars ---- */
+  .pbar-row{display:grid; grid-template-columns:62px 1fr 46px; align-items:center; gap:14px;
+    padding:9px 0; border-top:1px solid var(--hairline)}
+  .pbar-row:first-child{border-top:0}
+  .pbar-code{font:700 13px/1.2 var(--sans); color:var(--navy)}
+  .pbar-desc{font-size:11px; color:var(--ink-muted); margin-top:2px}
+  .pbar-track{position:relative; height:9px; background:var(--track); border-radius:5px}
+  .pbar-fill{position:absolute; left:0; top:0; bottom:0; background:var(--navy); border-radius:5px}
+  .pbar-p75{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--navy-dark)}
+  .pbar-rank{font-family:var(--serif); font-size:15px; text-align:right; color:var(--ink)}
+  .pbar-rank small{font-size:10px; color:var(--label)}
+  .legend{display:flex; gap:18px; margin-top:14px; font-size:11.5px; color:var(--ink-muted)}
+  .legend span{display:inline-flex; align-items:center; gap:6px}
+  .swatch{width:18px; height:8px; border-radius:4px; background:var(--navy); display:inline-block}
+  .tick{width:2px; height:12px; background:var(--navy-dark); display:inline-block}
+
+  /* ---- tables ---- */
+  table.data{width:100%; border-collapse:collapse; font-size:13.5px}
+  table.data thead th{background:var(--panel); text-align:right; padding:9px 10px;
+    font:700 10px/1.2 var(--sans); letter-spacing:.14em; text-transform:uppercase; color:var(--label);
+    border-bottom:1px solid var(--hairline)}
+  table.data thead th.l{text-align:left}
+  table.data tbody td{padding:10px; border-bottom:1px solid var(--hairline); text-align:right}
+  table.data td.code{text-align:left; font-weight:700; color:var(--navy); font-size:12.5px; white-space:nowrap}
+  table.data td.proc{text-align:left; color:var(--ink-muted); font-size:12.5px}
+  table.data td.d{font-family:var(--serif); color:var(--navy)}
+  table.data td.gap{font-family:var(--serif); color:var(--maroon)}
+  table.data td.vol{color:var(--ink-muted)}
+  .tag{display:inline-block; font:700 9.5px/1 var(--sans); letter-spacing:.1em; text-transform:uppercase;
+    padding:4px 7px; border-radius:4px; background:var(--panel); color:var(--navy); border:1px solid var(--hairline)}
+  table.data tr.total td{border-top:2px solid var(--navy); border-bottom:0; padding-top:12px; font-weight:700}
+  table.data tr.total td.d{font-size:15px}
+
+  /* ---- category bars ---- */
+  .cat-row{display:grid; grid-template-columns:150px 1fr 92px; align-items:center; gap:14px; padding:9px 0}
+  .cat-name{font-size:13px; color:var(--ink)}
+  .cat-track{height:14px; background:var(--track); border-radius:7px; overflow:hidden}
+  .cat-fill{height:100%; background:var(--navy); border-radius:7px}
+  .cat-amt{font-family:var(--serif); text-align:right; color:var(--navy); font-size:14px}
+  .cat-pct{font-size:10px; color:var(--label); text-align:right; margin-top:1px}
+
+  /* ---- provider variance ---- */
+  .prov-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  .prov-card{border:1px solid var(--hairline); border-radius:8px; padding:16px 18px}
+  .prov-card .ph{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px}
+  .prov-card .pc-code{font:700 14px/1 var(--sans); color:var(--navy)}
+  .prov-card .pc-desc{font-size:11px; color:var(--ink-muted); margin-top:3px}
+  .prov-card .pc-rec{font-family:var(--serif); color:var(--maroon); font-size:15px}
+  .prov-bar{display:grid; grid-template-columns:74px 1fr 56px; align-items:center; gap:10px; margin:7px 0}
+  .prov-bar .who{font-size:11px; color:var(--ink-muted)}
+  .prov-bar .pt{height:10px; background:var(--track); border-radius:5px; overflow:hidden}
+  .prov-bar .pf{height:100%; background:var(--navy); border-radius:5px}
+  .prov-bar .pf.best{background:var(--green)}
+  .prov-bar .pv{font-family:var(--serif); font-size:12.5px; text-align:right; color:var(--ink)}
+  .prov-spread{margin-top:10px; font-size:11.5px; color:var(--ink-muted)}
+  .prov-spread b{color:var(--ink)}
+
+  /* ---- carrier scorecard ---- */
+  .carrier-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px}
+  .ccard{border:1px solid var(--hairline); border-radius:8px; padding:16px 18px; cursor:pointer;
+    transition:border-color .15s, box-shadow .15s; background:#fff}
+  .ccard:hover{border-color:#cbd5e1}
+  .ccard:focus-visible{outline:2px solid var(--navy); outline-offset:2px}
+  .ccard.active{border-color:var(--navy); box-shadow:0 0 0 1px var(--navy)}
+  .ccard .ct{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+  .ccard .cname{font:700 15px/1.2 var(--sans); color:var(--ink)}
+  .grade{font:700 14px/1 var(--sans); width:30px; height:30px; border-radius:6px;
+    display:flex; align-items:center; justify-content:center}
+  .ccard .crec{font-family:var(--serif); font-size:24px; color:var(--maroon); line-height:1}
+  .ccard .cmeta{display:flex; justify-content:space-between; margin-top:12px; font-size:11.5px; color:var(--ink-muted)}
+  .ccard .cmeta .num{color:var(--ink)}
+
+  /* ---- heatmap ---- */
+  .hm-controls{display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin:6px 0 16px; font-size:12.5px}
+  .hm-controls .grp{display:inline-flex; align-items:center; gap:6px}
+  .hm-controls label.lab{color:var(--label); font:700 10px/1 var(--sans); letter-spacing:.14em; text-transform:uppercase}
+  .hm-controls select{font:inherit; font-size:12.5px; padding:5px 8px; border:1px solid var(--hairline);
+    border-radius:6px; background:#fff; color:var(--ink)}
+  .hm-controls button.clear{font:inherit; font-size:12px; border:1px solid var(--hairline); background:#fff;
+    border-radius:6px; padding:5px 10px; color:var(--navy); cursor:pointer}
+  .hm-wrap{border:1px solid var(--hairline); border-radius:8px; overflow:auto; max-height:520px; position:relative}
+  table.heat{border-collapse:separate; border-spacing:0; font-size:12px; width:max-content; min-width:100%}
+  table.heat th, table.heat td{padding:8px 10px; white-space:nowrap; border-bottom:1px solid var(--hairline);
+    border-right:1px solid var(--hairline)}
+  table.heat thead th{position:sticky; top:0; z-index:3; background:var(--panel);
+    font:700 10px/1.2 var(--sans); letter-spacing:.1em; text-transform:uppercase; color:var(--label); text-align:center}
+  table.heat thead th.corner{left:0; z-index:5; text-align:left}
+  table.heat thead th.oppo{right:0; z-index:5; text-align:right}
+  table.heat tbody th.rowh{position:sticky; left:0; z-index:2; background:#fff; text-align:left; font-weight:700}
+  table.heat tbody th.rowh .rc{color:var(--navy); font-size:12.5px}
+  table.heat tbody th.rowh .rm{color:var(--label); font:600 10px/1.3 var(--sans); margin-top:2px}
+  table.heat td.cell{text-align:center; font-family:var(--serif); cursor:default}
+  table.heat td.cell.dim{opacity:.18}
+  table.heat td.oppo{position:sticky; right:0; z-index:2; background:#fff; text-align:right;
+    font-family:var(--serif); color:var(--maroon); font-weight:700}
+  table.heat tfoot th, table.heat tfoot td{position:sticky; bottom:0; z-index:3; background:var(--panel);
+    font:700 11px/1 var(--sans)}
+  table.heat tfoot th.corner{left:0; z-index:5; text-align:left; color:var(--label);
+    letter-spacing:.12em; text-transform:uppercase; font-size:10px}
+  table.heat tfoot td{text-align:center; font-family:var(--serif); color:var(--ink)}
+  table.heat tfoot td.oppo{right:0; z-index:5}
+  .hm-scale{display:flex; align-items:center; gap:10px; margin-top:12px; font-size:11px; color:var(--ink-muted)}
+  .hm-scale .grad{flex:1; max-width:240px; height:9px; border-radius:5px;
+    background:linear-gradient(90deg,var(--maroon),#eef1f4 52%,var(--green))}
+
+  /* ---- tooltip ---- */
+  #tip{position:fixed; z-index:50; pointer-events:none; max-width:260px; background:var(--navy-dark);
+    color:#fff; border-radius:8px; padding:11px 13px; font-size:12px; line-height:1.5;
+    box-shadow:0 8px 24px rgba(8,50,71,.28); opacity:0; transition:opacity .1s}
+  #tip.on{opacity:1}
+  #tip .tt{font:700 10px/1 var(--sans); letter-spacing:.14em; text-transform:uppercase; color:#9ec5dc; margin-bottom:6px}
+  #tip .tr{display:flex; justify-content:space-between; gap:18px}
+  #tip .tr span:last-child{font-family:var(--serif)}
+  #tip .anchor{margin-top:7px; padding-top:7px; border-top:1px solid rgba(255,255,255,.18); color:#cfe0ea}
+
+  /* ---- methodology ---- */
+  .method{list-style:none; margin:0; padding:0}
+  .method li{padding:11px 0 11px 26px; border-top:1px solid var(--hairline); position:relative;
+    font-size:13px; color:var(--ink-muted)}
+  .method li:before{content:""; position:absolute; left:4px; top:18px; width:6px; height:6px;
+    border-radius:50%; background:var(--navy)}
+  .method li b{color:var(--ink)}
+
+  /* ---- footer ---- */
+  footer.doc{margin-top:54px; padding-top:16px; border-top:1px solid var(--hairline);
+    display:flex; justify-content:space-between; align-items:center; gap:16px;
+    font-size:11.5px; color:var(--ink-muted)}
+  footer.doc a{font-weight:600; text-decoration:none}
+
+  @media (max-width:680px){
+    .page{padding:0 18px 48px}
+    .doc-title{font-size:24px}
+    .stat-grid{grid-template-columns:1fr}
+    .prov-grid{grid-template-columns:1fr}
+    .cat-row{grid-template-columns:108px 1fr 78px; gap:9px}
+    .pbar-row{grid-template-columns:52px 1fr 40px; gap:9px}
+    footer.doc{flex-direction:column; align-items:flex-start; gap:6px}
+  }
+  @media print{
+    .hm-wrap{max-height:none; overflow:visible}
+    .hm-controls{display:none}
+    table.heat thead th, table.heat tbody th.rowh, table.heat td.oppo,
+    table.heat tfoot th, table.heat tfoot td{position:static}
+    a{color:var(--navy); text-decoration:none}
+  }
+</style>
+</head>
+<body>
+<div class="page" id="page"></div>
+<div id="tip" role="tooltip" aria-hidden="true"></div>
+
+<script>
+/* ============================================================
+   DATA  (injected at deploy via the /*__DATA__*\/ placeholder).
+   Shape: { report:{...}, carrier:{...} }. If absent, plausible
+   placeholder sample data is generated below.
+   ============================================================ */
+const INJECTED = /*__DATA__*/ null;
+
+/* ---------- sample data generation (deterministic) ---------- */
+function sampleData(){
+  const providers = [
+    {id:"DDS0", name:"Dr. Calderwood"},
+    {id:"DDS3", name:"Dr. Reyes"},
+    {id:"HYG2", name:"Hygiene"}
+  ];
+  // base[code] = [desc, category, fee, p50, p75, p90, volume, isHygiene]
+  const base = [
+    ["D0120","Periodic oral evaluation","Diagnostic",52,58,68,78,1300,true],
+    ["D0150","Comprehensive oral evaluation","Diagnostic",64,78,92,105,240,false],
+    ["D0210","Intraoral, complete series","Diagnostic",114,130,150,175,180,false],
+    ["D0274","Bitewings, four films","Diagnostic",52,62,72,84,640,true],
+    ["D1110","Prophylaxis, adult","Preventive",78,95,112,128,1450,true],
+    ["D1206","Topical fluoride varnish","Preventive",38,42,48,55,480,true],
+    ["D2392","Resin, two surface posterior","Restorative",155,175,205,235,440,false],
+    ["D2740","Crown, porcelain/ceramic","Restorative",1050,1150,1320,1480,200,false],
+    ["D2750","Crown, porcelain fused metal","Restorative",980,1080,1240,1390,90,false],
+    ["D2950","Core buildup, incl. pins","Restorative",165,195,230,265,190,false],
+    ["D3310","Endodontic therapy, anterior","Endodontics",695,820,950,1080,40,false],
+    ["D3330","Endodontic therapy, molar","Endodontics",945,1080,1240,1410,24,false],
+    ["D4341","Perio scaling, 4+ teeth","Periodontics",165,215,258,295,190,false],
+    ["D4910","Periodontal maintenance","Periodontics",118,135,158,180,92,true],
+    ["D7140","Extraction, erupted tooth","Oral Surgery",158,185,215,245,175,false],
+    ["D7210","Surgical extraction","Oral Surgery",285,330,385,440,105,false]
+  ];
+  // stable per-code jitter from the code string
+  const seed = s => { let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))>>>0; return h; };
+  const jit = (s,k,spread) => { const r=((seed(s+k)%1000)/1000); return 1 + (r-0.5)*2*spread; };
+
+  function pctRank(fee,p50,p75,p90){
+    let p;
+    if(fee<=p50){ const lo=p50*0.7; p = 1 + 49*Math.max(0,(fee-lo)/(p50-lo||1)); }
+    else if(fee<=p75){ p = 50 + 25*((fee-p50)/(p75-p50||1)); }
+    else if(fee<=p90){ p = 75 + 15*((fee-p75)/(p90-p75||1)); }
+    else { p = 90 + 9*Math.min(1,(fee-p90)/(p90*0.15||1)); }
+    return Math.max(1,Math.min(99,Math.round(p)));
+  }
+
+  const codes = base.map(b=>{
+    const [code,description,category,fee,p50,p75,p90,volume,isHyg] = b;
+    const gap = Math.max(0,p75-fee);
+    const annualRecoverable = Math.round(gap*volume);
+    // provider fees: spread the master fee a bit per provider
+    const provFees = {};
+    const provs = isHyg ? ["DDS0","DDS3","HYG2"] : ["DDS0","DDS3"];
+    provs.forEach((pid,i)=>{ provFees[pid] = Math.round(fee * jit(code,pid,0.06)); });
+    const provVals = Object.values(provFees);
+    const hiFee = Math.max(...provVals);
+    // align-up recoverable: bring lower providers to the highest in-house fee
+    const perProvVol = volume/provs.length;
+    let pv = 0; provVals.forEach(v=> pv += Math.max(0,hiFee-v)*perProvVol);
+    return {code,description,category,fee,p50,p75,p90,volume,gap,
+      annualRecoverable, percentile: pctRank(fee,p50,p75,p90),
+      providerFees:provFees, providerVarianceRecoverable: Math.round(pv)};
+  });
+
+  // category rollups (recoverable vs full production = fee*volume)
+  const catMap = {};
+  codes.forEach(c=>{
+    const m = catMap[c.category] || (catMap[c.category]={name:c.category,recoverable:0,production:0});
+    m.recoverable += c.annualRecoverable;
+    m.production += c.fee*c.volume;
+  });
+  const categories = Object.values(catMap).map(c=>({...c,
+    recoverable:Math.round(c.recoverable), production:Math.round(c.production),
+    pct: c.production? c.recoverable/c.production : 0
+  })).sort((a,b)=>b.recoverable-a.recoverable);
+
+  const annualUpliftFeeSchedule = codes.reduce((s,c)=>s+c.annualRecoverable,0);
+  const providerVarianceRecoverable = codes.reduce((s,c)=>s+c.providerVarianceRecoverable,0);
+  const below = codes.filter(c=>c.percentile<75).length;
+
+  /* ---------- carriers ---------- */
+  const carrierDefs = [
+    {id:"delta", name:"Delta Dental", share:0.30, factor:0.92},
+    {id:"cigna", name:"Cigna", share:0.24, factor:0.81},
+    {id:"aetna", name:"Aetna", share:0.20, factor:0.88},
+    {id:"uhc",   name:"UnitedHealthcare", share:0.16, factor:0.85},
+    {id:"metlife",name:"MetLife", share:0.10, factor:0.95}
+  ];
+  // per-code contracted rate per carrier (deterministic), capped at p90
+  const rates = {};
+  codes.forEach(c=>{
+    rates[c.code] = {};
+    carrierDefs.forEach(cd=>{
+      const r = c.p75 * cd.factor * jit(c.code,cd.id,0.05);
+      rates[c.code][cd.id] = Math.round(Math.min(c.p90, r));
+    });
+  });
+  const carriers = carrierDefs.map(cd=>{
+    let wRate=0, wP75=0, oppo=0;
+    codes.forEach(c=>{
+      const rate = rates[c.code][cd.id];
+      wRate += rate*c.volume; wP75 += c.p75*c.volume;
+      oppo += Math.max(0,c.p75-rate)*c.volume*cd.share;
+    });
+    const blended = wRate/wP75;
+    const grade = blended>=0.97?"A":blended>=0.92?"B":blended>=0.87?"C":blended>=0.82?"D":"F";
+    return {id:cd.id,name:cd.name,volumeShare:cd.share,blendedPctP75:blended,grade,
+      annualOpportunity:Math.round(oppo)};
+  }).sort((a,b)=>b.annualOpportunity-a.annualOpportunity);
+  const carrierUnderpaymentAnnual = carriers.reduce((s,c)=>s+c.annualOpportunity,0);
+
+  return {
+    report:{
+      meta:{practiceName:"Calderwood Family Dental", zip:"02446", providerCount:provFromCodes(),
+        generatedAt:"June 9, 2026", benchmarkCoverage:0.86},
+      totals:{annualUpliftFeeSchedule:Math.round(annualUpliftFeeSchedule),
+        codesBelowP75:{count:below,total:codes.length},
+        providerVarianceRecoverable:Math.round(providerVarianceRecoverable),
+        carrierUnderpaymentAnnual},
+      codes, categories, providers
+    },
+    carrier:{ carriers, rates, placeholder:true }
+  };
+  function provFromCodes(){ return 3; }
+}
+
+const DATA = INJECTED || sampleData();
+const R = DATA.report, C = DATA.carrier;
+
+/* ---------- formatting ---------- */
+const usd = (n,opts={}) => {
+  const v = Math.round(n);
+  const s = "$"+Math.abs(v).toLocaleString("en-US");
+  return v<0 ? "-"+s : s;
+};
+const usd2 = n => "$"+n.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0});
+const pct = (x,d=0)=> (x*100).toFixed(d)+"%";
+const ordinal = n => { const t=n%100; if(t>=11&&t<=13)return n+"th";
+  return n+({1:"st",2:"nd",3:"rd"}[n%10]||"th"); };
+const el = (tag,attrs={},...kids)=>{
+  const e=document.createElement(tag);
+  for(const k in attrs){
+    if(k==="class")e.className=attrs[k];
+    else if(k==="html")e.innerHTML=attrs[k];
+    else if(k.startsWith("on")&&typeof attrs[k]==="function")e.addEventListener(k.slice(2),attrs[k]);
+    else if(attrs[k]!=null)e.setAttribute(k,attrs[k]);
+  }
+  kids.flat().forEach(c=>{ if(c==null)return;
+    e.appendChild(typeof c==="string"?document.createTextNode(c):c); });
+  return e;
+};
+const page = document.getElementById("page");
+
+function sectionHead(n,title,headline,intro){
+  const wrap=el("div");
+  wrap.appendChild(el("p",{class:"label eyebrow"},`Section ${n} - ${title}`));
+  wrap.appendChild(el("h2",{class:"headline"},headline));
+  if(intro)wrap.appendChild(el("p",{class:"intro"},intro));
+  return wrap;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+(function header(){
+  const h=el("header",{class:"brand"},
+    el("div",{class:"brand-left"}, el("div",{class:"brand-mark"}), el("div",{class:"brand-name"},"Calderwood")),
+    el("div",{class:"brand-right"},"Fee Assessment"));
+  page.appendChild(h);
+  const m=el("div",{class:"doc-meta"},
+    el("h1",{class:"doc-title"},"Your fee assessment."),
+    el("p",{class:"doc-sub"},
+      `${R.meta.practiceName} · ZIP ${R.meta.zip} · ${R.meta.providerCount} providers · Generated ${R.meta.generatedAt}`));
+  page.appendChild(m);
+  if(C.placeholder){
+    page.appendChild(el("div",{class:"placeholder-note"},
+      "Carrier reimbursement rates shown here are placeholder / illustrative. They are replaced with your real contracted allowables once your carrier fee schedules are parsed."));
+  }
+})();
+
+/* ============================================================
+   1. EXECUTIVE SUMMARY
+   ============================================================ */
+(function exec(){
+  const s=el("section");
+  s.appendChild(sectionHead(1,"Executive Summary","What you're leaving on the table.",
+    "Your fees, benchmarked against UCR in your ZIP, and your carriers measured against that same benchmark."));
+  const t=R.totals;
+  const grid=el("div",{class:"stat-grid"},
+    stat("Annual fee-schedule uplift", usd(t.annualUpliftFeeSchedule), "gap",
+      "Raising every below-market fee to the 75th percentile."),
+    stat("Codes below 75th percentile", `${t.codesBelowP75.count} of ${t.codesBelowP75.total}`, "",
+      "Top codes priced under your local UCR p75."),
+    stat("Provider fee variance", usd(t.providerVarianceRecoverable), "",
+      "Recoverable by aligning every provider to your highest in-house fee."),
+    stat("Carrier underpayment (annual)", usd(t.carrierUnderpaymentAnnual), "gap",
+      "What carriers pay below p75, weighted by patient volume."));
+  s.appendChild(grid);
+  const co=el("div",{class:"callout",style:"margin-top:22px"},
+    el("h4",{},"The full picture."),
+    el("p",{html:
+      `Your master fee schedule alone leaves about <span class="big">${usd(t.annualUpliftFeeSchedule)}</span> on the table against local UCR. `+
+      `Of that, roughly <span class="big">${usd(t.carrierUnderpaymentAnnual)}</span> a year is attributable to what specific carriers contract to pay below the 75th percentile. `+
+      `That is the part you recover at the negotiating table. Section 6 breaks it down carrier by carrier.`}));
+  s.appendChild(co);
+  page.appendChild(s);
+
+  function stat(label,value,cls,sub){
+    return el("div",{class:"stat"},
+      el("div",{class:"label"},label),
+      el("div",{class:"value "+cls},value),
+      el("div",{class:"sub"},sub));
+  }
+})();
+
+/* ============================================================
+   2. PERCENTILE RANK
+   ============================================================ */
+(function percentile(){
+  const s=el("section");
+  s.appendChild(sectionHead(2,"Percentile Rank","Where each fee sits in your ZIP.",
+    "Each bar shows where your fee falls in the local distribution. The vertical line is the 75th percentile target."));
+  const top=[...R.codes].sort((a,b)=>b.annualRecoverable-a.annualRecoverable).slice(0,12);
+  const box=el("div");
+  top.forEach(c=>{
+    box.appendChild(el("div",{class:"pbar-row"},
+      el("div",{},
+        el("div",{class:"pbar-code"},c.code),
+        el("div",{class:"pbar-desc"},trunc(c.description,22))),
+      el("div",{class:"pbar-track"},
+        el("div",{class:"pbar-fill",style:`width:${c.percentile}%`}),
+        el("div",{class:"pbar-p75",style:"left:75%"})),
+      el("div",{class:"pbar-rank"}, String(c.percentile), el("small",{},ordinalSuffix(c.percentile)))));
+  });
+  s.appendChild(box);
+  s.appendChild(el("div",{class:"legend"},
+    el("span",{}, el("span",{class:"swatch"}), "your fee percentile"),
+    el("span",{}, el("span",{class:"tick"}), "75th percentile target")));
+  page.appendChild(s);
+  function ordinalSuffix(n){const t=n%100; if(t>=11&&t<=13)return"th"; return {1:"st",2:"nd",3:"rd"}[n%10]||"th";}
+})();
+
+/* ============================================================
+   3. TOP BY IMPACT
+   ============================================================ */
+(function topImpact(){
+  const s=el("section");
+  s.appendChild(sectionHead(3,"Top by Impact","The codes where the gap costs you the most.",
+    "Sorted by annual recoverable revenue: fee gap multiplied by how often you bill the code."));
+  const rows=[...R.codes].filter(c=>c.annualRecoverable>0)
+    .sort((a,b)=>b.annualRecoverable-a.annualRecoverable).slice(0,12);
+  const thead=el("thead",{}, el("tr",{},
+    th("Code","l"),th("Procedure","l"),th("Fee"),th("P75"),th("Gap"),th("Vol/Yr"),th("Annual"),th("Action","l")));
+  const tb=el("tbody");
+  let total=0;
+  rows.forEach(c=>{
+    total+=c.annualRecoverable;
+    tb.appendChild(el("tr",{},
+      el("td",{class:"code"},c.code),
+      el("td",{class:"proc"},trunc(c.description,28)),
+      el("td",{class:"d"},usd2(c.fee)),
+      el("td",{class:"d"},usd2(c.p75)),
+      el("td",{class:"gap"},usd2(c.gap)),
+      el("td",{class:"vol"},c.volume.toLocaleString()),
+      el("td",{class:"d"},usd(c.annualRecoverable)),
+      el("td",{class:"proc"}, el("span",{class:"tag"}, actionTag(c)))));
+  });
+  tb.appendChild(el("tr",{class:"total"},
+    el("td",{class:"code"},"Total"),el("td",{},""),el("td",{},""),el("td",{},""),
+    el("td",{},""),el("td",{},""),el("td",{class:"d"},usd(total)),el("td",{},"")));
+  s.appendChild(el("table",{class:"data"},thead,tb));
+  page.appendChild(s);
+  function actionTag(c){ return c.percentile<50?"Raise fee":c.percentile<75?"Adjust up":"Hold"; }
+  function th(t,c){ return el("th",{class:c==="l"?"l":""},t); }
+})();
+
+/* ============================================================
+   4. OPPORTUNITY BY CATEGORY
+   ============================================================ */
+(function byCategory(){
+  const s=el("section");
+  s.appendChild(sectionHead(4,"Opportunity by Category","Opportunity by procedure category.",
+    "Recoverable revenue as a share of each category's full annual production."));
+  const max=Math.max(...R.categories.map(c=>c.pct),0.0001);
+  const box=el("div");
+  R.categories.forEach(c=>{
+    box.appendChild(el("div",{class:"cat-row"},
+      el("div",{class:"cat-name"},c.name),
+      el("div",{class:"cat-track"}, el("div",{class:"cat-fill",style:`width:${Math.max(2,(c.pct/max)*100)}%`})),
+      el("div",{},
+        el("div",{class:"cat-amt"},usd(c.recoverable)),
+        el("div",{class:"cat-pct"},pct(c.pct,1)+" of production"))));
+  });
+  s.appendChild(box);
+  page.appendChild(s);
+})();
+
+/* ============================================================
+   5. PROVIDER VARIANCE
+   ============================================================ */
+(function providerVar(){
+  const s=el("section");
+  s.appendChild(sectionHead(5,"Provider Variance","Fee variance across providers.",
+    "Where the same code is billed at different fees by different providers. Aligning everyone to your highest in-house fee is found money."));
+  const nameById={}; R.providers.forEach(p=>nameById[p.id]=p.name);
+  const cards=[...R.codes]
+    .filter(c=>Object.keys(c.providerFees).length>1)
+    .map(c=>{ const v=Object.values(c.providerFees); return {c,spread:Math.max(...v)-Math.min(...v)}; })
+    .filter(x=>x.spread>0)
+    .sort((a,b)=>b.c.providerVarianceRecoverable-a.c.providerVarianceRecoverable)
+    .slice(0,4);
+  const grid=el("div",{class:"prov-grid"});
+  cards.forEach(({c,spread})=>{
+    const entries=Object.entries(c.providerFees);
+    const hi=Math.max(...entries.map(e=>e[1]));
+    const card=el("div",{class:"prov-card"},
+      el("div",{class:"ph"},
+        el("div",{}, el("div",{class:"pc-code"},c.code), el("div",{class:"pc-desc"},trunc(c.description,26))),
+        el("div",{class:"pc-rec"},usd(c.providerVarianceRecoverable))));
+    entries.forEach(([pid,fee])=>{
+      card.appendChild(el("div",{class:"prov-bar"},
+        el("div",{class:"who"},nameById[pid]||pid),
+        el("div",{class:"pt"}, el("div",{class:"pf"+(fee===hi?" best":""),style:`width:${(fee/hi)*100}%`})),
+        el("div",{class:"pv"},usd2(fee))));
+    });
+    card.appendChild(el("div",{class:"prov-spread",html:
+      `Spread <b>${usd2(spread)}</b> per procedure · highest in-house fee marked <span class="green">green</span>`}));
+    grid.appendChild(card);
+  });
+  s.appendChild(grid);
+  page.appendChild(s);
+})();
+
+/* ============================================================
+   6. CARRIER REIMBURSEMENT (centerpiece)
+   ============================================================ */
+let HM = { show:"pct", sort:"oppo", isolate:null };
+(function carriers(){
+  const s=el("section");
+  s.appendChild(sectionHead(6,"Carrier Reimbursement","Which carrier underpays you most.",
+    "Each carrier graded against your local UCR p75, then a code-by-carrier grid of what they actually contract to pay. Rates are placeholder until your schedules are parsed."));
+
+  // a. scorecard
+  const cardsWrap=el("div",{class:"carrier-cards"});
+  C.carriers.forEach(cr=>{
+    const card=el("div",{class:"ccard",tabindex:"0",role:"button",
+      "data-carrier":cr.id,"aria-pressed":"false",
+      onclick:()=>toggleIsolate(cr.id), onkeydown:e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleIsolate(cr.id);}}},
+      el("div",{class:"ct"},
+        el("div",{class:"cname"},cr.name),
+        el("div",{class:"grade",style:gradeStyle(cr.grade)},cr.grade)),
+      el("div",{class:"crec"},usd(cr.annualOpportunity)),
+      el("div",{class:"cmeta"},
+        el("span",{html:`<span class="num">${pct(cr.volumeShare)}</span> of volume`}),
+        el("span",{html:`pays <span class="num">${pct(cr.blendedPctP75)}</span> of p75`})));
+    cardsWrap.appendChild(card);
+  });
+  s.appendChild(cardsWrap);
+
+  // b. controls + heatmap
+  s.appendChild(el("div",{class:"hm-controls"},
+    ctrlGroup("Cell shows", selShow()),
+    ctrlGroup("Sort codes", selSort()),
+    el("button",{class:"clear",onclick:()=>{HM.isolate=null; renderHeat();}},"Show all carriers")));
+  const hmWrap=el("div",{class:"hm-wrap"}, el("div",{id:"heat-host"}));
+  s.appendChild(hmWrap);
+  s.appendChild(el("div",{class:"hm-scale"},
+    el("span",{},"Below market"), el("span",{class:"grad"}), el("span",{},"At / above p75")));
+
+  // c. takeaway
+  s.appendChild(takeawayBox());
+  page.appendChild(s);
+  renderHeat();
+
+  function ctrlGroup(label,control){ return el("div",{class:"grp"},
+    el("label",{class:"lab"},label),control); }
+  function selShow(){
+    const sel=el("select",{onchange:e=>{HM.show=e.target.value; renderHeat();}});
+    [["pct","% of p75"],["rate","Raw rate"],["gap","Annual gap $"]].forEach(([v,t])=>
+      sel.appendChild(el("option",{value:v},t)));
+    sel.value=HM.show; return sel;
+  }
+  function selSort(){
+    const sel=el("select",{onchange:e=>{HM.sort=e.target.value; renderHeat();}});
+    [["oppo","Opportunity"],["volume","Volume"],["code","Code"]].forEach(([v,t])=>
+      sel.appendChild(el("option",{value:v},t)));
+    sel.value=HM.sort; return sel;
+  }
+})();
+
+function gradeStyle(g){
+  // grade chips stay in the brand family
+  const map={A:["#dcebe3","#15803d"],B:["#e3eef4","#0c4a6e"],C:["#eef1f4","#475569"],
+    D:["#f3e3e3","#b4453f"],F:["#f1dede","#991b1b"]};
+  const [bg,fg]=map[g]||map.C; return `background:${bg};color:${fg}`;
+}
+function toggleIsolate(id){
+  HM.isolate = HM.isolate===id?null:id;
+  document.querySelectorAll(".ccard").forEach(c=>{
+    const on=c.getAttribute("data-carrier")===HM.isolate;
+    c.classList.toggle("active",on); c.setAttribute("aria-pressed",on?"true":"false");
+  });
+  renderHeat();
+}
+
+/* ----- heatmap color (muted maroon -> neutral -> green) ----- */
+function lerp(a,b,t){return Math.round(a+(b-a)*t);}
+function mix(c1,c2,t){return [lerp(c1[0],c2[0],t),lerp(c1[1],c2[1],t),lerp(c1[2],c2[2],t)];}
+function heatColor(ratio){
+  const maroon=[153,27,27], neutral=[238,241,244], green=[21,128,61];
+  let rgb;
+  if(ratio<=0.97){ const t=Math.max(0,Math.min(1,(ratio-0.78)/(0.97-0.78))); rgb=mix(maroon,neutral,t); }
+  else { const t=Math.max(0,Math.min(1,(ratio-0.97)/(1.06-0.97))); rgb=mix(neutral,green,t); }
+  // mute toward white
+  rgb=mix(rgb,[255,255,255],0.18);
+  const lum=(0.299*rgb[0]+0.587*rgb[1]+0.114*rgb[2]);
+  return {bg:`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`, fg: lum<140?"#fff":"#0b1220"};
+}
+
+function sortedCodes(){
+  const arr=[...R.codes];
+  if(HM.sort==="volume")arr.sort((a,b)=>b.volume-a.volume);
+  else if(HM.sort==="code")arr.sort((a,b)=>a.code.localeCompare(b.code));
+  else arr.sort((a,b)=>b.annualRecoverable-a.annualRecoverable);
+  return arr;
+}
+
+function renderHeat(){
+  const host=document.getElementById("heat-host");
+  host.innerHTML="";
+  const codes=sortedCodes();
+  const carr=C.carriers;
+  const table=el("table",{class:"heat"});
+
+  // header
+  const htr=el("tr",{}, el("th",{class:"corner"},"Code / p75 / vol"));
+  carr.forEach(cr=> htr.appendChild(el("th",{class:"col",
+    style: HM.isolate&&HM.isolate!==cr.id?"opacity:.3":""},cr.name)));
+  htr.appendChild(el("th",{class:"oppo"},"Opp / code"));
+  table.appendChild(el("thead",{},htr));
+
+  // body
+  const tb=el("tbody");
+  codes.forEach(c=>{
+    const tr=el("tr");
+    const rh=el("th",{class:"rowh"},
+      el("div",{class:"rc"},c.code),
+      el("div",{class:"rm"},`p75 ${usd2(c.p75)} · ${c.volume.toLocaleString()}/yr`));
+    tr.appendChild(rh);
+    // best in-network rate (any other carrier) per code, for the anchor
+    const rateRow=C.rates[c.code]||{};
+    carr.forEach(cr=>{
+      const rate=rateRow[cr.id];
+      const ratio=rate/c.p75;
+      const {bg,fg}=heatColor(ratio);
+      const dim = HM.isolate&&HM.isolate!==cr.id;
+      let text;
+      if(HM.show==="rate")text=usd2(rate);
+      else if(HM.show==="gap")text=usd(Math.max(0,c.p75-rate)*c.volume*cr.volumeShare);
+      else text=pct(ratio);
+      const td=el("td",{class:"cell"+(dim?" dim":""),
+        style:`background:${bg};color:${fg}`,
+        tabindex:"0",
+        onmouseenter:e=>showTip(e,c,cr,rate),
+        onmousemove:moveTip, onmouseleave:hideTip,
+        onfocus:e=>showTip(e,c,cr,rate), onblur:hideTip},text);
+      tr.appendChild(td);
+    });
+    tr.appendChild(el("td",{class:"oppo"},usd(c.annualRecoverable)));
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb);
+
+  // footer: blended % of p75 per carrier
+  const ftr=el("tr",{}, el("th",{class:"corner"},"Blended % of p75"));
+  carr.forEach(cr=> ftr.appendChild(el("td",{class:"foot",
+    style:HM.isolate&&HM.isolate!==cr.id?"opacity:.3":""}, pct(cr.blendedPctP75))));
+  ftr.appendChild(el("td",{class:"oppo"},""));
+  table.appendChild(el("tfoot",{},ftr));
+
+  host.appendChild(table);
+}
+
+/* ----- tooltip ----- */
+const tip=document.getElementById("tip");
+function bestOther(code,exceptId){
+  const row=C.rates[code]||{}; let best=null;
+  C.carriers.forEach(cr=>{ if(cr.id===exceptId)return; const r=row[cr.id];
+    if(r!=null&&(best==null||r>best.rate))best={name:cr.name,rate:r}; });
+  return best;
+}
+function showTip(e,c,cr,rate){
+  const anchor=bestOther(c.code,cr.id);
+  const gap=Math.max(0,c.p75-rate)*c.volume*cr.volumeShare;
+  tip.innerHTML="";
+  tip.appendChild(el("div",{class:"tt"},`${cr.name} · ${c.code}`));
+  tip.appendChild(row("Contracted rate",usd2(rate)));
+  tip.appendChild(row("UCR p75",usd2(c.p75)));
+  tip.appendChild(row("% of p75",pct(rate/c.p75)));
+  tip.appendChild(row("Est. annual gap",usd(gap)));
+  if(anchor && anchor.rate>rate){
+    tip.appendChild(el("div",{class:"anchor",html:
+      `Anchor: <b>${anchor.name}</b> already pays <b>${usd2(anchor.rate)}</b> for ${c.code}; ${cr.name} pays ${usd2(rate)}.`}));
+  }
+  tip.classList.add("on"); tip.setAttribute("aria-hidden","false");
+  moveTip(e);
+  function row(l,v){return el("div",{class:"tr"}, el("span",{},l), el("span",{},v));}
+}
+function moveTip(e){
+  const pad=14, w=tip.offsetWidth||240, h=tip.offsetHeight||120;
+  let x=(e.clientX||0)+pad, y=(e.clientY||0)+pad;
+  if(x+w>innerWidth-8)x=(e.clientX||0)-w-pad;
+  if(y+h>innerHeight-8)y=(e.clientY||0)-h-pad;
+  tip.style.left=Math.max(8,x)+"px"; tip.style.top=Math.max(8,y)+"px";
+}
+function hideTip(){ tip.classList.remove("on"); tip.setAttribute("aria-hidden","true"); }
+
+/* ----- auto takeaways ----- */
+function takeawayBox(){
+  const carr=C.carriers;
+  // 1. call first = worst blended x highest volume = highest annual opportunity (already sorted)
+  const callFirst=carr[0];
+  // 2. lowest blended rate may differ from top-opportunity once volume-weighted
+  const lowestRate=[...carr].sort((a,b)=>a.blendedPctP75-b.blendedPctP75)[0];
+  // 3. per-code anchor: biggest same-code spread between two carriers
+  let anchor=null;
+  R.codes.forEach(c=>{
+    const row=C.rates[c.code]||{};
+    let lo=null,hi=null;
+    carr.forEach(cr=>{ const r=row[cr.id]; if(r==null)return;
+      if(lo==null||r<lo.rate)lo={cr,rate:r}; if(hi==null||r>hi.rate)hi={cr,rate:r}; });
+    if(lo&&hi){ const sp=hi.rate-lo.rate; if(!anchor||sp>anchor.spread)anchor={code:c.code,lo,hi,spread:sp}; }
+  });
+
+  const box=el("div",{class:"callout",style:"margin-top:24px"},
+    el("h4",{},"What this grid says."));
+  const ul=el("ul",{style:"margin:6px 0 0;padding-left:18px;color:var(--ink-muted);font-size:14px;line-height:1.6"});
+  ul.appendChild(el("li",{html:
+    `<b>Call ${callFirst.name} first.</b> It carries the most recoverable revenue (${usd(callFirst.annualOpportunity)}/yr): `+
+    `its blended ${pct(callFirst.blendedPctP75)} of p75 across ${pct(callFirst.volumeShare)} of your patient volume.`}));
+  if(lowestRate.id!==callFirst.id){
+    ul.appendChild(el("li",{html:
+      `<b>${lowestRate.name} pays the least</b> (${pct(lowestRate.blendedPctP75)} of p75), but it is only `+
+      `${pct(lowestRate.volumeShare)} of your volume, so it is not the top priority once you weight by how often you see those patients.`}));
+  } else {
+    ul.appendChild(el("li",{html:
+      `${callFirst.name} is both your lowest-paying and highest-volume carrier, a rare case where the worst rate and the biggest dollar impact line up.`}));
+  }
+  if(anchor){
+    ul.appendChild(el("li",{html:
+      `<b>Concrete anchor:</b> on ${anchor.code}, ${anchor.lo.cr.name} pays ${usd2(anchor.lo.rate)} while ${anchor.hi.cr.name} already pays `+
+      `${usd2(anchor.hi.rate)} for the identical procedure. Bring that to your ${anchor.lo.cr.name} rep.`}));
+  }
+  box.appendChild(ul);
+  return box;
+}
+
+/* ============================================================
+   7. METHODOLOGY
+   ============================================================ */
+(function methodology(){
+  const s=el("section");
+  s.appendChild(sectionHead(7,"Methodology","How the numbers were calculated.",null));
+  const items=[
+    ["UCR geography.","Each code's benchmark is resolved at the most specific geography available: ZIP3, then metro, then state, then region, then national, requiring a minimum sample of 30 to use a level."],
+    ["Your fee.","Your practice fee is the production-weighted average across providers, with $0 bundled and write-off lines excluded so they don't drag the average down."],
+    ["Per-code recoverable.","Recoverable revenue is max(0, p75 - fee) × annual volume, with the zero-clamp applied per code, never netted at the aggregate, so an above-market code can't mask a below-market one."],
+    ["Carrier rates.","Carrier cells use each carrier's contracted allowed amount. When a carrier rate is missing we leave the cell empty rather than assuming your master fee applies."],
+    ["Carrier opportunity.","Each carrier's opportunity is weighted by its share of your patient volume. A low rate on a rare carrier matters less than a moderate rate on a common one."],
+    ["Coverage.",`Benchmark coverage for this report is ${pct(R.meta.benchmarkCoverage)} of captured production; codes without a benchmark at the required sample are excluded from totals.`]
+  ];
+  const ul=el("ul",{class:"method"});
+  items.forEach(([b,t])=> ul.appendChild(el("li",{html:`<b>${b}</b> ${t}`})));
+  s.appendChild(ul);
+  page.appendChild(s);
+})();
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+(function footer(){
+  page.appendChild(el("footer",{class:"doc"},
+    el("a",{href:"https://calderwoodtech.com"},"calderwoodtech.com"),
+    el("span",{},`UCR benchmark · ZIP ${R.meta.zip} · ${pct(R.meta.benchmarkCoverage)} production coverage · generated ${R.meta.generatedAt}`)));
+})();
+
+/* ---------- util ---------- */
+function trunc(s,n){return s.length<=n?s:s.slice(0,n-1)+"…";}
+</script>
+</body>
+</html>

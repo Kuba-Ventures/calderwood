@@ -17,6 +17,7 @@ export default function AccountPage() {
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,6 +76,30 @@ export default function AccountPage() {
       await browserSupabase().auth.signOut();
     }
     router.replace("/login");
+  }
+
+  async function resetData() {
+    if (
+      !window.confirm(
+        "Remove all report data for this account? This deletes your fee schedules, frequencies, and report so you can start fresh. Your login stays."
+      )
+    )
+      return;
+    setResetting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/reset-data", { method: "POST" });
+      if (res.ok) {
+        router.replace("/intake");
+      } else {
+        const json = await res.json().catch(() => ({}));
+        setError(json.error || "Couldn't reset. Try again.");
+      }
+    } catch {
+      setError("Couldn't reset. Try again.");
+    } finally {
+      setResetting(false);
+    }
   }
 
   if (!hydrated) {
@@ -159,6 +184,26 @@ export default function AccountPage() {
           <span className="inline-flex items-center rounded-full bg-canvas-tint2 px-2.5 py-0.5 text-xs font-medium text-ink-500">
             Coming soon
           </span>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-canvas-border bg-canvas px-8 py-6 shadow-sm">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-ink-900">Start fresh</h3>
+            <p className="text-xs text-ink-500">
+              Remove your report, fee schedules, and intake so you can re-run from
+              scratch. Your account and login stay.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={resetData}
+            disabled={resetting}
+            className="inline-flex shrink-0 items-center justify-center rounded-md border border-red-200 bg-canvas px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+          >
+            {resetting ? "Removing…" : "Remove data"}
+          </button>
         </div>
       </div>
 
