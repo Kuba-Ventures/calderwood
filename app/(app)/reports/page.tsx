@@ -17,6 +17,9 @@ import {
   CodeGapTable,
   SummaryCards,
 } from "@/components/dashboard/report-charts";
+import { CarrierAnalysis } from "@/components/dashboard/carrier-analysis";
+import { CategoryOpportunity } from "@/components/dashboard/category-opportunity";
+import { ReportMethodology } from "@/components/dashboard/report-methodology";
 import { UnlockBanner } from "@/components/report/lock-overlay";
 import { ShareReport } from "@/components/report/share-report";
 
@@ -166,19 +169,25 @@ function DeliveredView({
       )}
 
       <SummaryCards data={report} unlocked={unlocked} />
-      <CarrierRankingChart
-        carriers={report.carriers}
-        selected={selectedCarrier?.name ?? null}
-        onSelect={setSelectedCarrier}
-        unlocked={unlocked}
-        onUnlock={onUnlock}
-        busy={checkingOut}
-      />
+      {unlocked && report.carrierGrid?.hasData ? (
+        <CarrierAnalysis grid={report.carrierGrid} />
+      ) : (
+        <CarrierRankingChart
+          carriers={report.carriers}
+          selected={selectedCarrier?.name ?? null}
+          onSelect={setSelectedCarrier}
+          unlocked={unlocked}
+          onUnlock={onUnlock}
+          busy={checkingOut}
+        />
+      )}
       <CodeGapTable
         codes={report.codes}
         filterCarrier={unlocked ? selectedCarrier : null}
         unlocked={unlocked}
       />
+      <CategoryOpportunity categories={report.categories} unlocked={unlocked} />
+      {unlocked && <ReportMethodology />}
     </div>
   );
 }
