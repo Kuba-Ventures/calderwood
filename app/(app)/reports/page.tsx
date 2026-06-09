@@ -18,6 +18,7 @@ import {
   SummaryCards,
 } from "@/components/dashboard/report-charts";
 import { UnlockBanner } from "@/components/report/lock-overlay";
+import { ShareReport } from "@/components/report/share-report";
 
 export default function ReportsPage() {
   const { state, loading, checkingOut, genError, startCheckout } = useReport();
@@ -141,16 +142,19 @@ function DeliveredView({
             Benchmarked against UCR in ZIP {report.zip}.
           </p>
         </div>
-        {unlocked && pdfUrl && (
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-md bg-ink-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-ink-700"
-          >
-            Download PDF
-          </a>
-        )}
+        <div className="flex items-center gap-2">
+          <ShareReport />
+          {unlocked && pdfUrl && (
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-md bg-ink-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-ink-700"
+            >
+              Download PDF
+            </a>
+          )}
+        </div>
       </div>
 
       {!unlocked && (

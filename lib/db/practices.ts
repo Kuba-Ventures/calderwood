@@ -24,6 +24,7 @@ export type PracticeRow = {
   paid_at: string | null;
   fee_input_method: "csv" | "xlsx" | "paste" | "manual" | "eob" | "pdf" | null;
   phone?: string | null;
+  share_token?: string | null;
   status: PracticeStatus;
 };
 
