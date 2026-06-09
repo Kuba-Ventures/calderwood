@@ -1,0 +1,66 @@
+name: factory
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  # Gate 1: the test suite the reviewer leans on.
+  factory-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  # Gate 2: conservative Claude review. Only runs once tests are green.
+  factory-review:
+    needs: factory-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Use the pr-reviewer subagent to review this pull request against the
+            repo's merge policy in CLAUDE.md. The factory test suite has already
+            passed for this PR. Post your review as a comment on this pull
+            request, and make the FINAL line of that comment exactly one of:
+              VERDICT: APPROVE-LOWRISK
+              VERDICT: ESCALATE — <one concrete reason>
+
+      # Act on the verdict the reviewer posted. APPROVE-LOWRISK -> queue an
+      # auto-merge (still gated by branch protection). Otherwise label for a
+      # human and leave it. Defaults to escalate if no verdict is found.
+      - name: Act on verdict
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          approved=$(gh pr view "$PR" --json comments \
+            -q '.comments[].body' \
+            | grep -c 'VERDICT: APPROVE-LOWRISK' || true)
+          if [ "$approved" -ge 1 ]; then
+            echo "Reviewer APPROVED-LOWRISK — enabling auto-merge."
+            gh pr merge "$PR" --squash --auto
+          else
+            echo "Reviewer ESCALATED (or no verdict) — routing to a human."
+            gh label create factory:escalate \
+              --color FBCA04 --description "Needs a human to merge" 2>/dev/null || true
+            gh pr edit "$PR" --add-label factory:escalate
+          fi
