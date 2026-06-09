@@ -18,7 +18,7 @@ import { generateReport } from "@/lib/report/generate";
 import type { FeeEntry } from "@/lib/types/pipeline";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const UPLOADS_BUCKET = "uploads";
 

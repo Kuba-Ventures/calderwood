@@ -59,11 +59,13 @@ export async function parsePdfSchedule(opts: {
   }
 
   const client = new Anthropic({ apiKey });
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 16000,
-    system: SYSTEM,
-    messages: [
+  // Stream to avoid the serverless timeout on long extractions (see pdf-summary).
+  const response = await client.messages
+    .stream({
+      model: MODEL,
+      max_tokens: 16000,
+      system: SYSTEM,
+      messages: [
       {
         role: "user",
         content: [
@@ -82,7 +84,8 @@ export async function parsePdfSchedule(opts: {
         ],
       },
     ],
-  });
+    })
+    .finalMessage();
 
   const text = response.content.find((b) => b.type === "text");
   if (!text || text.type !== "text") {
