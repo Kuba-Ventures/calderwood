@@ -24,6 +24,8 @@ export type PdfSummaryEntry = {
   code: string;
   fee: number;
   annualVolume: number;
+  /** Per-provider average fee for this code (provider label -> fee). */
+  providerFees?: Record<string, number>;
 };
 
 export type PdfSummaryResult = {
@@ -47,8 +49,10 @@ STRICT inclusion rules:
 - EXCLUDE any code whose Average $ is 0 or blank (no usable fee).
 - Do not invent or infer values. Read them off the report. Round fee to cents and annualVolume to a whole number.
 
+ALSO, for each code, capture the per-provider average fee from the sub-rows under it (provider labels such as DDS0, DDS3, DDS4, HYG2). Put them in a "providers" object mapping each provider label to that provider's Average $ for the code. Omit providers whose Average $ is 0 or blank. If a code has no per-provider sub-rows, omit "providers".
+
 Respond with ONLY a JSON object, no prose and no markdown fences, of the exact form:
-{"entries":[{"code":"D2740","fee":864.43,"annualVolume":200}],"notes":["..."]}
+{"entries":[{"code":"D2740","fee":864.43,"annualVolume":200,"providers":{"DDS0":942.93,"DDS3":839.65}}],"notes":["..."]}
 Put any caveats (ambiguous rows, skipped sections) in "notes".`;
 
 const CDT_RE = /^D\d{4}$/;
@@ -141,10 +145,22 @@ export async function parsePdfSummary(opts: {
     }
     if (seen.has(code)) continue;
     seen.add(code);
+    // Per-provider fees: keep numeric, positive entries only.
+    let providerFees: Record<string, number> | undefined;
+    const rawProv = r.providers;
+    if (rawProv && typeof rawProv === "object") {
+      const pf: Record<string, number> = {};
+      for (const [label, v] of Object.entries(rawProv as Record<string, unknown>)) {
+        const f = Number(v);
+        if (label && Number.isFinite(f) && f > 0) pf[label] = Math.round(f * 100) / 100;
+      }
+      if (Object.keys(pf).length > 0) providerFees = pf;
+    }
     entries.push({
       code,
       fee: Math.round(fee * 100) / 100,
       annualVolume: Number.isFinite(annualVolume) && annualVolume > 0 ? annualVolume : 0,
+      ...(providerFees ? { providerFees } : {}),
     });
   }
   if (dropped > 0) notes.push(`${dropped} extracted row(s) failed validation and were dropped.`);

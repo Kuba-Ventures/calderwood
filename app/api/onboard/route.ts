@@ -36,6 +36,7 @@ const feeSchema = z.discriminatedUnion("method", [
     method: z.literal("pdf"),
     rows: rowsSchema,
     frequencies: z.record(z.string(), z.number()).optional(),
+    providerFees: z.record(z.string(), z.record(z.string(), z.number())).optional(),
     pdfPath: z.string().optional(),
     filename: z.string().optional(),
   }),
@@ -159,6 +160,7 @@ export async function POST(request: Request) {
       parsed_data: parsed.entries,
       parse_confidence: parsed.confidence,
       parse_notes: parsed.notes.join("; ") || null,
+      provider_fees: fee.method === "pdf" ? fee.providerFees ?? null : null,
     });
 
     // PDF reports carry the practice's real annual volumes — persist them so

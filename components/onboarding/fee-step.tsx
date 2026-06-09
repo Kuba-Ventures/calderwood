@@ -37,6 +37,7 @@ export type FeeDraft = {
   pdfPath: string | null;
   pdfRows: ManualRow[];
   pdfFrequencies: Record<string, number>;
+  pdfProviderFees: Record<string, Record<string, number>>;
   pdfCount: number | null;
   pdfMessage: string | null;
   // paste
@@ -57,6 +58,7 @@ export type FeePayload =
       method: "pdf";
       rows: ManualRow[];
       frequencies: Record<string, number>;
+      providerFees: Record<string, Record<string, number>>;
       pdfPath?: string;
       filename?: string;
     }
@@ -76,6 +78,7 @@ export function emptyFeeDraft(): FeeDraft {
     pdfPath: null,
     pdfRows: [],
     pdfFrequencies: {},
+    pdfProviderFees: {},
     pdfCount: null,
     pdfMessage: null,
     pasteText: "",
@@ -138,6 +141,7 @@ export function buildFeePayload(d: FeeDraft): FeePayload | null {
                 method: "pdf",
                 rows: d.pdfRows,
                 frequencies: d.pdfFrequencies,
+                providerFees: d.pdfProviderFees,
                 pdfPath: d.pdfPath ?? undefined,
                 filename: d.pdfFile?.name,
               }
@@ -412,6 +416,7 @@ function UploadPane({
         pdfStatus: "done",
         pdfRows: rows,
         pdfFrequencies: parseJson.frequencies ?? {},
+        pdfProviderFees: parseJson.providerFees ?? {},
         pdfCount: parseJson.count ?? rows.length,
         pdfMessage:
           `${rows.length} code${rows.length === 1 ? "" : "s"} found` +

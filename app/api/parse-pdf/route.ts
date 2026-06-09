@@ -60,8 +60,12 @@ export async function POST(request: Request) {
   // code -> annual-volume frequency map (only codes with a real volume).
   const rows = result.entries.map((e) => ({ code: e.code, fee: e.fee }));
   const frequencies: Record<string, number> = {};
+  const providerFees: Record<string, Record<string, number>> = {};
   for (const e of result.entries) {
     if (e.annualVolume > 0) frequencies[e.code] = e.annualVolume;
+    if (e.providerFees && Object.keys(e.providerFees).length > 1) {
+      providerFees[e.code] = e.providerFees;
+    }
   }
 
   return NextResponse.json({
@@ -69,6 +73,7 @@ export async function POST(request: Request) {
     count: rows.length,
     rows,
     frequencies,
+    providerFees,
     notes: result.notes,
     confidence: result.confidence,
   });

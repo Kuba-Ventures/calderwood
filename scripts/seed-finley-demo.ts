@@ -78,6 +78,18 @@ async function main() {
   const input: ComputationInput = JSON.parse(
     fs.readFileSync(path.join(fixtureDir, "input.json"), "utf8")
   );
+  // Demo per-provider fees: spread the master fee across providers so the
+  // provider-variance section has data on the seeded report.
+  const demoProviderFees: Record<string, Record<string, number>> = {};
+  input.masterSchedule.slice(0, 8).forEach((e) => {
+    const isHyg = /^D[01]/.test(e.code);
+    const hi = Math.round(e.fee * 1.06 * 100) / 100;
+    const lo = Math.round(e.fee * 0.94 * 100) / 100;
+    demoProviderFees[e.code] = isHyg
+      ? { DDS0: hi, DDS3: e.fee, HYG2: lo }
+      : { DDS0: hi, DDS3: lo };
+  });
+  input.providerFees = demoProviderFees;
   const { data: practice, error: pracErr } = await sb
     .from("practices")
     .insert({
@@ -110,6 +122,7 @@ async function main() {
       parsed_data: input.masterSchedule,
       parse_confidence: "high",
       parse_notes: "seeded",
+      provider_fees: input.providerFees,
     },
   ];
   for (const [carrier, fees] of Object.entries(input.carrierSchedules)) {

@@ -50,6 +50,15 @@ export type CarrierGrid = {
   rows: CarrierGridRow[];
 };
 
+/** One code's cross-provider fee spread. */
+export type ProviderVarianceRow = {
+  code: string;
+  label: string;
+  providers: Array<{ provider: string; fee: number }>;
+  recoverable: number;
+  spread: number;
+};
+
 export type GatedReport = Omit<ReportData, "worstCarrier"> & {
   // name is "" when locked (the worst carrier is itself a paid insight).
   worstCarrier: { name: string; annualGapUsd: number; gapPct: number };
@@ -62,6 +71,8 @@ export type GatedReport = Omit<ReportData, "worstCarrier"> & {
   categories: CategoryRollup[];
   /** Carrier scorecard + code-by-carrier rate grid. */
   carrierGrid: CarrierGrid;
+  /** Cross-provider fee variance per code. */
+  providerVariance: ProviderVarianceRow[];
 };
 
 function gradeFor(blended: number): string {
@@ -76,6 +87,7 @@ function gradeFor(blended: number): string {
 function buildRich(output: ComputationOutput): {
   categories: CategoryRollup[];
   carrierGrid: CarrierGrid;
+  providerVariance: ProviderVarianceRow[];
 } {
   // Categories: benchmarked codes only (p75 present), recoverable vs production.
   const catMap: Record<string, CategoryRollup> = {};
@@ -136,7 +148,30 @@ function buildRich(output: ComputationOutput): {
     }))
     .sort((a, b) => b.annualRecoverable - a.annualRecoverable);
 
-  return { categories, carrierGrid: { hasData: present.size > 0, carriers, rows } };
+  // Provider variance: codes with a real cross-provider fee spread.
+  const providerVariance: ProviderVarianceRow[] = output.codeRows
+    .filter((r) => r.providerFees && (r.providerVarianceRecoverable ?? 0) > 0)
+    .map((r) => {
+      const providers = Object.entries(r.providerFees ?? {})
+        .map(([provider, fee]) => ({ provider, fee }))
+        .sort((a, b) => b.fee - a.fee);
+      const fees = providers.map((p) => p.fee);
+      return {
+        code: r.code,
+        label: r.description,
+        providers,
+        recoverable: Math.round(r.providerVarianceRecoverable ?? 0),
+        spread: fees.length ? Math.max(...fees) - Math.min(...fees) : 0,
+      };
+    })
+    .filter((r) => r.spread > 0)
+    .sort((a, b) => b.recoverable - a.recoverable);
+
+  return {
+    categories,
+    carrierGrid: { hasData: present.size > 0, carriers, rows },
+    providerVariance,
+  };
 }
 
 /** Map the rich compute output into the flat ReportData the UI renders. */
@@ -229,6 +264,7 @@ export function toGatedReport(
       codesBelowP75,
       categories: rich.categories,
       carrierGrid: rich.carrierGrid,
+      providerVariance: rich.providerVariance,
     };
   }
 
@@ -266,6 +302,16 @@ export function toGatedReport(
       .sort((a, b) => a.code.localeCompare(b.code)),
   };
 
+  const lockedProviderVariance: ProviderVarianceRow[] = rich.providerVariance
+    .map((r) => ({
+      code: r.code,
+      label: r.label,
+      providers: r.providers.map((p) => ({ provider: p.provider, fee: 0 })),
+      recoverable: 0,
+      spread: 0,
+    }))
+    .sort((a, b) => a.code.localeCompare(b.code));
+
   return {
     unlocked: false,
     teaserUsd,
@@ -277,5 +323,6 @@ export function toGatedReport(
     codes: lockedCodes,
     categories: lockedCategories,
     carrierGrid: lockedGrid,
+    providerVariance: lockedProviderVariance,
   };
 }
