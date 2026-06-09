@@ -11,6 +11,7 @@ import { Cover } from "./cover";
 import { PercentileSection } from "./percentile-section";
 import { Top10Section } from "./top10-section";
 import { CarrierSection } from "./carrier-section";
+import { CategorySection } from "./category-section";
 import { MethodologySection } from "./methodology-section";
 import { AppendixSection } from "./appendix-section";
 
@@ -64,6 +65,12 @@ export function ReportDoc({
           <Footer basisLine={basisLine} />
         </Page>
       )}
+
+      <Page size="LETTER" style={styles.page}>
+        <BrandHeader />
+        <CategorySection data={data} />
+        <Footer basisLine={basisLine} />
+      </Page>
 
       <Page size="LETTER" style={styles.page}>
         <BrandHeader />
