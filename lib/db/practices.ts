@@ -37,6 +37,8 @@ export type FeeScheduleRow = {
   parsed_data: FeeEntry[] | null;
   parse_confidence: ParseConfidence | null;
   parse_notes: string | null;
+  /** code -> provider label -> fee (PM production reports). Optional. */
+  provider_fees?: Record<string, Record<string, number>> | null;
   created_at: string;
 };
 

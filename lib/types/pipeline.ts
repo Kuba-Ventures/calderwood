@@ -62,6 +62,8 @@ export type ComputationInput = {
   masterSchedule: FeeEntry[];
   carrierSchedules: Record<string, FeeEntry[]>;
   frequencies: Record<string, number>;
+  /** Per-code, per-provider fee: code -> provider label -> fee. Optional. */
+  providerFees?: Record<string, Record<string, number>>;
 };
 
 export type CodeConfidence = "high" | "medium" | "low" | "no_data";
@@ -82,6 +84,10 @@ export type CodeRow = {
   carrierFees: Record<string, number>;
   carrierGaps: Record<string, number>;
   annualRecoverableByCarrier: Record<string, number>;
+  /** Per-provider fee for this code (provider label -> fee). Optional. */
+  providerFees?: Record<string, number>;
+  /** Recoverable by aligning lower providers up to the highest in-house fee. */
+  providerVarianceRecoverable?: number;
 };
 
 export type UnderpaymentBasis = "carrier" | "market";

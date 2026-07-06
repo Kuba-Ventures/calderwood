@@ -19,6 +19,7 @@ import {
 } from "@/components/dashboard/report-charts";
 import { CarrierAnalysis } from "@/components/dashboard/carrier-analysis";
 import { CategoryOpportunity } from "@/components/dashboard/category-opportunity";
+import { ProviderVariance } from "@/components/dashboard/provider-variance";
 import { ReportPercentile } from "@/components/dashboard/report-percentile";
 import { ReportMethodology } from "@/components/dashboard/report-methodology";
 import { UnlockBanner } from "@/components/report/lock-overlay";
@@ -208,6 +209,9 @@ function DeliveredView({
         unlocked={unlocked}
       />
       <CategoryOpportunity categories={report.categories} unlocked={unlocked} />
+      {unlocked && report.providerVariance?.length > 0 && (
+        <ProviderVariance rows={report.providerVariance} unlocked={unlocked} />
+      )}
       {unlocked && <ReportMethodology />}
     </div>
   );
