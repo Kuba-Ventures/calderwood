@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CarrierRow, formatDateTime } from "@/lib/storage";
+import { CarrierRow, formatDateTime, formatUsd } from "@/lib/storage";
 import type { PracticeStatus } from "@/lib/types/pipeline";
 import { useReport } from "@/lib/client/use-report";
 import { PipelineTracker } from "@/components/dashboard/pipeline-tracker";
@@ -20,6 +20,7 @@ import {
 import { CarrierAnalysis } from "@/components/dashboard/carrier-analysis";
 import { CategoryOpportunity } from "@/components/dashboard/category-opportunity";
 import { ProviderVariance } from "@/components/dashboard/provider-variance";
+import { ReportPercentile } from "@/components/dashboard/report-percentile";
 import { ReportMethodology } from "@/components/dashboard/report-methodology";
 import { UnlockBanner } from "@/components/report/lock-overlay";
 import { ShareReport } from "@/components/report/share-report";
@@ -170,6 +171,26 @@ function DeliveredView({
       )}
 
       <SummaryCards data={report} unlocked={unlocked} />
+      {unlocked && report.carrierGrid?.hasData && (
+        <div className="rounded-xl border-l-[3px] border-accent bg-canvas-tint px-6 py-5">
+          <h3 className="text-base font-semibold text-ink-900">The full picture</h3>
+          <p className="mt-1.5 text-sm text-ink-600">
+            Your fee schedule leaves about{" "}
+            <span className="font-serif font-semibold text-accent-ink">
+              {formatUsd(report.annualUnderpaymentUsd)}
+            </span>{" "}
+            on the table against local UCR. Of that, about{" "}
+            <span className="font-serif font-semibold text-accent-ink">
+              {formatUsd(
+                report.carrierGrid.carriers.reduce((s, c) => s + c.annualRecoverable, 0)
+              )}
+            </span>{" "}
+            is attributable to specific carriers paying below the 75th percentile.
+            That is the part you recover at the negotiating table, broken down below.
+          </p>
+        </div>
+      )}
+      {unlocked && <ReportPercentile codes={report.codes} />}
       {unlocked && report.carrierGrid?.hasData ? (
         <CarrierAnalysis grid={report.carrierGrid} />
       ) : (

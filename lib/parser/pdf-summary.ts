@@ -85,11 +85,16 @@ export async function parsePdfSummary(opts: {
   }
 
   const client = new Anthropic({ apiKey });
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 16000,
-    system: SYSTEM,
-    messages: [
+  // Stream the extraction. A 14-page report at up to 16k output tokens can run
+  // well over a minute; a non-streaming request hits the serverless function
+  // timeout and the client spinner hangs. Streaming keeps the connection alive
+  // and lets us collect the full message via finalMessage().
+  const response = await client.messages
+    .stream({
+      model: MODEL,
+      max_tokens: 16000,
+      system: SYSTEM,
+      messages: [
       {
         role: "user",
         content: [
@@ -108,7 +113,8 @@ export async function parsePdfSummary(opts: {
         ],
       },
     ],
-  });
+    })
+    .finalMessage();
 
   const text = response.content.find((b) => b.type === "text");
   if (!text || text.type !== "text") {

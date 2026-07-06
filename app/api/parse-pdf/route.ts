@@ -11,7 +11,9 @@ import { serviceSupabase } from "@/lib/db/server";
 import { parsePdfSummary } from "@/lib/parser/pdf-summary";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+// Streamed Opus extraction of a 14-page report can run past a minute; give the
+// function real headroom (capped by the Vercel plan).
+export const maxDuration = 300;
 
 const BUCKET = "uploads";
 const MAX_BYTES = 32 * 1024 * 1024; // Anthropic native-PDF ceiling.
