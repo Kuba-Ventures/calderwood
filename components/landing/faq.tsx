@@ -1,7 +1,7 @@
 const faqs = [
   {
     q: "Where does the UCR data come from?",
-    a: "REFMed's national UCR database, covering all 50 states. No crowdsourced fees, no modeled estimates. Where confidence is low for a specific code or zip (low-volume codes, rural markets), we flag it on the report instead of reporting a false-precision number.",
+    a: "A national UCR benchmark database covering all 50 states. No crowdsourced fees, no modeled estimates. Where confidence is low for a specific code or zip (low-volume codes, rural markets), we flag it on the report instead of reporting a false-precision number.",
   },
   {
     q: "What if I don’t have my fee schedule in a clean format?",
