@@ -1,0 +1,33 @@
+name: main-build-check
+
+# The factory workflow runs `npm test` on the PR branch only. A bad *merge*
+# into main — e.g. a semantic 3-way merge that splices two branches' edits to
+# the same file without a conflict marker — is never build-checked, so a
+# non-compiling main can land unnoticed (it did once). This job builds main on
+# every push and goes red if it doesn't compile, so the break surfaces
+# immediately instead of via a failed production deploy.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main-build-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Build
+        run: npm run build
