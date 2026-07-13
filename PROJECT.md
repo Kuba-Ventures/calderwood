@@ -1,13 +1,13 @@
 # Calderwood (Fee IQ)
 *A $199 dental fee-schedule assessment that shows practices where they're underpaid.*
 
-*Last updated: 2026-06-26 14:00 ET by kuba-vault*
+*Last updated: 2026-07-13 12:00 ET by kuba-vault*
 
 ---
 
 ## TL;DR  [rewrite]
 
-Calderwood is a self-serve web product that benchmarks a dental practice's fee schedule against UCR (usual, customary, reasonable) data and surfaces recoverable revenue per code and per carrier. A practice onboards, uploads fees/volumes (CSV or PDF from their practice-management system), pays $199 via Stripe, and gets a gated report — on the web and as a downloadable PDF. The product is post-MVP: onboarding, computation, paywall, report rendering, and view-only sharing all work. Current focus has been report parity between web and PDF. The main open constraint is a compliance gate limiting how many CDT codes can be benchmarked.
+Calderwood is a self-serve web product that benchmarks a dental practice's fee schedule against UCR (usual, customary, reasonable) data and surfaces recoverable revenue per code and per carrier. A practice onboards, uploads fees/volumes (CSV or PDF from their practice-management system), pays $199 via Stripe, and gets a gated report — on the web and as a downloadable PDF. The product is post-MVP: onboarding, computation, paywall, report rendering, and view-only sharing all work. The main open constraint is a compliance gate limiting how many CDT codes can be benchmarked — the report covers ~19 of 142 codes. Current focus is unblocking that: we've reviewed the licensing documents, ruled out the off-the-shelf NDAS form (it forbids redistribution), and identified FAIR Health as the recommended fee-data source with existing commercial redistribution licensing. Inquiry emails to FAIR Health and NDAS are drafted, and the ADA CDT content-license application is completed and dated 2026-06-25, pending submission. No license is signed yet.
 
 ---
 
@@ -26,14 +26,16 @@ Calderwood is a self-serve web product that benchmarks a dental practice's fee s
 - **Engagement manager:** self-directed
 - **Lead:** Finley
 - **Cadence:** self-directed
-- **Next milestone:** compliance review of UCR data sourcing (gates benchmark coverage expansion) — ~week of 2026-06-15
+- **Next milestone:** secure a FAIR Health commercial license with written redistribution rights as the input to the still-open compliance review of data sourcing (gates benchmark coverage expansion)
 - **Flags:** shipping
 
 ---
 
 ## Where we are right now  [rewrite]
 
-The full path works end to end: onboard → upload fees and volumes → compute benchmark → pay $199 → see the gated report on the web and download the PDF. The last several PRs (#3–#5) pushed report parity — the rich sections (carrier scorecard + grade, carrier-vs-code heatmap, category opportunity rollup, methodology) now render in both the web report and the PDF, and the web report got the percentile callout and a "full picture" section. View-only sharing via `/r/<token>` is live so a practice can hand someone a read-only link with no login. The known constraint to watch: the report currently benchmarks only ~19 of 142 CDT codes; expanding coverage is gated on a compliance review of how the UCR data is sourced (targeted ~week of 2026-06-15). Next concrete step is that compliance review before widening code coverage.
+The full path works end to end: onboard → upload fees and volumes → compute benchmark → pay $199 → see the gated report on the web and download the PDF. The last several PRs (#3–#5) pushed report parity — the rich sections (carrier scorecard + grade, carrier-vs-code heatmap, category opportunity rollup, methodology) now render in both the web report and the PDF, and the web report got the percentile callout and a "full picture" section. View-only sharing via `/r/<token>` is live so a practice can hand someone a read-only link with no login.
+
+The active work this week is the data-sourcing/licensing path that gates expanding coverage beyond the vetted ~19 of 142 CDT codes. We reviewed the two licensing documents in `~/Desktop/Work/Calderwood/`. Two terminology corrections: the codes are CDT (Current Dental Terminology, ADA-copyrighted), not "CDC"; and the fee-data licensor is NDAS (National Dental Advisory Service, published by Yale Wasserman DMD / DMD Medical Publishers), not "Henry Schein." The standard NDAS "Developers License Agreement 2026" only permits internal business use and explicitly bans redistributing NDAS data to third parties or acting as an ASP/service bureau (§§4, 7, 8) — so the off-the-shelf form does not cover Calderwood's model of selling reports that embed the data to dental practices; a negotiated redistribution/OEM license would be needed. Recommended alternative: FAIR Health (FH Charge Dental module) — CDT-arrayed charge percentiles, ~493 geozips (~3-digit ZIP), coverage of essentially all dental procedures (well past the 142-code target), and an existing commercial data-licensing business that supports vendors embedding FH Benchmarks. Inquiry emails to both FAIR Health and NDAS/Wasserman are drafted. Separately, CDT codes/descriptors are ADA-copyrighted regardless of data source, so an ADA CDT commercial license is also required; that application is completed, attested, and dated 2026-06-25 (with product screenshots + marketing exhibits), pending submission to CDT-SNODENT@ada.org, minus two blank fields (company-history summary, company URL). Nothing is signed — these are drafted inquiries and a recommended direction. Next concrete step: send the FAIR Health inquiry and treat a written redistribution license as the prerequisite input to the compliance review before widening code coverage.
 
 ---
 
@@ -101,6 +103,9 @@ The full path works end to end: onboard → upload fees and volumes → compute 
 
 The "why" behind key choices. Newest first.
 
+- **2026-07-13 — FAIR Health is the recommended fee-data source for coverage expansion** — After reviewing the licensing documents, FAIR Health (FH Charge Dental) is the recommended path from ~19 to 140+ CDT codes: CDT-arrayed charge percentiles, ~493 geozips, near-total procedure coverage, and an existing commercial data-licensing business that supports vendors embedding FH Benchmarks. Rejected: standard NDAS "Developers License Agreement 2026" (internal-use only; §§4/7/8 forbid redistribution and ASP/service-bureau use — wrong instrument for reselling embedded data). Fallback: Sikka Software (742 codes, ZIP-level) but only via a bespoke OEM/data license since its standard ONE API license bars redistribution. Not viable: ADA HPI Survey of Dental Fees (discontinued 2023). Inquiry emails to FAIR Health and NDAS/Wasserman drafted; nothing signed.
+- **2026-07-13 — Treat a written FAIR Health redistribution license as the prerequisite input to the compliance review, not a parallel track** — The data-sourcing compliance review can't clear without a benchmark source that grants written third-party redistribution rights. Until that license is in hand, benchmarking stays limited to the vetted ~19-code subset.
+- **2026-07-13 — Separate ADA CDT commercial license required regardless of data source** — CDT codes/descriptors are ADA-copyrighted, so a CDT Content License is needed independent of which fee-data licensor is chosen. Application completed, attested, and dated 2026-06-25 with product/marketing exhibits (`Calderwood-CDT-application-with-exhibits.pdf`), pending submission to CDT-SNODENT@ada.org once the company-history summary and company URL fields are filled.
 - **2026-06-26 — Benchmark only ~19/142 CDT codes for now** — Reporting is limited to a vetted subset of codes; expanding coverage is gated on a compliance review of UCR data sourcing (~week of 2026-06-15). Avoids shipping benchmarks the data sourcing can't yet defend.
 - **2026-06-09 — Supervised PR factory with low-risk-only auto-merge** — Auto-merge restricted to landing/legal/markdown; anything touching money, auth, data, schema, or report computation escalates to a human (see `CLAUDE.md`, `.claude/agents/pr-reviewer.md`).
 - **2026-05 — Single paywall boundary in `lib/report/gate.ts`** — All gating lives in one place; locked dollar figures are zeroed server-side so they never reach the browser pre-payment, while a non-gated teaser stays visible.
@@ -111,7 +116,10 @@ The "why" behind key choices. Newest first.
 
 ## Open loops  [rewrite — but carry forward unfinished items]
 
-- [ ] Compliance review of UCR data sourcing before expanding code coverage beyond ~19 codes — Finley
+- [ ] Send the drafted FAIR Health inquiry and pursue a commercial license with written redistribution rights (prerequisite for the compliance review) — Finley
+- [ ] Send the drafted NDAS/Wasserman inquiry re: a negotiated redistribution/OEM license (fallback to FAIR Health) — Finley
+- [ ] Fill the two blank fields (company-history summary, company URL) and submit the ADA CDT license application to CDT-SNODENT@ada.org — Finley
+- [ ] Compliance review of data sourcing before expanding code coverage beyond ~19 codes — gated on a signed redistribution license — Finley
 - [ ] Confirm Resend delivery email is wired and sending in production — Finley
 - [ ] Decide manual vs. automated fulfillment for first paid customers (README runbook is still manual ~2h/customer) — Finley
 
@@ -119,7 +127,8 @@ The "why" behind key choices. Newest first.
 
 ## Risks & known issues  [rewrite]
 
-- Benchmark coverage is narrow (~19/142 CDT codes); reports may understate or feel incomplete until the compliance gate clears.
+- Benchmark coverage is narrow (~19/142 CDT codes); reports may understate or feel incomplete until the compliance gate clears, which now depends on landing a benchmark data license with written redistribution rights (FAIR Health is the recommended target). No data or CDT license is signed yet.
+- Licensing risk: the off-the-shelf NDAS form forbids reselling embedded data, so a bespoke/OEM negotiation is required for any of the candidate sources; timelines and terms are unknown and outside our control.
 - PDF extraction depends on Claude vision quality across heterogeneous PM exports (Dentrix/Eaglesoft/Open Dental); the post-extraction review step mitigates but doesn't eliminate extraction errors.
 - Money is rendered in multiple places (web report, PDF, dashboard); any gating regression risks exposing locked figures pre-payment — `lib/report/gate.ts` must remain the only gate.
 - Fulfillment for early customers may still be partly manual per the README runbook.
@@ -138,4 +147,5 @@ The "why" behind key choices. Newest first.
 
 ## Changelog  [append-only — never rewrite or delete]
 
+- **2026-07-13:** Recorded UCR data-sourcing/licensing direction — reviewed licensing docs, ruled out off-the-shelf NDAS (no redistribution), recommended FAIR Health, drafted inquiries to FAIR Health + NDAS; ADA CDT license application completed/dated 2026-06-25 pending submission. Corrected terminology (CDT not "CDC"; NDAS/Wasserman not "Henry Schein"). Nothing signed.
 - **2026-06-26:** Initial PROJECT.md superdoc created from repo scan (61 commits, through PR #5 report parity).
