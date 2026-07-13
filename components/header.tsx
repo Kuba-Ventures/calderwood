@@ -14,6 +14,8 @@ export function Header() {
   );
 
   if (isAppPage) return null;
+  // The landing page ("/") renders its own <LandingNav>.
+  if (pathname === "/") return null;
 
   return (
     <header className="border-b border-canvas-border bg-canvas">
