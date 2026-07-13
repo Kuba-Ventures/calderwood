@@ -92,6 +92,23 @@ export async function compute(
       annualRecoverableByCarrier[carrier] = gap * annualFrequency;
     }
 
+    // Provider variance: bring lower-charging providers up to the highest
+    // in-house fee for this code. Volume split evenly across providers.
+    const provFees = input.providerFees?.[entry.code];
+    let providerFees: Record<string, number> | undefined;
+    let providerVarianceRecoverable: number | undefined;
+    if (provFees) {
+      const vals = Object.values(provFees).filter((v) => v > 0);
+      if (vals.length > 1) {
+        const hi = Math.max(...vals);
+        const perProviderVol = annualFrequency / vals.length;
+        providerFees = provFees;
+        providerVarianceRecoverable = Math.round(
+          vals.reduce((s, v) => s + Math.max(0, hi - v) * perProviderVol, 0)
+        );
+      }
+    }
+
     codeRows.push({
       code: entry.code,
       description: getCdtDescription(entry.code),
@@ -108,6 +125,7 @@ export async function compute(
       carrierFees,
       carrierGaps,
       annualRecoverableByCarrier,
+      ...(providerFees ? { providerFees, providerVarianceRecoverable } : {}),
     });
   }
 

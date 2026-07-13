@@ -11,6 +11,7 @@ import { Cover } from "./cover";
 import { PercentileSection } from "./percentile-section";
 import { Top10Section } from "./top10-section";
 import { CarrierSection } from "./carrier-section";
+import { ProviderVarianceSection, providerVarianceRows } from "./provider-variance-section";
 import { CategorySection } from "./category-section";
 import { MethodologySection } from "./methodology-section";
 import { AppendixSection } from "./appendix-section";
@@ -30,6 +31,7 @@ export function ReportDoc({
   meta: ReportMeta;
 }) {
   const basis = data.executiveSummary.underpaymentBasis;
+  const hasProviderVariance = providerVarianceRows(data).length > 0;
   const basisLine =
     basis === "carrier"
       ? "Headline based on contracted-rate gap to UCR p75."
@@ -62,6 +64,14 @@ export function ReportDoc({
         <Page size="LETTER" style={styles.page}>
           <BrandHeader />
           <CarrierSection data={data} />
+          <Footer basisLine={basisLine} />
+        </Page>
+      )}
+
+      {hasProviderVariance && (
+        <Page size="LETTER" style={styles.page} wrap>
+          <BrandHeader />
+          <ProviderVarianceSection data={data} />
           <Footer basisLine={basisLine} />
         </Page>
       )}

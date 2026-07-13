@@ -29,6 +29,7 @@ const feeSchema = z.discriminatedUnion("method", [
     method: z.literal("pdf"),
     rows: rowsSchema,
     frequencies: z.record(z.string(), z.number()).optional(),
+    providerFees: z.record(z.string(), z.record(z.string(), z.number())).optional(),
     pdfPath: z.string().optional(),
   }),
 ]);
@@ -109,6 +110,7 @@ export async function POST(request: Request) {
       fee.method === "eob"
         ? "EOB image uploaded; queued for manual extraction."
         : notes.join("; ") || null,
+    provider_fees: fee.method === "pdf" ? fee.providerFees ?? null : null,
   });
 
   // Replace stored frequencies with the report's real volumes on a PDF resubmit.

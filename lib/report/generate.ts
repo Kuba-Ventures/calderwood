@@ -91,6 +91,7 @@ export async function generateReport(
     masterSchedule,
     carrierSchedules,
     frequencies,
+    providerFees: master?.provider_fees ?? undefined,
   };
 
   // 2. Compute against live benchmarks.
