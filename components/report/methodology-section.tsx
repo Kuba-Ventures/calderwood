@@ -25,8 +25,8 @@ export function MethodologySection({
       <Text style={styles.h2}>How the numbers were calculated.</Text>
 
       <Text style={[styles.bodyMuted, { marginTop: 10 }]}>
-        UCR (usual, customary, and reasonable) data is sourced from the ADA
-        Survey of Dental Fees and FAIR Health distributions. Benchmarks are
+        UCR (usual, customary, and reasonable) data is sourced from REFMed&apos;s
+        national UCR database. Benchmarks are
         resolved at the most specific geo level available (ZIP3, then metro,
         state, region, national), with a minimum sample size of 30 at each
         level. Levels with insufficient sample fall through to the next.
