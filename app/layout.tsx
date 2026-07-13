@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, Newsreader } from "next/font/google";
+import {
+  Inter,
+  Newsreader,
+  Plus_Jakarta_Sans,
+  IBM_Plex_Mono,
+} from "next/font/google";
 import { Header } from "@/components/header";
 import {
   GoogleTagManager,
@@ -17,6 +22,20 @@ const newsreader = Newsreader({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-newsreader",
+  display: "swap",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono-data",
   display: "swap",
 });
 
@@ -44,7 +63,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${newsreader.variable}`}
+      className={`${inter.variable} ${newsreader.variable} ${plusJakarta.variable} ${ibmPlexMono.variable}`}
     >
       <head>
         <GoogleTagManager />

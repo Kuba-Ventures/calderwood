@@ -9,6 +9,13 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: [
+          "var(--font-display)",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        data: ["var(--font-mono-data)", "ui-monospace", "monospace"],
         serif: [
           "var(--font-newsreader)",
           "ui-serif",
@@ -25,6 +32,22 @@ const config: Config = {
         ],
       },
       colors: {
+        // ---- Mintlify-style landing palette (CSS vars in globals.css) ----
+        brand: { DEFAULT: "var(--brand)", deep: "var(--brand-deep)" },
+        sky: "var(--sky)",
+        violet: "var(--violet)",
+        gold: {
+          DEFAULT: "var(--gold)",
+          soft: "var(--gold-soft)",
+          deep: "var(--gold-deep)",
+        },
+        coral: "var(--coral)",
+        paper: "var(--paper)",
+        tint: { DEFAULT: "var(--tint)", 2: "var(--tint2)" },
+        line: "var(--line)",
+        body: "var(--body)",
+        muted: "var(--muted)",
+        heading: "var(--ink)",
         ink: {
           DEFAULT: "#0b1220",
           900: "#0b1220",
@@ -54,8 +77,13 @@ const config: Config = {
       },
       maxWidth: {
         container: "1120px",
+        wrap: "1140px",
         prose: "65ch",
         readable: "60ch",
+      },
+      boxShadow: {
+        soft: "0 24px 60px -28px rgba(17, 24, 72, 0.32)",
+        lift: "0 44px 100px -40px rgba(17, 24, 72, 0.42)",
       },
       letterSpacing: {
         tightish: "-0.015em",
