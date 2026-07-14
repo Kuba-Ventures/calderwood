@@ -27,7 +27,7 @@ export function Hero() {
 
       <div className="relative z-[2] mx-auto max-w-[820px] px-7">
         <Reveal>
-          <Pill dot>For independent practices &amp; small DSOs</Pill>
+          <Pill>For independent practices &amp; small DSOs</Pill>
           <h1 className="mx-auto mb-5 mt-[22px] font-display text-[clamp(40px,6vw,68px)] font-extrabold leading-[1.08] tracking-[-0.02em] text-heading">
             How much is each carrier
             <br />
@@ -35,7 +35,7 @@ export function Hero() {
           </h1>
           <p className="mx-auto mb-3 max-w-[60ch] text-[19px] text-body">
             A code-by-code benchmark of your fee schedule against UCR data in
-            your zip code — in minutes.
+            your zip code, in minutes.
           </p>
           <p className="mx-auto mb-3 max-w-[60ch] text-[19px] text-body">
             Most independent practices are reimbursed{" "}

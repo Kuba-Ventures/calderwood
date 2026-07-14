@@ -20,7 +20,7 @@ const stats = [
     kicker: "flat rate",
     value: 199,
     prefix: "$",
-    label: "for the full breakdown — your report in minutes",
+    label: "for the full breakdown, your report in minutes",
   },
 ];
 
