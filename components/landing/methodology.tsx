@@ -40,7 +40,7 @@ export function Methodology() {
               <span className="text-gradient">your report.</span>
             </>
           }
-          sub="One worked example using D2740, a porcelain crown. Every code in your fee schedule runs through the same arithmetic — no modeled estimates, no crowdsourced fees."
+          sub="One worked example using D2740, a porcelain crown. Every code in your fee schedule runs through the same arithmetic. No modeled estimates, no crowdsourced fees."
         />
         <Reveal
           y={40}

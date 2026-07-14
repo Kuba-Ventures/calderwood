@@ -2,18 +2,9 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { Reveal } from "@/components/motion/reveal";
 
-export function Pill({
-  children,
-  dot = false,
-}: {
-  children: ReactNode;
-  dot?: boolean;
-}) {
+export function Pill({ children }: { children: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-[#DCE1FB] bg-[#EEF1FE] px-[14px] py-[7px] text-[13px] font-semibold text-brand">
-      {dot && (
-        <span className="h-[7px] w-[7px] rounded-full bg-gold shadow-[0_0_0_3px_rgba(217,154,43,0.2)]" />
-      )}
       {children}
     </span>
   );

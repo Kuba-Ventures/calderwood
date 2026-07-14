@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: "Do you contact my carriers?",
-    a: "No. We never contact your carriers, your patients, or anyone else. The report is for you. What you do with it — renegotiate yourself, hire a consultant, drop a contract — is your decision.",
+    a: "No. We never contact your carriers, your patients, or anyone else. The report is for you. What you do with it is your decision: renegotiate yourself, hire a consultant, or drop a contract.",
   },
   {
     q: "Is my data confidential?",
