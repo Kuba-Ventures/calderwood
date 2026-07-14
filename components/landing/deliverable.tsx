@@ -59,7 +59,7 @@ export function Deliverable() {
               Three answers, <span className="text-gradient">one PDF.</span>
             </>
           }
-          sub="Built from REFMed's national UCR database, covering all 50 states — not crowdsourced guesses."
+          sub="Built from a national UCR benchmark database covering all 50 states — not crowdsourced guesses."
         />
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           <Reveal className={`${cardBase} md:col-span-2`}>

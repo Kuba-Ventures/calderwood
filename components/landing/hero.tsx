@@ -136,7 +136,7 @@ export function Hero() {
               </div>
 
               <div className="flex items-center justify-between border-t border-line bg-[#FBFCFF] px-[26px] py-3 font-data text-[10.5px] text-muted">
-                <span>Built from REFMed&apos;s national UCR database</span>
+                <span>Built from a national UCR benchmark database</span>
                 <span>page 1 of 14</span>
               </div>
             </div>
