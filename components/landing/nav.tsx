@@ -38,16 +38,18 @@ export function LandingNav() {
         <div className="hidden items-center gap-8 lg:flex">
           {LINKS.map((l) => {
             const active = pathname === l.href;
+            const base =
+              "rounded-sm text-[15px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand";
             return (
               <Link
                 key={l.href}
                 href={l.href}
                 aria-current={active ? "page" : undefined}
-                className={
+                className={`${base} ${
                   active
-                    ? "text-[15px] font-semibold text-brand-deep underline decoration-brand decoration-2 underline-offset-[10px]"
-                    : "text-[15px] font-medium text-ink-600 transition hover:text-brand-deep"
-                }
+                    ? "font-semibold text-brand-deep underline decoration-brand decoration-2 underline-offset-[10px]"
+                    : "font-medium text-ink-600 transition hover:text-brand-deep"
+                }`}
               >
                 {l.label}
               </Link>
@@ -58,7 +60,7 @@ export function LandingNav() {
         <div className="flex items-center gap-5">
           <Link
             href="/login"
-            className="hidden text-[15px] font-semibold text-ink-600 transition hover:text-brand-deep sm:inline"
+            className="hidden rounded-sm text-[15px] font-semibold text-ink-600 transition hover:text-brand-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:inline"
           >
             Log in
           </Link>
