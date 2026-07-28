@@ -6,6 +6,16 @@ import { usePathname } from "next/navigation";
 
 const APP_PREFIXES = ["/dashboard", "/intake", "/reports", "/account"];
 
+// Marketing pages render their own <LandingNav> via <LandingShell>.
+const MARKETING_ROUTES = [
+  "/",
+  "/how-it-works",
+  "/features",
+  "/sample-report",
+  "/pricing",
+  "/resources",
+];
+
 export function Header() {
   const pathname = usePathname();
   const isAuthPage = pathname === "/login";
@@ -14,8 +24,7 @@ export function Header() {
   );
 
   if (isAppPage) return null;
-  // The landing page ("/") renders its own <LandingNav>.
-  if (pathname === "/") return null;
+  if (pathname && MARKETING_ROUTES.includes(pathname)) return null;
 
   return (
     <header className="border-b border-canvas-border bg-canvas">
