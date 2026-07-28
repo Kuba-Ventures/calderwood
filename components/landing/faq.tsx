@@ -7,6 +7,10 @@ const faqs = [
     a: "A national UCR benchmark database covering all 50 states. No crowdsourced fees, no modeled estimates. Where confidence is low for a specific code or zip (low-volume codes, rural markets), we flag it on the report instead of reporting a false-precision number.",
   },
   {
+    q: "What does the '75th percentile' mean?",
+    a: "It's a simple way to rank fees. Line up what every practice in your area charges for a code: the 75th percentile is the point where three out of four charge less and one in four charges more. We benchmark you against it because it's a fair, defensible target for what you should be paid, not the average and not the very top.",
+  },
+  {
     q: "What if my fee schedule isn't in a clean format?",
     a: "Upload whatever you have. We accept CSVs from Dentrix, Eaglesoft, and Open Dental directly, plus PDFs or screenshots. If you only know your top 20 codes off the top of your head, that's enough to run the assessment.",
   },

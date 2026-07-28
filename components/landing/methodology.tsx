@@ -48,7 +48,11 @@ export function Methodology() {
             <span className="text-[#C9C6F5]">D2740 · Crown, porcelain</span>
           </div>
           <LedgerRow k="Your fee" sub="what you charge today" v="$185" />
-          <LedgerRow k="75th percentile UCR" sub="median in your ZIP" v="$215" />
+          <LedgerRow
+            k="75th percentile UCR"
+            sub="a fair target for your ZIP"
+            v="$215"
+          />
           <LedgerRow
             k="Annual frequency"
             sub="procedures last year"
