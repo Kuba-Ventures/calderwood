@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const LINKS = [
   { label: "How It Works", href: "/how-it-works" },
@@ -10,6 +13,8 @@ const LINKS = [
 ];
 
 export function LandingNav() {
+  const pathname = usePathname();
+
   return (
     <nav className="sticky top-0 z-[60] border-b border-line bg-white/[0.82] backdrop-blur-[14px]">
       <div className="mx-auto flex h-[72px] max-w-wrap items-center justify-between px-7">
@@ -31,15 +36,23 @@ export function LandingNav() {
         </Link>
 
         <div className="hidden items-center gap-8 lg:flex">
-          {LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="text-[15px] font-medium text-ink-600 transition hover:text-brand-deep"
-            >
-              {l.label}
-            </Link>
-          ))}
+          {LINKS.map((l) => {
+            const active = pathname === l.href;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={active ? "page" : undefined}
+                className={
+                  active
+                    ? "text-[15px] font-semibold text-brand-deep underline decoration-brand decoration-2 underline-offset-[10px]"
+                    : "text-[15px] font-medium text-ink-600 transition hover:text-brand-deep"
+                }
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-5">
