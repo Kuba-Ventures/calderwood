@@ -55,7 +55,7 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid max-w-wrap grid-cols-1 items-center gap-12 px-7 pb-14 pt-8 lg:grid-cols-[1.02fr_1.28fr] lg:gap-14 lg:pt-12">
-        <Reveal>
+        <Reveal instant>
           <h1 className="font-serif text-[clamp(38px,5vw,55px)] font-semibold leading-[1.05] tracking-[-0.02em] text-brand-deep [text-wrap:balance]">
             A better fee schedule starts with better data.
           </h1>
@@ -97,7 +97,7 @@ export function Hero() {
           </ul>
         </Reveal>
 
-        <Reveal y={40} delay={120}>
+        <Reveal instant>
           <ConsoleCard />
         </Reveal>
       </div>
