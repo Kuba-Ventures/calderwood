@@ -40,7 +40,7 @@ function LoginForm() {
       return;
     }
     if (!hasSupabaseEnv()) {
-      setError("Sign-in is not yet configured. Email hello@calderwoodtech.com.");
+      setError("Sign-in is not yet configured. Email support@newfeeschedule.com.");
       return;
     }
     setSubmitting(true);
@@ -75,7 +75,7 @@ function LoginForm() {
           className="h-20 w-auto sm:h-24"
         />
         <h1 className="mt-6 text-center text-4xl font-semibold tracking-tighter2 text-ink-900 sm:text-5xl">
-          Calderwood
+          New Fee Schedule
         </h1>
         <p className="mt-3 text-center text-base text-ink-500">
           Sign in to your fee assessment
@@ -108,7 +108,7 @@ function LoginForm() {
                 Password
               </label>
               <a
-                href="mailto:hello@calderwoodtech.com?subject=Password%20reset"
+                href="mailto:support@newfeeschedule.com?subject=Password%20reset"
                 className="text-sm text-ink-400 hover:text-ink-700"
               >
                 Forgot password?
@@ -167,10 +167,10 @@ function LoginForm() {
         <p className="mt-6 text-center text-sm leading-relaxed text-ink-500">
           Need help? Email{" "}
           <a
-            href="mailto:hello@calderwoodtech.com"
+            href="mailto:support@newfeeschedule.com"
             className="text-accent hover:underline"
           >
-            hello@calderwoodtech.com
+            support@newfeeschedule.com
           </a>
           .
         </p>

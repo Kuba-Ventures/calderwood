@@ -137,7 +137,7 @@ export default function AccountPage() {
           />
           <p className="mt-1 text-xs text-ink-400">
             This is the account you&rsquo;re signed in as. To change it, email
-            hello@calderwoodtech.com.
+            support@newfeeschedule.com.
           </p>
         </div>
 
@@ -146,7 +146,7 @@ export default function AccountPage() {
           label="Practice name"
           value={practiceName}
           onChange={setPracticeName}
-          placeholder="Calderwood Dental"
+          placeholder="Riverside Family Dental"
         />
 
         <Field

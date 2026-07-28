@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata = {
-  title: "Sign in | Calderwood",
+  title: "Sign in | New Fee Schedule",
 };
 
 export default function LoginPage() {

@@ -33,7 +33,7 @@ export function ProofBar() {
       </ul>
       <p className="mx-auto mt-4 max-w-wrap px-7 font-data text-[10px] leading-relaxed tracking-[0.04em] text-muted opacity-70">
         Carrier names and logos are trademarks of their respective owners.
-        Calderwood is not affiliated with, sponsored by, or endorsed by any carrier shown.
+        New Fee Schedule is not affiliated with, sponsored by, or endorsed by any carrier shown.
       </p>
     </div>
   );

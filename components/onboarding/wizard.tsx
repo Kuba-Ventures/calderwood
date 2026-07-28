@@ -85,7 +85,7 @@ export default function OnboardingWizard() {
     }
     if (!hasSupabaseEnv()) {
       return setError(
-        "Sign-up is not yet configured. Email hello@calderwoodtech.com."
+        "Sign-up is not yet configured. Email support@newfeeschedule.com."
       );
     }
     const feePayload = buildFeePayload(fee);
@@ -366,7 +366,7 @@ function AccountStep({
               type="text"
               value={practiceName}
               onChange={(e) => setPracticeName(e.target.value)}
-              placeholder="Calderwood Dental"
+              placeholder="Riverside Family Dental"
               autoComplete="organization"
               className={inputCls}
             />

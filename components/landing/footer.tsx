@@ -8,20 +8,20 @@ export function Footer() {
           <div className="mb-2 flex items-center gap-2.5 font-display text-lg font-bold text-heading">
             <Image
               src="/logo.png"
-              alt="Calderwood"
+              alt="New Fee Schedule"
               width={161}
               height={187}
               className="h-6 w-auto"
             />
-            Calderwood
+            New Fee Schedule
           </div>
           <div>
             Built for independent practices ·{" "}
             <a
-              href="mailto:hello@calderwoodtech.com"
+              href="mailto:support@newfeeschedule.com"
               className="transition hover:text-heading"
             >
-              hello@calderwoodtech.com
+              support@newfeeschedule.com
             </a>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy | Calderwood",
+  title: "Privacy | New Fee Schedule",
 };
 
 export default function PrivacyStub() {
@@ -20,7 +20,7 @@ export default function PrivacyStub() {
         Placeholder. The full privacy policy is published before payments go live. In short: we collect only the data you submit through the intake form (zip code, fee schedule, carriers, contact info) and use it solely to produce and deliver your report. We never see patient data and the intake form is built to refuse PHI. We do not sell or share your data.
       </p>
       <p className="mt-4 max-w-prose text-base leading-relaxed text-ink-700">
-        Questions: <a href="mailto:hello@calderwoodtech.com" className="text-accent hover:underline">hello@calderwoodtech.com</a>
+        Questions: <a href="mailto:support@newfeeschedule.com" className="text-accent hover:underline">support@newfeeschedule.com</a>
       </p>
     </main>
   );
