@@ -59,7 +59,7 @@ export async function POST(request: Request) {
             currency: "usd",
             unit_amount: REPORT_PRICE_USD_CENTS,
             product_data: {
-              name: "New Fee Schedule Fee IQ — full report",
+              name: "New Fee Schedule Fee IQ: full report",
               description:
                 "Code-by-code underpayment, carrier ranking, and PDF.",
             },
