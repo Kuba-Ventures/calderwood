@@ -59,7 +59,7 @@ export function Hero() {
           <h1 className="font-serif text-[clamp(38px,5vw,55px)] font-semibold leading-[1.05] tracking-[-0.02em] text-brand-deep [text-wrap:balance]">
             A better fee schedule starts with better data.
           </h1>
-          <p className="mt-5 max-w-[34ch] text-[18px] leading-relaxed text-muted">
+          <p className="mt-5 max-w-[34ch] text-[18px] leading-relaxed text-body">
             See exactly what insurance companies are paying in your area, where
             you&apos;re leaving money on the table, and build a fee schedule
             that maximizes production and profitability.

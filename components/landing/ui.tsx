@@ -61,7 +61,7 @@ export function SectionHead({
       <h2 className="font-serif text-[clamp(30px,4vw,42px)] font-semibold leading-[1.1] tracking-[-0.015em] text-brand-deep [text-wrap:balance]">
         {title}
       </h2>
-      {sub && <p className="mt-4 text-[17px] leading-relaxed text-muted">{sub}</p>}
+      {sub && <p className="mt-4 text-[17px] leading-relaxed text-body">{sub}</p>}
     </Reveal>
   );
 }
