@@ -2,11 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 
 const LINKS = [
-  { label: "How It Works", href: "#how" },
-  { label: "Features", href: "#features" },
-  { label: "Sample Report", href: "#sample" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Resources", href: "#faq" },
+  { label: "How It Works", href: "/how-it-works" },
+  { label: "Features", href: "/features" },
+  { label: "Sample Report", href: "/sample-report" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Resources", href: "/resources" },
 ];
 
 export function LandingNav() {
