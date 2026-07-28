@@ -26,24 +26,16 @@ const faqs = [
 
 export function Faq() {
   return (
-    <section className="py-24">
+    <section id="faq" className="scroll-mt-24 py-[76px]">
       <div className="mx-auto max-w-wrap px-7">
-        <SectionHead
-          pill="FAQ"
-          title={
-            <>
-              Questions worth{" "}
-              <span className="text-gradient">answering up front.</span>
-            </>
-          }
-        />
+        <SectionHead pill="FAQ" title="Questions, answered." />
         <Reveal className="mx-auto max-w-[780px]">
           {faqs.map((f) => (
             <details
               key={f.q}
               className="group mb-3 overflow-hidden rounded-[14px] border border-line bg-white transition-shadow open:shadow-soft"
             >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-[22px] py-5 font-display text-[17px] font-bold text-heading [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-[22px] py-5 text-[17px] font-bold text-brand-deep [&::-webkit-details-marker]:hidden">
                 {f.q}
                 <span className="grid h-[26px] w-[26px] flex-none place-items-center rounded-full bg-[#EEF1FE] font-bold text-brand transition-transform duration-200 group-open:rotate-45">
                   +

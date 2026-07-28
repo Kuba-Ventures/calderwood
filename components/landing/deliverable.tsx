@@ -36,11 +36,19 @@ function Idx({ children }: { children: string }) {
   );
 }
 
-function CardHead({ idx, title, body }: { idx: string; title: string; body: string }) {
+function CardHead({
+  idx,
+  title,
+  body,
+}: {
+  idx: string;
+  title: string;
+  body: string;
+}) {
   return (
     <>
       <Idx>{idx}</Idx>
-      <h3 className="mb-2 mt-3.5 font-display text-[21px] font-bold text-heading">
+      <h3 className="mb-2 mt-3.5 text-[21px] font-bold text-brand-deep">
         {title}
       </h3>
       <p className="text-[14.5px] text-muted">{body}</p>
@@ -50,15 +58,11 @@ function CardHead({ idx, title, body }: { idx: string; title: string; body: stri
 
 export function Deliverable() {
   return (
-    <section className="relative bg-[linear-gradient(180deg,#fff,var(--tint)_40%,#fff)] py-24">
+    <section id="features" className="scroll-mt-24 py-[76px]">
       <div className="mx-auto max-w-wrap px-7">
         <SectionHead
           pill="What's in the report"
-          title={
-            <>
-              Three answers, <span className="text-gradient">one PDF.</span>
-            </>
-          }
+          title="Three answers, one PDF."
           sub="Built from a national UCR benchmark database covering all 50 states, not crowdsourced guesses."
         />
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -120,10 +124,15 @@ export function Deliverable() {
             <table className="mt-5 w-full border-collapse text-[13.5px]">
               <tbody>
                 {topCodes.map((r) => (
-                  <tr key={r.code} className="border-b border-line last:border-b-0">
-                    <td className="py-[11px] font-data text-heading">{r.code}</td>
+                  <tr
+                    key={r.code}
+                    className="border-b border-line last:border-b-0"
+                  >
+                    <td className="py-[11px] font-data text-heading">
+                      {r.code}
+                    </td>
                     <td className="py-[11px] text-muted">{r.desc}</td>
-                    <td className="py-[11px] text-right font-data font-semibold text-gold-deep">
+                    <td className="py-[11px] text-right font-data font-semibold text-coral">
                       {r.annual}
                     </td>
                   </tr>
