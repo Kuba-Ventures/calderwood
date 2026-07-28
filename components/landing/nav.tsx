@@ -11,14 +11,14 @@ export function LandingNav() {
         >
           <Image
             src="/logo.png"
-            alt="Calderwood"
+            alt="New Fee Schedule"
             width={161}
             height={187}
             priority
             className="h-[30px] w-auto"
           />
           <span className="font-display text-[20px] font-bold text-heading">
-            Calderwood
+            New Fee Schedule
           </span>
         </Link>
         <div className="flex items-center gap-5">

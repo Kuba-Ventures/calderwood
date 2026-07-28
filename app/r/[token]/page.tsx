@@ -78,9 +78,9 @@ export default async function SharedReportPage({
         {unlocked && <ReportMethodology />}
 
         <p className="pt-2 text-center text-xs text-ink-400">
-          Shared via Calderwood ·{" "}
+          Shared via New Fee Schedule ·{" "}
           <a href="/" className="text-accent hover:underline">
-            calderwoodtech.com
+            newfeeschedule.com
           </a>
         </p>
       </div>

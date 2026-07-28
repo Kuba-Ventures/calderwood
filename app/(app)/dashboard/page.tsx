@@ -217,7 +217,7 @@ function StateDelivered({
             <span>
               Want help running the call? A 30-minute strategy session is $299.{" "}
               <a
-                href="mailto:hello@calderwoodtech.com?subject=Strategy%20call"
+                href="mailto:support@newfeeschedule.com?subject=Strategy%20call"
                 className="text-accent hover:underline"
               >
                 Book one →

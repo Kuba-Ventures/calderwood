@@ -39,8 +39,8 @@ export function ReportDoc({
 
   return (
     <Document
-      title={`${meta.practiceName} -- Calderwood Fee Assessment`}
-      author="Calderwood"
+      title={`${meta.practiceName} -- New Fee Schedule Fee Assessment`}
+      author="New Fee Schedule"
     >
       <Page size="LETTER" style={styles.page}>
         <BrandHeader />
@@ -109,7 +109,7 @@ function BrandHeader() {
             marginRight: 6,
           }}
         />
-        <Text style={styles.brandName}>Calderwood</Text>
+        <Text style={styles.brandName}>New Fee Schedule</Text>
       </View>
       <Text style={styles.brandRight}>Fee Assessment</Text>
     </View>
@@ -122,7 +122,7 @@ function Footer({ basisLine }: { basisLine: string }) {
       <Text>{basisLine}</Text>
       <Text
         render={({ pageNumber, totalPages }) =>
-          `calderwoodtech.com  ·  page ${pageNumber} of ${totalPages}`
+          `newfeeschedule.com  ·  page ${pageNumber} of ${totalPages}`
         }
       />
     </View>

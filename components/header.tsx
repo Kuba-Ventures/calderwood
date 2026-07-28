@@ -42,7 +42,7 @@ export function Header() {
               className="h-7 w-auto sm:h-8"
             />
             <span className="text-base font-semibold tracking-tightish text-ink-900 sm:text-lg">
-              Calderwood
+              New Fee Schedule
             </span>
           </Link>
         )}

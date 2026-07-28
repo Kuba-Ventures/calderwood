@@ -34,7 +34,7 @@ export function Sidebar() {
           className="h-7 w-auto"
         />
         <span className="text-base font-semibold tracking-tightish text-ink-900">
-          Calderwood
+          New Fee Schedule
         </span>
       </Link>
       <nav className="flex-1 px-3 py-2">
@@ -69,10 +69,10 @@ export function Sidebar() {
         <p className="text-xs text-ink-400">
           Questions?{" "}
           <a
-            href="mailto:hello@calderwoodtech.com"
+            href="mailto:support@newfeeschedule.com"
             className="text-ink-700 hover:text-ink-900"
           >
-            hello@calderwoodtech.com
+            support@newfeeschedule.com
           </a>
         </p>
       </div>

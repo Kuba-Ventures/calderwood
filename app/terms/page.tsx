@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms | Calderwood",
+  title: "Terms | New Fee Schedule",
 };
 
 export default function TermsStub() {
@@ -20,7 +20,7 @@ export default function TermsStub() {
         Placeholder. Full terms of service are published before payments go live.
       </p>
       <p className="mt-4 max-w-prose text-base leading-relaxed text-ink-700">
-        Questions: <a href="mailto:hello@calderwoodtech.com" className="text-accent hover:underline">hello@calderwoodtech.com</a>
+        Questions: <a href="mailto:support@newfeeschedule.com" className="text-accent hover:underline">support@newfeeschedule.com</a>
       </p>
     </main>
   );
