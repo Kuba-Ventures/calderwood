@@ -41,7 +41,7 @@ export function Faq() {
                   +
                 </span>
               </summary>
-              <p className="max-w-[68ch] px-[22px] pb-[22px] text-[15px] leading-relaxed text-muted">
+              <p className="max-w-[68ch] px-[22px] pb-[22px] text-[15px] leading-relaxed text-body">
                 {f.a}
               </p>
             </details>

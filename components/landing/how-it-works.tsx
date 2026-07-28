@@ -54,7 +54,7 @@ export function HowItWorks() {
               <h3 className="mt-5 text-[19px] font-bold text-heading">
                 {`${i + 1}. ${s.title}`}
               </h3>
-              <p className="mt-2.5 max-w-[32ch] text-[15px] leading-relaxed text-muted">
+              <p className="mt-2.5 max-w-[32ch] text-[15px] leading-relaxed text-body">
                 {s.body}
               </p>
             </Reveal>

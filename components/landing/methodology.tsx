@@ -14,9 +14,9 @@ function LedgerRow({
 }) {
   return (
     <div className="flex items-baseline justify-between border-b border-line px-[22px] py-[17px]">
-      <span className="text-sm text-muted">
+      <span className="text-sm text-body">
         {k}
-        <small className="block text-[11.5px] text-[#9AA1C2]">{sub}</small>
+        <small className="block text-[11.5px] text-body">{sub}</small>
       </span>
       <span
         className={`font-data text-[22px] font-medium tabular-nums ${

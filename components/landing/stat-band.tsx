@@ -55,7 +55,7 @@ export function StatBand() {
                 suffix={s.suffix}
                 className="font-serif text-[clamp(44px,7vw,72px)] font-semibold leading-none tracking-[-0.03em] text-brand"
               />
-              <div className="mx-auto mt-3.5 max-w-[24ch] text-[15px] text-muted">
+              <div className="mx-auto mt-3.5 max-w-[24ch] text-[15px] text-body">
                 {s.label}
               </div>
             </Reveal>

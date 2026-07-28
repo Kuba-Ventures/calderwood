@@ -51,7 +51,7 @@ function CardHead({
       <h3 className="mb-2 mt-3.5 text-[21px] font-bold text-brand-deep">
         {title}
       </h3>
-      <p className="text-[14.5px] text-muted">{body}</p>
+      <p className="text-[14.5px] text-body">{body}</p>
     </>
   );
 }
@@ -131,7 +131,7 @@ export function Deliverable() {
                     <td className="py-[11px] font-data text-heading">
                       {r.code}
                     </td>
-                    <td className="py-[11px] text-muted">{r.desc}</td>
+                    <td className="py-[11px] text-body">{r.desc}</td>
                     <td className="py-[11px] text-right font-data font-semibold text-coral">
                       {r.annual}
                     </td>
