@@ -1,40 +1,25 @@
 import { Reveal } from "@/components/motion/reveal";
-import { Arrow, Button, Glow, radialGlow } from "./ui";
+import { Arrow, Button } from "./ui";
 
 export function FinalCta() {
   return (
-    <section className="px-7 pb-[110px] pt-10">
+    <section className="px-7 pb-[90px] pt-6">
       <div className="mx-auto max-w-wrap">
         <Reveal
           y={40}
-          className="bg-grad-brand relative overflow-hidden rounded-[28px] px-8 py-[66px] text-center text-white shadow-[0_50px_100px_-40px_rgba(30,47,209,0.7)]"
+          className="relative overflow-hidden rounded-[24px] bg-brand-deep px-8 py-16 text-center text-white shadow-[0_50px_100px_-46px_rgba(49,46,129,0.8)]"
         >
-          <Glow
-            style={radialGlow("rgba(242,200,121,0.5)", 420, {
-              top: -160,
-              right: -80,
-            })}
-          />
-          <Glow
-            style={radialGlow("rgba(123,92,245,0.6)", 380, {
-              bottom: -160,
-              left: -60,
-            })}
-          />
-          <h2 className="relative z-[1] font-display text-[clamp(30px,4.4vw,50px)] font-extrabold text-white">
-            Find out in minutes.
+          <h2 className="font-serif text-[clamp(30px,4.4vw,44px)] font-semibold [text-wrap:balance]">
+            See what every carrier is underpaying you.
           </h2>
-          <p className="relative z-[1] mt-3.5 text-[17px] text-[#DCE2FF]">
-            See the gap in your fee schedule before you pay a cent.
+          <p className="mt-3.5 text-[17px] text-[#C9C6F5]">
+            $199 flat. Your report in minutes. No sales call.
           </p>
-          <div className="relative z-[1] mt-[30px]">
+          <div className="mt-7">
             <Button href="/signup" variant="white">
-              Get started for $199 <Arrow />
+              Get Started <Arrow />
             </Button>
           </div>
-          <p className="relative z-[1] mt-4 font-data text-[13px] text-[#B8C1F0]">
-            See your opportunity in minutes. Pay $199 only to unlock.
-          </p>
         </Reveal>
       </div>
     </section>

@@ -1,293 +1,270 @@
+import type { ReactNode } from "react";
 import { Reveal } from "@/components/motion/reveal";
-import { Odometer } from "@/components/motion/odometer";
-import { Arrow, Button, Glow, Pill, radialGlow } from "./ui";
+import { Button } from "./ui";
 
-/** Illustrative per-code fee assessment shown in the hero console card. */
-const CODES = ["D2740", "D2392", "D2750", "D2950", "D3310"];
-
-/** Carrier gaps for the active code (D2740), largest first. Bar width is
- *  relative to the top carrier so Cigna reads as the anchor. */
-const CARRIERS = [
-  { name: "Cigna", gap: "$32,180", pct: 100, top: true },
-  { name: "Delta", gap: "$14,320", pct: 45 },
-  { name: "United", gap: "$11,540", pct: 36 },
-  { name: "Aetna", gap: "$9,870", pct: 31 },
-  { name: "MetLife", gap: "$6,210", pct: 19 },
+/** Left-column value props, each with a small line icon. */
+const FEATURES: { icon: ReactNode; text: string }[] = [
+  {
+    icon: (
+      <path d="M12 15V3M7 8l5-5 5 5M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
+    ),
+    text: "Identify underpayments code by code",
+  },
+  {
+    icon: <path d="M3 3v18h18M7 15l4-4 3 3 5-6" />,
+    text: "Benchmark against local and national data",
+  },
+  {
+    icon: (
+      <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+    ),
+    text: "Build a new fee schedule with confidence",
+  },
 ];
 
-const CHIPS = [
-  "Underpayments, code by code",
-  "Carrier-by-carrier gaps",
-  "Percentile scored",
+/** Top-opportunity rows shown in the console card, largest first. */
+const TOP = [
+  { code: "D2740", amount: "$73,840" },
+  { code: "D2392", amount: "$41,650" },
+  { code: "D2750", amount: "$38,920" },
+  { code: "D2950", amount: "$27,450" },
+  { code: "D3310", amount: "$18,730" },
 ];
+
+function FeatIcon({ children }: { children: ReactNode }) {
+  return (
+    <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-[#EEF1FE]">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-brand"
+      >
+        {children}
+      </svg>
+    </span>
+  );
+}
 
 export function Hero() {
   return (
-    <header className="relative overflow-hidden pb-14 pt-[64px]">
-      <Glow
-        style={radialGlow("rgba(91,124,247,0.5)", 520, { top: -160, left: -120 })}
-      />
-      <Glow
-        style={radialGlow("rgba(123,92,245,0.42)", 460, { top: -120, right: -100 })}
-      />
-      <Glow
-        style={radialGlow("rgba(242,200,121,0.4)", 420, { top: 160, right: "10%" })}
-      />
-
-      <div className="relative z-[2] mx-auto grid max-w-wrap grid-cols-1 items-center gap-12 px-7 lg:grid-cols-[1fr_1.16fr] lg:gap-14">
-        {/* ---- copy column ---- */}
-        <Reveal className="text-left">
-          <Pill>Live, code-by-code</Pill>
-          <h1 className="mb-5 mt-[22px] font-display text-[clamp(36px,4.6vw,56px)] font-extrabold leading-[1.05] tracking-[-0.025em] text-heading">
-            See what every carrier is{" "}
-            <span className="text-gradient">underpaying you.</span>
+    <section className="relative overflow-hidden">
+      <div className="mx-auto grid max-w-wrap grid-cols-1 items-center gap-12 px-7 pb-14 pt-8 lg:grid-cols-[1.02fr_1.28fr] lg:gap-14 lg:pt-12">
+        <Reveal>
+          <h1 className="font-serif text-[clamp(38px,5vw,55px)] font-semibold leading-[1.05] tracking-[-0.02em] text-brand-deep [text-wrap:balance]">
+            A better fee schedule starts with better data.
           </h1>
-          <p className="mb-3 max-w-[46ch] text-[18px] text-body">
-            A code-by-code benchmark of your fee schedule against UCR data in
-            your zip. Most independent practices are reimbursed{" "}
-            <b className="font-bold text-heading">15–35% below</b> the 75th
-            percentile — a gap of{" "}
-            <b className="font-bold text-heading">
-              $40k–$120k per provider, per year.
-            </b>
+          <p className="mt-5 max-w-[34ch] text-[18px] leading-relaxed text-muted">
+            See exactly what insurance companies are paying in your area, where
+            you&apos;re leaving money on the table, and build a fee schedule
+            that maximizes production and profitability.
           </p>
-          <div className="mt-[26px] flex flex-col gap-[14px] sm:flex-row sm:flex-wrap">
+          <div className="mt-7 flex flex-wrap gap-3">
             <Button href="/signup">
-              Find what you&apos;re leaving on the table <Arrow />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 16V4M6 10l6-6 6 6M4 20h16" />
+              </svg>
+              Upload Production Report
             </Button>
-            <Button href="/signup" variant="ghost">
-              See a sample report
+            <Button href="#sample" variant="ghost">
+              See a Sample Report
             </Button>
           </div>
-          <p className="mt-3 font-data text-[13.5px] text-muted">
-            See your opportunity in minutes. Pay $199 only to unlock.
-          </p>
-
-          <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-3">
-            {CHIPS.map((c) => (
-              <li
-                key={c}
-                className="flex items-center gap-2.5 text-[13.5px] text-muted"
-              >
-                <span className="grid h-7 w-7 place-items-center rounded-lg border border-line bg-[#EEF1FE] text-[13px] font-bold text-brand">
-                  ✓
+          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-4">
+            {FEATURES.map((f) => (
+              <li key={f.text} className="flex max-w-[200px] items-center gap-3">
+                <FeatIcon>{f.icon}</FeatIcon>
+                <span className="text-[13px] font-medium leading-tight text-ink-700">
+                  {f.text}
                 </span>
-                {c}
               </li>
             ))}
           </ul>
         </Reveal>
 
-        {/* ---- console card column ---- */}
-        <Reveal y={40} delay={90} className="relative">
-          {/* gradient hairline border */}
-          <div className="rounded-[20px] bg-[linear-gradient(120deg,rgba(30,47,209,0.4),rgba(123,92,245,0.25),rgba(242,200,121,0.4))] p-px shadow-lift">
-            <div className="overflow-hidden rounded-[19px] bg-white">
-              {/* window chrome */}
-              <div className="flex items-center justify-between border-b border-line bg-[linear-gradient(180deg,#FBFCFF,#F5F7FF)] px-5 py-[13px]">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex gap-1.5" aria-hidden="true">
-                    <i className="h-2.5 w-2.5 rounded-full bg-[#F6C6BE]" />
-                    <i className="h-2.5 w-2.5 rounded-full bg-[#F3DDAE]" />
-                    <i className="h-2.5 w-2.5 rounded-full bg-[#BFD3C4]" />
-                  </span>
-                  <span className="font-display text-sm font-bold text-heading">
-                    Fee Assessment
-                  </span>
-                </div>
-                <span className="hidden font-data text-[11.5px] text-muted sm:inline">
-                  Practice 4729 · ZIP 02446
-                </span>
-              </div>
-
-              {/* per-code switcher */}
-              <div className="flex items-center gap-1.5 overflow-x-auto border-b border-line px-4 py-[11px]">
-                {CODES.map((code, i) => (
-                  <span
-                    key={code}
-                    className={`flex-none rounded-lg px-3 py-1.5 font-data text-[12px] font-semibold ${
-                      i === 0
-                        ? "bg-grad-brand text-white shadow-[0_8px_18px_-10px_rgba(30,47,209,0.9)]"
-                        : "border border-line bg-white text-muted"
-                    }`}
-                  >
-                    {code}
-                  </span>
-                ))}
-                <span className="ml-auto flex-none pl-2 font-data text-[11px] text-muted">
-                  + 15 more codes
-                </span>
-              </div>
-
-              {/* KPI tiles */}
-              <div className="grid grid-cols-2 gap-2.5 p-4 sm:grid-cols-4">
-                <Kpi label="Your avg reimbursement" value="$605" />
-                <Kpi label="75th-pct benchmark" value="$1,125" />
-                <Kpi label="Gap per procedure" value="+$520" gold />
-                <Kpi
-                  label="Annual (vol 142)"
-                  gold
-                  valueNode={
-                    <Odometer
-                      value={73840}
-                      prefix="$"
-                      className="mt-1.5 font-data text-[22px] font-semibold tracking-[-0.02em] text-gold-deep"
-                    />
-                  }
-                />
-              </div>
-
-              {/* chart + carrier breakdown */}
-              <div className="grid grid-cols-1 gap-5 px-4 pb-4 sm:grid-cols-[1.2fr_1fr]">
-                <div>
-                  <div className="mb-2.5 flex items-center justify-between">
-                    <span className="text-[12px] font-bold text-heading">
-                      Reimbursement vs benchmark
-                    </span>
-                    <span className="flex gap-3 font-data text-[10px] font-semibold text-muted">
-                      <span className="flex items-center gap-1.5">
-                        <i className="block w-3.5 border-t-2 border-brand" />
-                        You
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <i className="block w-3.5 border-t-2 border-dashed border-violet" />
-                        75th pct
-                      </span>
-                    </span>
-                  </div>
-                  <ComparisonChart />
-                </div>
-
-                <div>
-                  <div className="mb-2.5 text-[12px] font-bold text-heading">
-                    Gap by carrier · D2740
-                  </div>
-                  <div className="flex flex-col gap-2.5">
-                    {CARRIERS.map((c) => (
-                      <div
-                        key={c.name}
-                        className="grid grid-cols-[58px_1fr_58px] items-center gap-2.5 font-data text-[11.5px]"
-                      >
-                        <span className="font-semibold text-heading">
-                          {c.name}
-                        </span>
-                        <span className="h-2 overflow-hidden rounded-full bg-[#EEF0F8]">
-                          <i
-                            className={`block h-full rounded-full ${
-                              c.top
-                                ? "bg-[linear-gradient(90deg,#E0A93A,#B57C15)]"
-                                : "bg-[linear-gradient(90deg,#5B7CF7,#1E2FD1)]"
-                            }`}
-                            style={{ width: `${c.pct}%` }}
-                          />
-                        </span>
-                        <span className="text-right font-semibold text-gold-deep">
-                          {c.gap}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-line bg-[#FBFCFF] px-4 py-3 font-data text-[10.5px] text-muted">
-                <span>Built from a national UCR benchmark database</span>
-                <span>14 of 20 codes below 75th pct</span>
-              </div>
-            </div>
-          </div>
+        <Reveal y={40} delay={120}>
+          <ConsoleCard />
         </Reveal>
       </div>
-    </header>
+    </section>
   );
 }
 
-function Kpi({
-  label,
-  value,
-  valueNode,
-  gold = false,
-}: {
-  label: string;
-  value?: string;
-  valueNode?: React.ReactNode;
-  gold?: boolean;
-}) {
+/** Static "Fee Assessment" console mock shown to the right of the hero copy. */
+function ConsoleCard() {
   return (
-    <div
-      className={`rounded-[14px] px-[13px] py-3 ${
-        gold
-          ? "border border-[#F1DFB4] bg-[linear-gradient(160deg,#FFF9EC,#FFFDF7)]"
-          : "border border-line bg-[linear-gradient(180deg,#fff,#FAFBFF)]"
-      }`}
-    >
-      <div className="min-h-[26px] text-[10.5px] font-semibold leading-[1.25] text-muted">
-        {label}
+    <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_34px_80px_-42px_rgba(30,27,75,0.45)]">
+      <div className="flex gap-[7px] border-b border-line bg-[#FAF9FC] px-[18px] py-[13px]">
+        <span className="h-[11px] w-[11px] rounded-full bg-[#F0685F]" />
+        <span className="h-[11px] w-[11px] rounded-full bg-[#F7C04A]" />
+        <span className="h-[11px] w-[11px] rounded-full bg-[#4CAF6D]" />
       </div>
-      {valueNode ?? (
-        <div
-          className={`mt-1.5 font-data text-[22px] font-semibold tracking-[-0.02em] ${
-            gold ? "text-gold-deep" : "text-heading"
-          }`}
-        >
-          {value}
+      <div className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="text-[14.5px] font-semibold text-heading">
+            Procedure: D2740 – Crown, porcelain/ceramic
+          </div>
+          <div className="inline-flex flex-none items-center gap-[6px] rounded-lg border border-line px-[11px] py-[6px] text-[12px] font-semibold text-ink-600">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3v12M7 10l5 5 5-5M4 21h16" />
+            </svg>
+            Export Report
+          </div>
         </div>
-      )}
+
+        <div className="mb-5 grid grid-cols-2 gap-[10px] sm:grid-cols-4">
+          <Kpi k="Your Average Reimbursement" v="$605" tone="ink" />
+          <Kpi k="Recommended Benchmark" v="$1,125" tone="green" />
+          <Kpi k="Opportunity Per Procedure" v="$520" tone="coral" />
+          <Kpi k="Annual Opportunity (Volume: 142)" v="$73,840" tone="coral" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-[1.35fr_1fr]">
+          <div>
+            <div className="text-[13.5px] font-semibold text-heading">
+              Reimbursement Comparison
+            </div>
+            <div className="mb-1 mt-1.5 flex gap-4 text-[11px] text-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <i className="inline-block h-0 w-[15px] border-t-[2.5px] border-brand" />
+                You
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <i className="inline-block h-0 w-[15px] border-t-[2.5px] border-dashed border-[#2f9e6a]" />
+                Recommended Benchmark
+              </span>
+            </div>
+            <ComparisonChart />
+          </div>
+          <div>
+            <div className="mb-2 text-[13.5px] font-semibold text-heading">
+              Top Opportunities
+            </div>
+            <table className="w-full border-collapse text-[12.5px]">
+              <thead>
+                <tr>
+                  <th className="pb-2 text-left text-[10px] font-medium text-muted">
+                    Procedure
+                  </th>
+                  <th className="pb-2 text-right text-[10px] font-medium text-muted">
+                    Annual Opportunity
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {TOP.map((r) => (
+                  <tr key={r.code} className="border-t border-line">
+                    <td className="py-[6px] font-data text-ink-700">{r.code}</td>
+                    <td className="py-[6px] text-right font-data font-semibold tabular-nums text-heading">
+                      {r.amount}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="mt-2.5 text-[12.5px] font-semibold text-brand">
+              View full report →
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-/** Static SVG: your reimbursement line under the 75th-pct benchmark, with the
- *  gold "opportunity" band shaded between them and D2740 highlighted. */
+function Kpi({
+  k,
+  v,
+  tone,
+}: {
+  k: string;
+  v: string;
+  tone: "ink" | "green" | "coral";
+}) {
+  const color =
+    tone === "green"
+      ? "text-[#2f9e6a]"
+      : tone === "coral"
+        ? "text-coral"
+        : "text-heading";
+  return (
+    <div className="rounded-xl border border-line p-[13px]">
+      <div className="mb-2.5 min-h-[28px] text-[11px] leading-tight text-muted">
+        {k}
+      </div>
+      <div className={`text-[23px] font-bold tracking-[-0.01em] ${color}`}>
+        {v}
+      </div>
+    </div>
+  );
+}
+
+/** Reimbursement vs. benchmark line chart with an opportunity band on D2740. */
 function ComparisonChart() {
   return (
-    <svg
-      viewBox="0 0 320 150"
-      width="100%"
-      role="img"
-      aria-label="Your reimbursement runs below the 75th-percentile benchmark across your five most-billed codes"
-    >
-      <rect x="78" y="12" width="39" height="112" rx="4" fill="#F2C879" opacity="0.18" />
-      <g stroke="#E7EAF6" strokeWidth="1">
-        <line x1="20" y1="32" x2="310" y2="32" />
-        <line x1="20" y1="60" x2="310" y2="60" />
-        <line x1="20" y1="88" x2="310" y2="88" />
-        <line x1="20" y1="116" x2="310" y2="116" />
+    <svg viewBox="0 0 460 200" className="w-full" role="img" aria-label="Reimbursement compared to the recommended benchmark across five codes">
+      <g stroke="#EEF0F5">
+        <line x1="52" y1="18" x2="452" y2="18" />
+        <line x1="52" y1="62" x2="452" y2="62" />
+        <line x1="52" y1="106" x2="452" y2="106" />
+        <line x1="52" y1="150" x2="452" y2="150" />
       </g>
-      <polygon
-        points="30,88 97.5,76 165,82 232.5,79 300,69 300,32 232.5,48 165,43 97.5,38 30,63"
-        fill="#F2C879"
-        opacity="0.22"
-      />
+      <g fill="#9AA0AD" fontSize="10">
+        <text x="46" y="22" textAnchor="end">$1,500</text>
+        <text x="46" y="66" textAnchor="end">$1,000</text>
+        <text x="46" y="110" textAnchor="end">$500</text>
+        <text x="46" y="154" textAnchor="end">$0</text>
+      </g>
+      <rect x="118" y="18" width="52" height="132" fill="rgba(79,70,229,0.10)" />
       <polyline
-        points="30,63 97.5,38 165,43 232.5,48 300,32"
         fill="none"
-        stroke="#7B5CF5"
-        strokeWidth="2.2"
-        strokeDasharray="5 4"
+        stroke="#2f9e6a"
+        strokeWidth="2.5"
+        strokeDasharray="4 4"
         strokeLinecap="round"
+        points="64,80 144,62 224,70 304,54 384,46 452,38"
       />
       <polyline
-        points="30,88 97.5,76 165,82 232.5,79 300,69"
         fill="none"
-        stroke="#1E2FD1"
-        strokeWidth="2.6"
+        stroke="var(--brand)"
+        strokeWidth="2.8"
         strokeLinecap="round"
         strokeLinejoin="round"
+        points="64,122 144,106 224,126 304,120 384,106 452,98"
       />
-      <g fill="#1E2FD1">
-        <circle cx="30" cy="88" r="3" />
-        <circle cx="97.5" cy="76" r="4" stroke="#fff" strokeWidth="2" />
-        <circle cx="165" cy="82" r="3" />
-        <circle cx="232.5" cy="79" r="3" />
-        <circle cx="300" cy="69" r="3" />
-      </g>
-      <g fill="#6B7398" fontSize="9" textAnchor="middle" className="font-data">
-        <text x="30" y="140">D2140</text>
-        <text x="97.5" y="140">D2740</text>
-        <text x="165" y="140">D2750</text>
-        <text x="232.5" y="140">D2950</text>
-        <text x="300" y="140">D3310</text>
+      <circle cx="144" cy="106" r="4.5" fill="var(--brand)" />
+      <circle cx="144" cy="62" r="4.5" fill="#fff" stroke="#2f9e6a" strokeWidth="2.5" />
+      <g fill="#9AA0AD" fontSize="10" textAnchor="middle">
+        <text x="64" y="172">D2140</text>
+        <text x="144" y="172">D2740</text>
+        <text x="224" y="172">D2750</text>
+        <text x="304" y="172">D2950</text>
+        <text x="384" y="172">D3310</text>
       </g>
     </svg>
   );

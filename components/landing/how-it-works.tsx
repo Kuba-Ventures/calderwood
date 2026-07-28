@@ -1,69 +1,65 @@
+import type { ReactNode } from "react";
 import { Reveal } from "@/components/motion/reveal";
 import { SectionHead } from "./ui";
 
-const steps = [
+const steps: { icon: ReactNode; title: string; body: string }[] = [
   {
-    n: "1",
-    title: "Enter your practice zip",
-    body: "We use it to pull the right UCR percentiles. Nothing else.",
+    icon: <path d="M12 15V3M7 8l5-5 5 5M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />,
+    title: "Upload Your Data",
+    body: "Securely upload your production report — CSV, PDF, or a snapshot of your top codes. We handle the rest.",
   },
   {
-    n: "2",
-    title: "Tell us your provider count",
-    body: "1, 2–5, or 6+. Same price for everyone right now.",
+    icon: <path d="M5 20V10M12 20V4M19 20v-7" />,
+    title: "We Analyze & Benchmark",
+    body: "We compare your fees to local and national UCR benchmarks, code by code, against the 50th, 75th, and 90th percentiles.",
   },
   {
-    n: "3",
-    title: "Give us your fee schedule",
-    body: "Upload a CSV, paste a table, snap an EOB, or hand-enter your top 20 codes.",
-  },
-  {
-    n: "4",
-    title: "Pick your carriers",
-    body: "Delta, Aetna, Cigna, MetLife, UnitedHealthcare, Guardian, BCBS, and more.",
+    icon: (
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M9 13h6M9 17h6" />
+    ),
+    title: "Get Your New Fee Schedule",
+    body: "Review your opportunities, see which carrier to call first, and build a new fee schedule with confidence.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section className="relative bg-[linear-gradient(180deg,#fff,var(--tint)_40%,#fff)] py-24">
+    <section
+      id="how"
+      className="scroll-mt-24 border-y border-line bg-tint-2 py-[74px]"
+    >
       <div className="mx-auto max-w-wrap px-7">
         <SectionHead
           pill="How it works"
-          title={
-            <>
-              Five minutes of your time.
-              <br />
-              <span className="text-gradient">Your report in minutes.</span>
-            </>
-          }
+          title="Three simple steps to a stronger fee schedule"
         />
-        <div className="relative grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div
-            aria-hidden="true"
-            className="absolute left-[8%] right-[8%] top-[38px] hidden h-0.5 bg-[linear-gradient(90deg,transparent,#D6DBF4_12%,#D6DBF4_88%,transparent)] lg:block"
-          />
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
           {steps.map((s, i) => (
-            <Reveal
-              key={s.n}
-              delay={i * 90}
-              className="relative z-[1] text-center"
-            >
-              <div className="mx-auto mb-[18px] grid h-14 w-14 place-items-center rounded-2xl border border-line bg-white font-data text-[20px] font-semibold text-brand shadow-soft">
-                {s.n}
-              </div>
-              <h4 className="mb-2 font-display text-[16.5px] font-bold text-heading">
-                {s.title}
-              </h4>
-              <p className="px-1.5 text-sm text-muted">{s.body}</p>
+            <Reveal key={s.title} delay={i * 90}>
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-[#EEF1FE]">
+                <svg
+                  width="27"
+                  height="27"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-brand-deep"
+                >
+                  {s.icon}
+                </svg>
+              </span>
+              <h3 className="mt-5 text-[19px] font-bold text-heading">
+                {`${i + 1}. ${s.title}`}
+              </h3>
+              <p className="mt-2.5 max-w-[32ch] text-[15px] leading-relaxed text-muted">
+                {s.body}
+              </p>
             </Reveal>
           ))}
         </div>
-        <Reveal className="mt-[38px] text-center text-[15px] text-muted">
-          Your benchmarked report is ready within minutes. Review the
-          opportunity we found, then pay $199 to unlock the full breakdown and
-          PDF. <b className="text-heading">No charge until your report is ready.</b>
-        </Reveal>
       </div>
     </section>
   );

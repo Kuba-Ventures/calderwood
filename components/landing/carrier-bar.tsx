@@ -3,7 +3,7 @@
 import { useInView } from "@/components/motion/use-in-view";
 import { useReducedMotion } from "@/components/motion/use-reduced-motion";
 
-/** A carrier's recoverable revenue: a gold fill animates to `pct`. */
+/** A carrier's recoverable revenue: an indigo fill animates to `pct`. */
 export function CarrierBar({
   name,
   value,
@@ -21,14 +21,14 @@ export function CarrierBar({
     <div ref={ref} className="mb-4">
       <div className="mb-[7px] flex justify-between text-[13px]">
         <span className="font-medium text-heading">{name}</span>
-        <span className="font-data font-semibold text-gold-deep">{value}</span>
+        <span className="font-data font-semibold text-coral">{value}</span>
       </div>
       <div className="h-[11px] overflow-hidden rounded-md bg-[#EDEFFA]">
         <div
           className="h-full rounded-md"
           style={{
             width,
-            background: "linear-gradient(90deg, var(--gold), var(--gold-soft))",
+            background: "linear-gradient(90deg, var(--brand-deep), var(--brand))",
             transition: reduced
               ? "none"
               : "width 1.3s cubic-bezier(.22,1,.36,1)",
