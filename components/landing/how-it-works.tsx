@@ -6,7 +6,7 @@ const steps: { icon: ReactNode; title: string; body: string }[] = [
   {
     icon: <path d="M12 15V3M7 8l5-5 5 5M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />,
     title: "Upload Your Data",
-    body: "Securely upload your production report — CSV, PDF, or a snapshot of your top codes. We handle the rest.",
+    body: "Securely upload your production report: CSV, PDF, or a snapshot of your top codes. We handle the rest.",
   },
   {
     icon: <path d="M5 20V10M12 20V4M19 20v-7" />,

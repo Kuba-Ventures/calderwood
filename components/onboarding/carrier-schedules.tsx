@@ -163,7 +163,7 @@ function CarrierRow({
     }
 
     setStatus("error");
-    setMessage("Use a CSV, Excel, or PDF — or paste the rates.");
+    setMessage("Use a CSV, Excel, or PDF, or paste the rates.");
   }
 
   async function submitPaste() {

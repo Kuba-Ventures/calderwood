@@ -471,7 +471,7 @@ function UploadPane({
       csvText: null,
       previewCount: null,
       uploadError:
-        "Unsupported file. Upload a CSV, Excel, PDF, or image — or use the Paste / Top 20 tabs.",
+        "Unsupported file. Upload a CSV, Excel, PDF, or image, or use the Paste / Top 20 tabs.",
     });
   }
 
