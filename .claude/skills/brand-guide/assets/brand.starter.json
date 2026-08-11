@@ -1,0 +1,82 @@
+{
+  "name": "Brand Name",
+  "descriptor": "Brand Guidelines",
+  "version": "v0.1",
+  "year": "2026",
+  "owner": "Company LLC",
+  "domain": "yourdomain.com",
+  "logos": {
+    "primary": "assets/logo-primary.svg"
+  },
+  "colors": {
+    "primary": {
+      "hex": "#8A9299",
+      "name": "Primary",
+      "use": "Logo, headlines, primary actions."
+    },
+    "secondary": {
+      "hex": "#B4BABE",
+      "name": "Secondary",
+      "use": "Charts, links, hover states."
+    },
+    "tertiary": {
+      "hex": "#D7DAD9",
+      "name": "Tertiary",
+      "use": "Backgrounds, quiet surfaces."
+    }
+  },
+  "neutrals": {
+    "ink": {
+      "hex": "#14181C",
+      "name": "Ink",
+      "use": "Body text."
+    },
+    "paper": {
+      "hex": "#FFFFFF",
+      "name": "Paper",
+      "use": "Default background."
+    }
+  },
+  "applications": {
+    "nav": [
+      "Product",
+      "Pricing",
+      "Resources",
+      "About"
+    ],
+    "cta": "Get started",
+    "ctaAlt": "Learn more",
+    "heroHtml": "One clear promise, <em>stated plainly.</em>",
+    "heroSub": "A single sentence of support.",
+    "features": [
+      "First proof point",
+      "Second proof point",
+      "Third proof point"
+    ],
+    "docLabel": "Report",
+    "docTitle": "Client report",
+    "docSub": "Subtitle",
+    "reportStats": [
+      {
+        "k": "Metric",
+        "v": "0"
+      },
+      {
+        "k": "Metric",
+        "v": "0"
+      }
+    ],
+    "reportRows": [
+      {
+        "k": "Row",
+        "label": "Description",
+        "v": "0"
+      }
+    ]
+  },
+  "logoRules": {
+    "clearSpace": "Clear space on all four sides equals X, where X is the cap-height of the mark.",
+    "minPrint": "10 mm",
+    "minScreen": "40 px"
+  }
+}
