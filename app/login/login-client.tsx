@@ -107,12 +107,12 @@ function LoginForm() {
               >
                 Password
               </label>
-              <a
-                href="mailto:support@newfeeschedule.com?subject=Password%20reset"
-                className="text-sm text-ink-400 hover:text-ink-700"
+              <Link
+                href="/forgot-password"
+                className="text-sm text-accent hover:underline"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <div className="relative mt-1.5">
               <input
