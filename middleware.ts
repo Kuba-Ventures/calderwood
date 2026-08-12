@@ -3,6 +3,10 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import {
+  isRootRecoveryHit,
+  RESET_PASSWORD_PATH,
+} from "@/lib/auth/recovery-redirect";
 
 const APP_PREFIXES = ["/dashboard", "/intake", "/reports", "/account"];
 const PUBLIC_PATHS = ["/", "/login", "/signup", "/start", "/privacy", "/terms"];
@@ -13,6 +17,18 @@ export async function middleware(request: NextRequest) {
   // Auth pages must never be edge-cached; if a stale HTML cache references
   // an old script bundle without the inlined env values, sign-in breaks.
   const path = request.nextUrl.pathname;
+
+  // Password-recovery safety net (issue #45): when a Supabase recovery link
+  // falls back to the site root, it arrives as "/?code=...". Forward that code
+  // to /reset-password so the user reaches the new-password form regardless of
+  // the dashboard Redirect URLs config. Same-origin redirect preserves the
+  // PKCE code_verifier held in the browser.
+  if (isRootRecoveryHit(path, request.nextUrl.searchParams)) {
+    const url = request.nextUrl.clone();
+    url.pathname = RESET_PASSWORD_PATH;
+    return NextResponse.redirect(url);
+  }
+
   if (path === "/login" || path === "/signup") {
     response.headers.set("Cache-Control", "no-store, must-revalidate");
   }
