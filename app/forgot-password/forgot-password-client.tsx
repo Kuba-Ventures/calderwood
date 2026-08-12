@@ -15,6 +15,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
+import { browserSiteOrigin } from "@/lib/site-url";
 
 export default function ForgotPasswordClient() {
   const [email, setEmail] = useState("");
@@ -39,9 +40,14 @@ export default function ForgotPasswordClient() {
     setSubmitting(true);
     try {
       const sb = browserSupabase();
+      // Pin the recovery link to the canonical site origin, not whatever host
+      // the user is on. The bare apex does not resolve, so a link built from it
+      // is dead on arrival; the canonical origin is also the single URL to add
+      // to the Supabase Redirect URLs allow-list. See lib/site-url.ts and
+      // docs/auth-password-reset.md.
       const { error: resetError } = await sb.auth.resetPasswordForEmail(
         trimmed,
-        { redirectTo: `${window.location.origin}/reset-password` }
+        { redirectTo: `${browserSiteOrigin()}/reset-password` }
       );
       // Don't reveal whether the email exists: only surface genuine transport
       // failures, and show the same confirmation for both "sent" and "no such
