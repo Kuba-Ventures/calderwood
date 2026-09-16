@@ -1,7 +1,9 @@
 // Pure computation: ComputationInput + benchmark resolver -> ComputationOutput.
-// No DB writes. No I/O beyond the injected resolver. This function is
+// No DB writes. No I/O beyond the injected resolver; the description lookup is
+// synchronous and resolved by the caller before compute runs. This function is
 // re-runnable against the same input and must produce identical output.
 
+import { DescribeCode } from "@/lib/cdt/descriptions";
 import { getCdtDescription } from "@/lib/seed/cdt-codes";
 import {
   Benchmark,
@@ -19,7 +21,11 @@ export type ResolveBenchmark = (
 
 export async function compute(
   input: ComputationInput,
-  resolve: ResolveBenchmark
+  resolve: ResolveBenchmark,
+  // Defaults to the in-repo short labels, which only cover ~50 codes. Callers
+  // with a Supabase client should pass loadCdtDescriptions(sb) so the long
+  // tail gets words instead of a bare code next to a dollar figure.
+  describe: DescribeCode = getCdtDescription
 ): Promise<ComputationOutput> {
   const flags: string[] = [];
   const codeRows: CodeRow[] = [];
@@ -56,7 +62,7 @@ export async function compute(
     if (!benchmark) {
       codeRows.push({
         code: entry.code,
-        description: getCdtDescription(entry.code),
+        description: describe(entry.code),
         practiceFee: entry.fee,
         p50: null,
         p75: null,
@@ -111,7 +117,7 @@ export async function compute(
 
     codeRows.push({
       code: entry.code,
-      description: getCdtDescription(entry.code),
+      description: describe(entry.code),
       practiceFee: entry.fee,
       p50: benchmark.p50,
       p75: benchmark.p75,
