@@ -1,7 +1,7 @@
 // Shared domain types for the intake → parse → compute → report pipeline.
 // These mirror the DB schema in supabase/migrations/0001_init.sql.
 
-export type GeoLevel = "zip3" | "metro" | "state" | "region" | "national";
+export type GeoLevel = "zip5" | "zip3" | "metro" | "state" | "region" | "national";
 
 export const CARRIERS = [
   "Delta",

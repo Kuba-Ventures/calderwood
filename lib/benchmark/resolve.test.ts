@@ -30,6 +30,19 @@ const baseRow = (
 });
 
 describe("resolveBenchmark cascade", () => {
+  it("prefers zip5 over zip3 when both exist", async () => {
+    const resolve = build([
+      baseRow({ geo_level: "zip5", geo_id: "02115", cdt_code: "D1110", p75: 300 }),
+      baseRow({ geo_level: "zip3", geo_id: "021", cdt_code: "D1110", p75: 125 }),
+    ]);
+    const result = await resolve("02115", "D1110");
+    expect(result).toMatchObject({
+      geoLevelUsed: "zip5",
+      confidence: "high",
+      p75: 300,
+    });
+  });
+
   it("returns the zip3 row when it exists with sufficient sample", async () => {
     const resolve = build([
       baseRow({ geo_level: "zip3", geo_id: "021", cdt_code: "D1110" }),
