@@ -24,6 +24,8 @@ export class SupabaseBenchmarkSource implements BenchmarkSource {
     geoId: string,
     cdtCode: string
   ): Promise<UcrBenchmarkRow | null> {
+    if (level === "zip5") return this.lookupZip5(geoId, cdtCode);
+
     const { data, error } = await this.sb
       .from("ucr_benchmarks")
       .select(
@@ -39,6 +41,50 @@ export class SupabaseBenchmarkSource implements BenchmarkSource {
       .maybeSingle();
     if (error) throw error;
     return (data as UcrBenchmarkRow | null) ?? null;
+  }
+
+  // zip5 has no stored percentile row: NDAS ships a national percentile per
+  // code plus a per-zip5 geo_factor. Multiply the two at lookup time instead
+  // of materializing every (zip5, code) pair.
+  private async lookupZip5(
+    zip5: string,
+    cdtCode: string
+  ): Promise<UcrBenchmarkRow | null> {
+    const [nationalRes, factorRes] = await Promise.all([
+      this.sb
+        .from("ucr_benchmarks")
+        .select(
+          "geo_level, geo_id, cdt_code, p50, p75, p90, sample_size, source_version"
+        )
+        .eq("geo_level", "national")
+        .eq("geo_id", "US")
+        .eq("cdt_code", cdtCode)
+        .order("source_version", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      this.sb
+        .from("zip_geo_factors")
+        .select("geo_factor, source_version")
+        .eq("zip5", zip5)
+        .maybeSingle(),
+    ]);
+    if (nationalRes.error) throw nationalRes.error;
+    if (factorRes.error) throw factorRes.error;
+
+    const national = nationalRes.data as UcrBenchmarkRow | null;
+    const factor = factorRes.data as { geo_factor: number; source_version: string } | null;
+    if (!national || !factor) return null;
+
+    return {
+      geo_level: "zip5",
+      geo_id: zip5,
+      cdt_code: cdtCode,
+      p50: national.p50 * factor.geo_factor,
+      p75: national.p75 * factor.geo_factor,
+      p90: national.p90 * factor.geo_factor,
+      sample_size: national.sample_size,
+      source_version: national.source_version,
+    };
   }
 }
 

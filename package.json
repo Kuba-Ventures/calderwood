@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "load:zcta": "tsx scripts/load-zcta.ts",
     "load:ucr": "tsx scripts/load-ucr-benchmarks.ts",
+    "load:ndas": "tsx scripts/load-ndas-source.ts",
     "render:sample-report": "tsx scripts/render-sample-report.ts",
     "seed:finley": "tsx scripts/seed-finley-demo.ts",
     "db:migrate": "tsx scripts/migrate.ts"

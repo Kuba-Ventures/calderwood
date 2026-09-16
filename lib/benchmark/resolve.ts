@@ -14,9 +14,10 @@ import {
 } from "@/lib/types/pipeline";
 
 const SAMPLE_FLOOR = 30;
-const CASCADE: GeoLevel[] = ["zip3", "metro", "state", "region", "national"];
+const CASCADE: GeoLevel[] = ["zip5", "zip3", "metro", "state", "region", "national"];
 
 const CONFIDENCE_BY_LEVEL: Record<GeoLevel, BenchmarkConfidence> = {
+  zip5: "high",
   zip3: "high",
   metro: "high",
   state: "medium",
@@ -76,6 +77,8 @@ export function resolveBenchmarkWith(
 
 function geoIdFor(level: GeoLevel, zip5: string, ids: GeoIds): string | null {
   switch (level) {
+    case "zip5":
+      return zip5;
     case "zip3":
       return zip5.slice(0, 3);
     case "metro":

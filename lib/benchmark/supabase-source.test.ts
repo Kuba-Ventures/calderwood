@@ -68,4 +68,45 @@ describe("SupabaseBenchmarkSource", () => {
     const src = new SupabaseBenchmarkSource(fakeClient({}));
     expect(await src.lookup("zip3", "024", "D9999")).toBeNull();
   });
+
+  it("computes zip5 by multiplying the national row by the zip's geo factor", async () => {
+    const national = {
+      geo_level: "national",
+      geo_id: "US",
+      cdt_code: "D1110",
+      p50: 100,
+      p75: 125,
+      p90: 150,
+      sample_size: 500,
+      source_version: "ndas_2026",
+    };
+    const src = new SupabaseBenchmarkSource(
+      fakeClient({ ucr_benchmarks: national, zip_geo_factors: { geo_factor: 1.2, source_version: "ndas_2026" } })
+    );
+    expect(await src.lookup("zip5", "02115", "D1110")).toEqual({
+      geo_level: "zip5",
+      geo_id: "02115",
+      cdt_code: "D1110",
+      p50: 120,
+      p75: 150,
+      p90: 180,
+      sample_size: 500,
+      source_version: "ndas_2026",
+    });
+  });
+
+  it("returns null for zip5 when there's no geo factor for that zip", async () => {
+    const national = {
+      geo_level: "national",
+      geo_id: "US",
+      cdt_code: "D1110",
+      p50: 100,
+      p75: 125,
+      p90: 150,
+      sample_size: 500,
+      source_version: "ndas_2026",
+    };
+    const src = new SupabaseBenchmarkSource(fakeClient({ ucr_benchmarks: national }));
+    expect(await src.lookup("zip5", "02115", "D1110")).toBeNull();
+  });
 });
