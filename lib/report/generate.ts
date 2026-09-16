@@ -17,6 +17,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { ReportDoc } from "@/components/report/report-doc";
 import { compute } from "@/lib/computation/compute";
 import { resolveForZip } from "@/lib/benchmark/supabase-source";
+import { loadCdtDescriptions } from "@/lib/cdt/descriptions";
 import {
   defaultFrequencies,
   providersFromBucket,
@@ -96,7 +97,8 @@ export async function generateReport(
 
   // 2. Compute against live benchmarks.
   const resolve = resolveForZip(sb);
-  const output = await compute(input, resolve);
+  const describe = await loadCdtDescriptions(sb);
+  const output = await compute(input, resolve, describe);
 
   // 3. Render + store the deliverable.
   await setStatus(sb, practice.id, "review_queue");
