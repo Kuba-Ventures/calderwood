@@ -30,18 +30,35 @@ import { CDT_REGEX } from "@/lib/types/pipeline";
 // these rows aren't skipped, and rely on source_version to trace provenance.
 const NDAS_SAMPLE_SIZE_PLACEHOLDER = 500;
 
-const NmasRowSchema = z.object({
+// NMAS.csv columns: CDTINDEX,A,Code,ORDER,IN,INT2,NOMEN,Note,P40..P95
+// (NOMEN/Note hold what other NDAS tables call DESC/NOTES).
+//
+// The file mixes three row shapes, not one:
+//  - category-divider rows with no CDT code (e.g. "IMAGE CAPTURE ONLY") -- not
+//    data, skipped silently.
+//  - real codes NDAS marks "IR" (Individually Rated) on every percentile --
+//    NDAS's own way of saying "no statistical percentile for this code".
+//    Kept in staging for the code/description, but no national benchmark row.
+//  - real codes with real percentiles. Complex surgical/prosthetic codes run
+//    well past $10k (max observed: $22,808 for D7949), so the bound here is
+//    set generously rather than at the $10k cap used for typical UCR data.
+const PERCENTILE_MAX = 30000;
+const PRICE_FIELDS = ["p40", "p50", "p60", "p70", "p80", "p90", "p95"] as const;
+
+const CodedRowSchema = z.object({
   code: z.string().regex(CDT_REGEX),
-  seqorder: z.coerce.number().int().optional(),
-  p40: z.coerce.number().positive().max(10000),
-  p50: z.coerce.number().positive().max(10000),
-  p60: z.coerce.number().positive().max(10000),
-  p70: z.coerce.number().positive().max(10000),
-  p80: z.coerce.number().positive().max(10000),
-  p90: z.coerce.number().positive().max(10000),
-  p95: z.coerce.number().positive().max(10000),
-  desc: z.string().min(1),
-  notes: z.string().optional(),
+  cdtindex: z.coerce.number().int().optional(),
+  nomen: z.string().min(1),
+  note: z.string().optional(),
+});
+const NmasRowSchema = CodedRowSchema.extend({
+  p40: z.coerce.number().positive().max(PERCENTILE_MAX),
+  p50: z.coerce.number().positive().max(PERCENTILE_MAX),
+  p60: z.coerce.number().positive().max(PERCENTILE_MAX),
+  p70: z.coerce.number().positive().max(PERCENTILE_MAX),
+  p80: z.coerce.number().positive().max(PERCENTILE_MAX),
+  p90: z.coerce.number().positive().max(PERCENTILE_MAX),
+  p95: z.coerce.number().positive().max(PERCENTILE_MAX),
 });
 
 const ZipRowSchema = z.object({
@@ -86,10 +103,29 @@ async function main() {
   const nmasRows = parseCsv(args.nmas);
   const zipRows = parseCsv(args.zipvals);
 
-  const validNmas: z.infer<typeof NmasRowSchema>[] = [];
+  const pricedNmas: z.infer<typeof NmasRowSchema>[] = [];
+  const irNmas: z.infer<typeof CodedRowSchema>[] = [];
+  let headerRowCount = 0;
   const nmasErrors: { line: number; reason: string }[] = [];
   for (let i = 0; i < nmasRows.length; i++) {
-    const result = NmasRowSchema.safeParse(nmasRows[i]);
+    const row = nmasRows[i];
+    if (!row.code || !CDT_REGEX.test(row.code)) {
+      headerRowCount++;
+      continue;
+    }
+    if (PRICE_FIELDS.some((f) => row[f] === "IR")) {
+      const result = CodedRowSchema.safeParse(row);
+      if (!result.success) {
+        nmasErrors.push({
+          line: i + 2,
+          reason: result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; "),
+        });
+        continue;
+      }
+      irNmas.push(result.data);
+      continue;
+    }
+    const result = NmasRowSchema.safeParse(row);
     if (!result.success) {
       nmasErrors.push({
         line: i + 2,
@@ -97,7 +133,7 @@ async function main() {
       });
       continue;
     }
-    validNmas.push(result.data);
+    pricedNmas.push(result.data);
   }
 
   const validZips: z.infer<typeof ZipRowSchema>[] = [];
@@ -118,7 +154,10 @@ async function main() {
     validZips.push(result.data);
   }
 
-  console.log(`NMAS:    parsed ${nmasRows.length}, valid ${validNmas.length}, errors ${nmasErrors.length}`);
+  console.log(
+    `NMAS:    parsed ${nmasRows.length}, priced ${pricedNmas.length}, individually-rated (no benchmark) ${irNmas.length}, ` +
+      `header/divider rows skipped ${headerRowCount}, errors ${nmasErrors.length}`
+  );
   for (const e of nmasErrors.slice(0, 10)) console.log(`  line ${e.line}: ${e.reason}`);
   console.log(`ZIPVALS: parsed ${zipRows.length}, valid ${validZips.length}, errors ${zipErrors.length}`);
   for (const e of zipErrors.slice(0, 10)) console.log(`  line ${e.line}: ${e.reason}`);
@@ -143,21 +182,38 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js");
   const sb = createClient(url, key, { auth: { persistSession: false } });
 
-  const stagingNmas = validNmas.map((r) => ({
-    code: r.code,
-    seq_order: r.seqorder ?? null,
-    p40: r.p40,
-    p50: r.p50,
-    p60: r.p60,
-    p70: r.p70,
-    p80: r.p80,
-    p90: r.p90,
-    p95: r.p95,
-    description: r.desc,
-    notes: r.notes ?? null,
-    source_version: args.sourceVersion,
-  }));
-  const nationalRows = validNmas.map((r) => ({
+  const stagingNmas = [
+    ...pricedNmas.map((r) => ({
+      code: r.code,
+      seq_order: r.cdtindex ?? null,
+      p40: r.p40,
+      p50: r.p50,
+      p60: r.p60,
+      p70: r.p70,
+      p80: r.p80,
+      p90: r.p90,
+      p95: r.p95,
+      description: r.nomen,
+      notes: r.note ?? null,
+      source_version: args.sourceVersion,
+    })),
+    // Individually-rated codes: kept for the code/description, no percentiles.
+    ...irNmas.map((r) => ({
+      code: r.code,
+      seq_order: r.cdtindex ?? null,
+      p40: null,
+      p50: null,
+      p60: null,
+      p70: null,
+      p80: null,
+      p90: null,
+      p95: null,
+      description: r.nomen,
+      notes: r.note ?? null,
+      source_version: args.sourceVersion,
+    })),
+  ];
+  const nationalRows = pricedNmas.map((r) => ({
     geo_level: "national" as const,
     geo_id: "US",
     cdt_code: r.code,
