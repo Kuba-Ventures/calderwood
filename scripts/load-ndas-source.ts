@@ -8,16 +8,24 @@
 //   ZIPVALS_24.csv: ZIP3,ZIP,STATE,CITY,GEO_N,available
 //                  (per-zip5 geographic adjustment factor)
 //
+// Optionally also loads --headings (Codes,RngCode,Org,In,Header: CDT code
+// ranges to category labels) to populate cdt_codes.category. PROCODEN.csv
+// is NOT a separate input here: it's exactly NMAS with the category-divider
+// rows stripped out (same 853 = 758 priced + 95 IR codes, identical values
+// on every overlapping code), so it adds no information NMAS doesn't
+// already have. cdt_codes.description is sourced from NMAS's NOMEN field.
+//
 // This writes:
 //   - raw 1:1 rows into staging_ndas_nmas / staging_ndas_zipvals (audit trail)
 //   - one national row per code into ucr_benchmarks (geo_level='national')
 //   - one row per zip5 into zip_geo_factors
+//   - one row per code into cdt_codes (description + category), if --headings given
 // resolve.ts multiplies national x geo_factor at lookup time for geo_level
 // 'zip5' rather than materializing every (zip5, code) pair.
 //
 // Usage:
 //   npm run load:ndas -- --nmas ./data/NMAS.csv --zipvals ./data/ZIPVALS_24.csv --dry-run
-//   npm run load:ndas -- --nmas ./data/NMAS.csv --zipvals ./data/ZIPVALS_24.csv --source-version ndas_2026
+//   npm run load:ndas -- --nmas ./data/NMAS.csv --zipvals ./data/ZIPVALS_24.csv --headings ./data/headings.csv --source-version ndas_2026
 
 import fs from "node:fs";
 import path from "node:path";
@@ -68,7 +76,24 @@ const ZipRowSchema = z.object({
   geo_n: z.coerce.number().positive().max(10),
 });
 
-type Args = { nmas?: string; zipvals?: string; sourceVersion: string; dryRun: boolean };
+// headings.csv: Codes,RngCode,Org,In,Header. Only the 12 top-level ("H")
+// ranges are used for cdt_codes.category -- the ~77 "N" rows are finer
+// sub-headings (e.g. "CLINICAL ORAL EVALUATIONS") that don't fit the
+// schema's single category column.
+const HeadingRowSchema = z.object({
+  codes: z.string().regex(CDT_REGEX),
+  rngcode: z.string().regex(CDT_REGEX),
+  org: z.string(),
+  header: z.string().min(1),
+});
+
+type Args = {
+  nmas?: string;
+  zipvals?: string;
+  headings?: string;
+  sourceVersion: string;
+  dryRun: boolean;
+};
 
 function parseArgs(argv: string[]): Args {
   const out: Args = { sourceVersion: "ndas_2026", dryRun: false };
@@ -76,10 +101,19 @@ function parseArgs(argv: string[]): Args {
     const a = argv[i];
     if (a === "--nmas") out.nmas = argv[++i];
     else if (a === "--zipvals") out.zipvals = argv[++i];
+    else if (a === "--headings") out.headings = argv[++i];
     else if (a === "--source-version") out.sourceVersion = argv[++i];
     else if (a === "--dry-run") out.dryRun = true;
   }
   return out;
+}
+
+function categoryFor(
+  code: string,
+  ranges: { codes: string; rngcode: string; header: string }[]
+): string | null {
+  const match = ranges.find((r) => code >= r.codes && code <= r.rngcode);
+  return match?.header ?? null;
 }
 
 function parseCsv(file: string) {
@@ -162,7 +196,33 @@ async function main() {
   console.log(`ZIPVALS: parsed ${zipRows.length}, valid ${validZips.length}, errors ${zipErrors.length}`);
   for (const e of zipErrors.slice(0, 10)) console.log(`  line ${e.line}: ${e.reason}`);
 
-  if (nmasErrors.length > 0 || zipErrors.length > 0) {
+  let categoryRanges: z.infer<typeof HeadingRowSchema>[] = [];
+  const headingErrors: { line: number; reason: string }[] = [];
+  if (args.headings) {
+    const headingRows = parseCsv(args.headings);
+    for (let i = 0; i < headingRows.length; i++) {
+      const result = HeadingRowSchema.safeParse(headingRows[i]);
+      if (!result.success) {
+        headingErrors.push({
+          line: i + 2,
+          reason: result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; "),
+        });
+        continue;
+      }
+      if (result.data.org === "H") categoryRanges.push(result.data);
+    }
+    const codesWithoutCategory = [...pricedNmas, ...irNmas].filter(
+      (r) => !categoryFor(r.code, categoryRanges)
+    );
+    console.log(
+      `HEADINGS: parsed ${headingRows.length}, top-level category ranges ${categoryRanges.length}, errors ${headingErrors.length}, ` +
+        `codes with no matching category ${codesWithoutCategory.length}`
+    );
+    for (const e of headingErrors.slice(0, 10)) console.log(`  line ${e.line}: ${e.reason}`);
+    for (const r of codesWithoutCategory.slice(0, 10)) console.log(`  no category for ${r.code}`);
+  }
+
+  if (nmasErrors.length > 0 || zipErrors.length > 0 || headingErrors.length > 0) {
     console.error("\nAborting: fix the source CSVs before loading.");
     process.exit(1);
   }
@@ -259,8 +319,23 @@ async function main() {
     if (error) throw error;
   }
 
+  let cdtCodeCount = 0;
+  if (args.headings) {
+    const cdtCodeRows = [...pricedNmas, ...irNmas].map((r) => ({
+      code: r.code,
+      description: r.nomen,
+      category: categoryFor(r.code, categoryRanges),
+    }));
+    for (const c of chunk(cdtCodeRows, 1000)) {
+      const { error } = await sb.from("cdt_codes").upsert(c, { onConflict: "code" });
+      if (error) throw error;
+    }
+    cdtCodeCount = cdtCodeRows.length;
+  }
+
   console.log(
-    `Inserted ${nationalRows.length} national benchmark rows and ${factorRows.length} zip geo factors.`
+    `Inserted ${nationalRows.length} national benchmark rows, ${factorRows.length} zip geo factors, ` +
+      `and ${cdtCodeCount} cdt_codes rows.`
   );
 }
 
