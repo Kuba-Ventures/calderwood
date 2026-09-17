@@ -28,6 +28,7 @@ export default function OnboardingWizard() {
   // Account + practice
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [practiceName, setPracticeName] = useState("");
   const [zip, setZip] = useState("");
@@ -44,6 +45,7 @@ export default function OnboardingWizard() {
     if (s === 0) {
       if (!EMAIL_RE.test(email.trim())) return "Enter a valid email address.";
       if (password.length < 8) return "Password must be at least 8 characters.";
+      if (password !== confirmPassword) return "Passwords don't match.";
       if (!practiceName.trim()) return "Enter your practice name.";
       if (!/^\d{5}$/.test(zip.trim())) return "Enter a 5-digit ZIP code.";
       if (!Number.isFinite(providerCount) || providerCount < 1)
@@ -176,6 +178,8 @@ export default function OnboardingWizard() {
               setEmail={setEmail}
               password={password}
               setPassword={setPassword}
+              confirmPassword={confirmPassword}
+              setConfirmPassword={setConfirmPassword}
               showPassword={showPassword}
               setShowPassword={setShowPassword}
               practiceName={practiceName}
@@ -277,6 +281,8 @@ function AccountStep({
   setEmail,
   password,
   setPassword,
+  confirmPassword,
+  setConfirmPassword,
   showPassword,
   setShowPassword,
   practiceName,
@@ -290,6 +296,8 @@ function AccountStep({
   setEmail: (v: string) => void;
   password: string;
   setPassword: (v: string) => void;
+  confirmPassword: string;
+  setConfirmPassword: (v: string) => void;
   showPassword: boolean;
   setShowPassword: (v: boolean) => void;
   practiceName: string;
@@ -352,6 +360,27 @@ function AccountStep({
             </button>
           </div>
           <p className="mt-1 text-xs text-ink-400">At least 8 characters.</p>
+        </div>
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="block text-sm font-medium text-ink-700"
+          >
+            Confirm password
+          </label>
+          <input
+            id="confirmPassword"
+            type={showPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+            className={inputCls}
+          />
+          {confirmPassword.length > 0 && confirmPassword !== password && (
+            <p className="mt-1 text-xs text-red-600" role="alert">
+              Passwords don&apos;t match.
+            </p>
+          )}
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
