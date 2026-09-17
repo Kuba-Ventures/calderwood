@@ -5,6 +5,7 @@
 // sees a read-only report — no login.
 
 import { useState } from "react";
+import { asMessage } from "@/lib/api-message";
 
 export function ShareReport() {
   const [url, setUrl] = useState<string | null>(null);
@@ -23,7 +24,7 @@ export function ShareReport() {
         setUrl(json.url);
         setOpen(true);
       } else {
-        setError(json.error || "Couldn't create a link.");
+        setError(asMessage(json.error, "Couldn't create a link."));
         setOpen(true);
       }
     } catch {

@@ -8,6 +8,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
+import { asMessage } from "@/lib/api-message";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -59,7 +60,7 @@ export default function AccountPage() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        setError(json.error || "Couldn't save. Try again.");
+        setError(asMessage(json.error, "Couldn't save. Try again."));
         return;
       }
       setSaved(true);
@@ -93,7 +94,7 @@ export default function AccountPage() {
         router.replace("/intake");
       } else {
         const json = await res.json().catch(() => ({}));
-        setError(json.error || "Couldn't reset. Try again.");
+        setError(asMessage(json.error, "Couldn't reset. Try again."));
       }
     } catch {
       setError("Couldn't reset. Try again.");
