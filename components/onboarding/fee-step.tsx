@@ -10,7 +10,15 @@
 // type landed in the unified box, so the validity/payload helpers know how to
 // treat it.
 
-import { ChangeEvent, DragEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  Dispatch,
+  DragEvent,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { parseCsv } from "@/lib/parser/csv";
 import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 import { TOP_CDT } from "@/lib/data/top-cdt";
@@ -175,9 +183,13 @@ export function FeeStep({
   setDraft,
 }: {
   draft: FeeDraft;
-  setDraft: (d: FeeDraft) => void;
+  setDraft: Dispatch<SetStateAction<FeeDraft>>;
 }) {
-  const patch = (p: Partial<FeeDraft>) => setDraft({ ...draft, ...p });
+  // Functional update: the upload handlers below patch the draft several times
+  // across awaits, so spreading the render-time draft would clobber the earlier
+  // patches (e.g. reset uploadedKind back to null mid-upload).
+  const patch = (p: Partial<FeeDraft>) =>
+    setDraft((prev) => ({ ...prev, ...p }));
 
   return (
     <div>
@@ -272,6 +284,21 @@ function ExtractionProgress({
       </div>
     </div>
   );
+}
+
+// A failed route doesn't always answer in JSON: a crashed API route returns
+// Next's HTML 500 page, and res.json() then throws, collapsing a precise
+// failure into the generic "Something went wrong" catch below. Read the body
+// as text and parse defensively so the real status reaches the dentist.
+async function readJson(res: Response): Promise<Record<string, unknown>> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return {
+      error: `Upload service error (${res.status}). Try again in a moment.`,
+    };
+  }
 }
 
 // One box that accepts CSV / XLSX / PDF / EOB image and routes by file type.
@@ -369,8 +396,13 @@ function UploadPane({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name }),
       });
-      const urlJson = await urlRes.json();
-      if (!urlRes.ok || !urlJson.token) {
+      const urlJson = (await readJson(urlRes)) as {
+        bucket?: string;
+        path?: string;
+        token?: string;
+        error?: string;
+      };
+      if (!urlRes.ok || !urlJson.bucket || !urlJson.path || !urlJson.token) {
         patch({ pdfStatus: "error", pdfMessage: urlJson.error || "Upload failed." });
         return;
       }
@@ -390,7 +422,13 @@ function UploadPane({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: urlJson.path }),
       });
-      const parseJson = await parseRes.json();
+      const parseJson = (await readJson(parseRes)) as {
+        rows?: { code: string; fee: number }[];
+        frequencies?: Record<string, number>;
+        providerFees?: Record<string, Record<string, number>>;
+        count?: number;
+        error?: string;
+      };
       if (
         !parseRes.ok ||
         !Array.isArray(parseJson.rows) ||
@@ -439,7 +477,11 @@ function UploadPane({
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/eob-ocr", { method: "POST", body: fd });
-      const json = await res.json();
+      const json = (await readJson(res)) as {
+        eobPath?: string;
+        message?: string;
+        error?: string;
+      };
       if (!res.ok || !json.eobPath) {
         patch({
           eobStatus: "error",
