@@ -18,6 +18,7 @@ import {
 } from "@/components/onboarding/fee-step";
 import { CarriersStep } from "@/components/onboarding/carriers-step";
 import { CarrierSchedules } from "@/components/onboarding/carrier-schedules";
+import { asMessage } from "@/lib/api-message";
 
 export default function IntakePage() {
   const [hydrated, setHydrated] = useState(false);
@@ -104,7 +105,7 @@ export default function IntakePage() {
         setError(
           json.error === "fee_parse_failed"
             ? "We couldn't read that fee schedule. Try another file or method."
-            : json.error || "Something went wrong. Please try again."
+            : asMessage(json.error, "Something went wrong. Please try again.")
         );
         setStep(0);
         return;

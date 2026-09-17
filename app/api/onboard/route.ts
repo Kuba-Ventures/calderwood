@@ -52,6 +52,31 @@ const bodySchema = z.object({
   fee: feeSchema,
 });
 
+// Supabase/Postgrest errors are plain objects, not Error instances, so
+// String(err) on one yields the literal "[object Object]" and throws away the
+// message the caller needs. Pull out something actionable instead.
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === "object") {
+    const e = err as {
+      message?: unknown;
+      details?: unknown;
+      hint?: unknown;
+      code?: unknown;
+    };
+    const parts = [e.message, e.details, e.hint].filter(
+      (part): part is string => typeof part === "string" && part.length > 0
+    );
+    if (parts.length > 0) {
+      const joined = parts.join(" ");
+      return typeof e.code === "string" && e.code
+        ? `${joined} (${e.code})`
+        : joined;
+    }
+  }
+  return String(err);
+}
+
 function bucketFor(n: number): ProviderBucket {
   if (n <= 1) return "1";
   if (n <= 5) return "2-5";
@@ -64,7 +89,7 @@ export async function POST(request: Request) {
     body = bodySchema.parse(await request.json());
   } catch (err) {
     return NextResponse.json(
-      { error: "invalid request", detail: err instanceof Error ? err.message : err },
+      { error: "invalid request", detail: errorMessage(err) },
       { status: 400 }
     );
   }
@@ -88,10 +113,18 @@ export async function POST(request: Request) {
   }
   const userId = created.user?.id;
 
-  // If anything after account creation fails, delete the just-created auth user
-  // so the email isn't stranded (createUser succeeded but the practice didn't —
-  // a retry would otherwise hit "account_exists" forever).
-  async function rollbackAuthUser() {
+  // If anything after account creation fails, undo both halves: delete the
+  // practice row (if we got that far) and the just-created auth user, so the
+  // email isn't stranded (createUser succeeded but the rest didn't — a retry
+  // would otherwise hit "account_exists" forever, against an orphaned practice).
+  let practiceId: string | null = null;
+  async function rollback() {
+    if (practiceId)
+      await sb
+        .from("practices")
+        .delete()
+        .eq("id", practiceId)
+        .then(undefined, () => {});
     if (userId) await sb.auth.admin.deleteUser(userId).catch(() => {});
   }
 
@@ -111,6 +144,7 @@ export async function POST(request: Request) {
       // EOB needs a human to extract fees; everything else is ready to compute.
       status: fee.method === "eob" ? "review_queue" : "awaiting_uploads",
     });
+    practiceId = practice.id;
 
     // 3. Master fee schedule.
     if (fee.method === "eob") {
@@ -140,8 +174,7 @@ export async function POST(request: Request) {
 
     if (parsed.entries.length === 0) {
       // Roll back so the user can retry cleanly with a different file/method.
-      await sb.from("practices").delete().eq("id", practice.id);
-      await rollbackAuthUser();
+      await rollback();
       return NextResponse.json(
         {
           error: "fee_parse_failed",
@@ -177,10 +210,8 @@ export async function POST(request: Request) {
       parsedCount: parsed.entries.length,
     });
   } catch (err) {
-    await rollbackAuthUser();
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
-    );
+    console.error("[onboard] submit failed", err);
+    await rollback();
+    return NextResponse.json({ error: errorMessage(err) }, { status: 500 });
   }
 }

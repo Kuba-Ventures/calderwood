@@ -18,6 +18,7 @@ import {
   isFeeValid,
 } from "@/components/onboarding/fee-step";
 import { CarriersStep } from "@/components/onboarding/carriers-step";
+import { asMessage } from "@/lib/api-message";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const STEP_LABELS = ["Account", "Fee schedule", "Carriers"];
@@ -119,7 +120,7 @@ export default function OnboardingWizard() {
             "We couldn't read that fee schedule. Try a different file or the Paste / Top 20 methods."
           );
         } else {
-          setError(json.error || "Something went wrong. Please try again.");
+          setError(asMessage(json.error, "Something went wrong. Please try again."));
         }
         return;
       }
