@@ -34,7 +34,7 @@ export function ReportDoc({
   const hasProviderVariance = providerVarianceRows(data).length > 0;
   const basisLine =
     basis === "carrier"
-      ? "Headline based on contracted-rate gap to UCR p75."
+      ? "Headline based on master fee gap to UCR p75. Carrier figures use contracted rates, volume split evenly across carriers."
       : "Headline based on master fee gap to UCR p75 (no carrier schedules parsed).";
 
   return (

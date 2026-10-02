@@ -702,14 +702,15 @@
     }
   ],
   "executiveSummary": {
-    "totalAnnualUnderpayment": 468121,
+    "totalAnnualUnderpayment": 67651,
+    "carrierAnnualUnderpayment": 93624.19999999995,
     "codesBelowP75InTop20": {
       "count": 20,
       "total": 20
     },
     "topCarrier": {
       "name": "Cigna",
-      "recoverable": 134283
+      "recoverable": 26856.600000000002
     },
     "underpaymentBasis": "carrier"
   },
@@ -1068,23 +1069,23 @@
   "recoverableByCarrier": [
     {
       "carrier": "Cigna",
-      "recoverable": 134283
+      "recoverable": 26856.600000000002
     },
     {
       "carrier": "UnitedHealthcare",
-      "recoverable": 112334
+      "recoverable": 22466.8
     },
     {
       "carrier": "Aetna",
-      "recoverable": 94869
+      "recoverable": 18973.8
     },
     {
       "carrier": "Delta",
-      "recoverable": 68167
+      "recoverable": 13633.4
     },
     {
       "carrier": "MetLife",
-      "recoverable": 58468
+      "recoverable": 11693.6
     }
   ],
   "workedExample": {

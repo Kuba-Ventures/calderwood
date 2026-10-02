@@ -6,7 +6,8 @@ exports[`compute -- Underwood Family Dental fixture > snapshot: total under brie
     "count": 20,
     "total": 20,
   },
-  "cigna": 134283,
-  "total": 468121,
+  "carrier": 93624,
+  "cigna": 26857,
+  "total": 67651,
 }
 `;

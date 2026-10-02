@@ -4,7 +4,22 @@ import {
   teaserFigure,
   toGatedReport,
 } from "./gate";
-import type { CodeRow, ComputationOutput } from "@/lib/types/pipeline";
+import fs from "node:fs";
+import path from "node:path";
+import type {
+  CodeRow,
+  ComputationInput,
+  ComputationOutput,
+  UcrBenchmarkRow,
+} from "@/lib/types/pipeline";
+import {
+  InMemoryBenchmarkSource,
+  InMemoryGeoResolver,
+  resolveBenchmarkWith,
+} from "@/lib/benchmark/resolve";
+import { STATE_TO_REGION } from "@/lib/seed/state-to-region";
+import { ZIP_TO_METRO, ZIP_TO_STATE } from "@/lib/data/zip-fixtures";
+import { compute } from "@/lib/computation/compute";
 
 function codeRow(partial: Partial<CodeRow> & { code: string }): CodeRow {
   return {
@@ -72,7 +87,8 @@ describe("computationToReportData", () => {
   it("maps the compute output into the flat ReportData shape", () => {
     const r = computationToReportData(OUTPUT, "02446");
     expect(r.zip).toBe("02446");
-    expect(r.annualUnderpaymentUsd).toBe(52000);
+    // Headline is re-derived from the code rows: 35475 + 16000.
+    expect(r.annualUnderpaymentUsd).toBe(51475);
     expect(r.worstCarrier.name).toBe("Aetna");
     expect(r.worstCarrier.annualGapUsd).toBe(30000);
     // Codes sorted by annual gap desc.
@@ -97,7 +113,8 @@ describe("toGatedReport — unlocked", () => {
   it("returns the full numbers", () => {
     const g = toGatedReport(OUTPUT, "02446", true);
     expect(g.unlocked).toBe(true);
-    expect(g.annualUnderpaymentUsd).toBe(52000);
+    expect(g.annualUnderpaymentUsd).toBe(51475);
+    expect(g.carrierUnderpaymentUsd).toBe(42000);
     expect(g.worstCarrier.name).toBe("Aetna");
     expect(g.codes[0].annualGap).toBe(35475);
   });
@@ -109,6 +126,7 @@ describe("toGatedReport — locked (the paywall boundary)", () => {
   it("zeroes every gated dollar figure", () => {
     expect(g.unlocked).toBe(false);
     expect(g.annualUnderpaymentUsd).toBe(0);
+    expect(g.carrierUnderpaymentUsd).toBe(0);
     expect(g.worstCarrier.annualGapUsd).toBe(0);
     expect(g.worstCarrier.gapPct).toBe(0);
     expect(g.worstCarrier.name).toBe(""); // which-carrier is itself paid insight
@@ -138,7 +156,7 @@ describe("toGatedReport — locked (the paywall boundary)", () => {
     // recoverable must all be absent from what reaches the browser. (Carrier
     // names themselves aren't secret — the dentist entered them — but the
     // worst-carrier identity and all dollar figures are.)
-    expect(json).not.toContain("52000");
+    expect(json).not.toContain("51475");
     expect(json).not.toContain("35475");
     expect(json).not.toContain("30000");
     expect(g.worstCarrier.name).toBe("");
@@ -148,5 +166,51 @@ describe("toGatedReport — locked (the paywall boundary)", () => {
     // Carriers sorted by name, codes by code — not by gold-value.
     expect(g.carriers.map((c) => c.name)).toEqual(["Aetna", "Cigna"].sort());
     expect(g.codes.map((c) => c.code)).toEqual(["D1110", "D2740"]);
+  });
+});
+
+describe("toGatedReport: sample-practice fixture totals", () => {
+  const dir = path.join(__dirname, "..", "..", "test-fixtures", "sample-practice");
+  const load = <T,>(name: string): T =>
+    JSON.parse(fs.readFileSync(path.join(dir, name), "utf8"));
+
+  async function fixtureOutput() {
+    const geo = new InMemoryGeoResolver(ZIP_TO_STATE, ZIP_TO_METRO, STATE_TO_REGION);
+    const src = new InMemoryBenchmarkSource(load<UcrBenchmarkRow[]>("benchmarks.json"));
+    return compute(load<ComputationInput>("input.json"), resolveBenchmarkWith(src, geo));
+  }
+
+  it("headline is the fee-schedule gap and reconciles with the code and category tables", async () => {
+    const g = toGatedReport(await fixtureOutput(), "02446", true);
+    expect(g.annualUnderpaymentUsd).toBe(67651);
+    expect(g.codes.reduce((s, c) => s + c.annualGap, 0)).toBe(67651);
+    expect(g.categories.reduce((s, c) => s + c.recoverable, 0)).toBe(67651);
+    expect(g.teaserUsd).toBe(65000);
+  });
+
+  it("carrier figure is distinct from the headline and equals the scorecard sum", async () => {
+    const g = toGatedReport(await fixtureOutput(), "02446", true);
+    expect(Math.round(g.carrierUnderpaymentUsd)).toBe(93624);
+    expect(g.carrierUnderpaymentUsd).not.toBe(g.annualUnderpaymentUsd);
+    const scorecard = g.carrierGrid.carriers.reduce((s, c) => s + c.annualRecoverable, 0);
+    // Scorecard values are rounded per carrier.
+    expect(Math.abs(scorecard - g.carrierUnderpaymentUsd)).toBeLessThanOrEqual(3);
+    expect(g.worstCarrier.name).toBe("Cigna");
+    expect(Math.round(g.worstCarrier.annualGapUsd)).toBe(26857);
+  });
+
+  it("web percentile rank is compute's rank (same value the PDF prints)", async () => {
+    const out = await fixtureOutput();
+    const g = toGatedReport(out, "02446", true);
+    const web = g.codes.find((c) => c.code === "D3330")!;
+    const pdf = out.codeRows.find((r) => r.code === "D3330")!;
+    expect(web.percentileRank).toBe(pdf.percentileRank);
+    expect(Math.round(web.percentileRank!)).toBe(48);
+  });
+
+  it("locked payload carries no carrier total or percentile", async () => {
+    const g = toGatedReport(await fixtureOutput(), "02446", false);
+    expect(g.carrierUnderpaymentUsd).toBe(0);
+    expect(g.codes.every((c) => c.percentileRank === null)).toBe(true);
   });
 });
