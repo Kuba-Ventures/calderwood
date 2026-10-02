@@ -1,7 +1,7 @@
 # Calderwood (public brand: New Fee Schedule)
 *A $199 dental fee-schedule assessment that shows practices where they're underpaid.*
 
-*Last updated: 2026-10-02 12:40 ET by kuba-vault*
+*Last updated: 2026-10-02 14:58 ET by kuba-vault*
 
 ---
 
@@ -9,7 +9,7 @@
 
 Calderwood is the company and repo name; **New Fee Schedule** has been the public brand since 2026-07-28 (PR #17). The product is a self-serve web app that benchmarks a dental practice's fee schedule against UCR (usual, customary, reasonable) percentiles and shows recoverable revenue per CDT code and per carrier. A practice onboards, uploads fees and volumes (CSV or PDF), pays $199 via Stripe, and gets a gated web report plus a PDF.
 
-The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS fee-data license is signed**, which clears the PR #49 gate on using NDAS data in production report lookups. The NDAS pipeline merged in September (PRs #49 to #53, #58): a zip5 tier, a loader covering 758 priced codes (up from ~19), public Census crosswalks, readable labels for every code, and RLS on the new tables. The one compliance blocker left is the ADA CDT content license application. Launch-readiness gaps remain: no app email, no product analytics, and a stub EOB OCR endpoint. `ROADMAP.md` (PR #59) is now the staged plan.
+Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and the **ADA CDT content license application went to ADA** the same day; the next step is ADA's template license agreement. Report math changed that afternoon: the headline was about 7x inflated and is now the fee-schedule gap, with a separate carrier figure (PRs #65, #67). Web reports corrected themselves on read; PDFs already sent to customers were intentionally not regenerated and still show the old numbers. sales@newfeeschedule.com is now the only public contact and forwards to Finley and Calderwood through a live Resend inbound webhook (PRs #64, #68). Marketing pages no longer show unsourced stats (PR #69). Remaining launch gaps: no product analytics, a stub EOB OCR endpoint, and a decision on telling existing customers about the corrected totals.
 
 ---
 
@@ -18,33 +18,33 @@ The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS 
 **The problem:** Dental practices set fees blind and quietly leave money on the table. They don't know which procedure codes are priced below what carriers in their area actually reimburse.
 **The solution:** Upload your fees and volumes; get a benchmarked report showing per-code and per-carrier underpayment and total recoverable revenue.
 **The user:** Independent and small-group dental practices (office managers and owner-dentists), often older and less comfortable with software. `CLAUDE.md` makes this a design constraint, not a persona note.
-**The value:** A $199 assessment that typically points to multiples of that in recoverable annual revenue.
+**The value:** A $199 assessment that shows, code by code and carrier by carrier, how far the practice's fees sit below the local 75th percentile, in annual dollars.
 **The name:** public-facing copy says "New Fee Schedule"; the repo, Vercel project, and internal tooling stay "Calderwood".
 
 ---
 
 ## Status  [rewrite]
 
-- **Phase:** post-MVP iteration, moving into launch prep (fee data licensed; CDT license and launch gaps remain)
+- **Phase:** launch prep (fee data licensed; CDT license applied for, awaiting ADA)
 - **Engagement manager:** self-directed
 - **Lead:** Finley
 - **Cadence:** self-directed
-- **Next milestone:** submit the ADA CDT content license application (two fields still blank). TBD date.
-- **Flags:** on-track; the NDAS license cleared the main data blocker on 2026-10-02
+- **Next milestone:** receive and sign ADA's template CDT license agreement. TBD date.
+- **Flags:** on-track; NDAS signed and CDT application sent on 2026-10-02
 
 ---
 
 ## Where we are right now  [rewrite]
 
-**NDAS is the licensed fee source.** Finley confirmed the NDAS fee-data license is signed (2026-10-02). That replaces the REFMed (unverified) and FAIR Health (fallback) candidates this doc listed on 2026-08-19. Whether REFMed is still needed for anything is an open question. Naming the data source in public and report copy is now unblocked; check the license's attribution terms for the required wording first.
+**Licensing.** Finley confirmed the NDAS fee-data license is signed (2026-10-02). The ADA CDT Content License application went to CDT-SNODENT@ada.org the same day. Applicant: Calderwood Tech LLC, a Virginia LLC organized 2025-09-30; contact J Finley Underwood, Principal Agent; product New Fee Schedule. Exhibits came from synthetic sample data and the marketing pages. ADA sends a template license agreement next. Whether REFMed is still needed is open.
 
-**What shipped in September.** PR #49 added a `zip5` tier ahead of `zip3` in the cascade: NDAS ships national percentiles per code plus a per-zip5 geo factor, so `lib/benchmark/supabase-source.ts` multiplies the two at lookup time. PR #50 fixed the loader against the real export (758 priced codes, 95 "individually rated" codes kept out of `ucr_benchmarks`, 42,688 zip factors, zero errors). PR #51 loaded `cdt_codes` descriptions and 12 categories from NDAS headings. PR #52 built the zip-to-state (33,791) and zip-to-metro (18,475) crosswalks from public Census and OMB files, so the zip3 and metro rungs can fire. PR #53 made `compute()` read `cdt_codes`, so all 758 codes render a readable label. PR #58 turned on RLS for the three NDAS tables, already applied to production on 2026-09-23.
+**Report totals fixed (PRs #65, #67).** The headline summed every carrier's gap to p75 times each code's full volume, so a five-carrier practice counted each procedure five times. On the sample fixture that was $468,121 against tables summing to $67,651, about 7x. The headline is now the fee-schedule gap (your fee vs p75, times volume). A separate carrier figure splits each code's volume evenly across the carriers that list a rate ($93,624 on the fixture). `lib/report/gate.ts` re-derives totals from stored code rows, so web reports already in the database render correctly. PR #67 made the PDF Top 10 and appendix Annual columns add up to the headline. Web and PDF percentile ranks now come from the same `percentileRank`. Per Finley, PDFs already generated for customers were intentionally not regenerated, so they still show the inflated numbers.
 
-**Onboarding fixes.** Confirm-password on signup (PR #54), fee-upload state clobbering and real upload errors (PR #55), and `asMessage()` error handling plus a fixed `/api/onboard` rollback that no longer orphans the practice row (PR #57).
+**Copy corrections.** The FAQ dropped "no modeled estimates" and the survey-of-every-practice reading of the 75th percentile (PR #62); the methodology block on `/sample-report` dropped the same claim (PR #63). Report methodology now describes the ZIP5-first cascade, the national sample size at ZIP level, the High-confidence legend, a working coverage percentage, and no write-off claim (PR #66). Marketing removed "up to 35%", "up to $120K per provider", and "$73,840 average recovery"; mock visuals are tagged "Sample practice" and drawn from the fixture, and `CLAUDE.md` now forbids unsourced stats (PR #69).
 
-**CI.** PR #60 pinned `anthropics/claude-code-action` to v1.0.239 (SHA `97c53473391bff1901034d4b454b5bac7ab7a029`) in `factory.yml`. The floating `@v1` tag moved to a broken release on 2026-09-28 and broke factory reviews on every Kuba-Ventures/Nemat-Trading PR.
+**Email.** sales@newfeeschedule.com replaced support@ in all 11 public files (PR #64). `POST /api/inbound` forwards mail sent to sales@ to finley@qsbsrollover.com and calderwoodra1113@gmail.com (PR #68). Live and tested 2026-10-02: newfeeschedule.com MX points to `inbound-smtp.us-east-1.amazonaws.com` in Squarespace DNS, Resend receiving is on, and `RESEND_API_KEY` (full access) plus `RESEND_WEBHOOK_SECRET` are set in Vercel Production.
 
-**Next concrete steps.** Submit the ADA CDT application. Decide the three NDAS placeholders from PR #49 (p75 interpolation, fixed `sample_size` of 500, the `ZIPVALS_24.available` flag). Then update public copy to name NDAS within the license terms.
+**Next concrete steps.** Decide whether to tell existing customers their PDF totals were overstated. Watch for ADA's template agreement. Decide the three NDAS placeholders from PR #49.
 
 ---
 
@@ -58,11 +58,15 @@ The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS 
 - Auth pages: `/login`, `/signup` (now with confirm-password, PR #54), `/forgot-password`, `/reset-password`.
 - Authenticated app under `app/(app)/`: dashboard, intake, reports, account (with a "Remove data" reset for testing).
 - Onboarding (`components/onboarding/`): unified upload box, staged PDF extraction progress, post-extraction review, real error messages via `lib/api-message.ts` (PRs #55, #57).
-- Report UI (`components/report/`): per-code fee-vs-UCR table with a readable label for every benchmarked code, ordinal percentile, carrier scorecard and heatmap, category opportunity, provider variance, methodology.
+- Report UI (`components/report/`): per-code fee-vs-UCR table with a readable label for every benchmarked code, ordinal percentile (same `percentileRank` on web and PDF), carrier scorecard and heatmap, category opportunity, provider variance, methodology with a coverage percentage.
+- Report totals: headline = fee-schedule gap; separate carrier figure with an even volume split across carriers per code (`summarizeTotals` in `lib/computation/compute.ts`, PR #65). PDF Top 10 and appendix columns reconcile with the headline (`lib/report/pdf-columns.ts`, PR #67).
+- Marketing mocks are tagged "Sample practice" and use `test-fixtures/sample-practice/` figures (PR #69).
+- Public contact: sales@newfeeschedule.com only (PR #64).
 - View-only shared report at `/r/<token>`, no login required.
 
 **Backend / data**
-- API routes under `app/api/`: `onboard`, `intake`, `upload-url`, `parse-pdf`, `carrier-schedule`, `eob-ocr`, `generate`, `report`, `share`, `checkout`, `stripe/webhook`, `account`, `reset-data`, plus `admin/` (seed-finley, verify-rls).
+- API routes under `app/api/`: `onboard`, `intake`, `upload-url`, `parse-pdf`, `carrier-schedule`, `eob-ocr`, `generate`, `report`, `share`, `checkout`, `stripe/webhook`, `account`, `reset-data`, `inbound`, plus `admin/` (seed-finley, verify-rls).
+- Inbound mail (`app/api/inbound/route.ts`, `lib/inbound/`): Resend `email.received` webhook with Svix signature check; forwards sales@ mail to `INBOUND_FORWARD_TO` with attachments, `reply_to` set to the sender, and an idempotency key (PR #68).
 - `eob-ocr` is a stub: it stores the uploaded image for a human to read and returns `queued: true`. No OCR, no rate limiting yet (`app/api/eob-ocr/route.ts`).
 - Parsing (`lib/parser/`): CSV and PDF dispatch; Claude vision extracts code, fee, annual volume, and per-provider fees (`pdf-summary.ts`); per-carrier schedules (`pdf-schedule.ts`).
 - Benchmark resolution (`lib/benchmark/resolve.ts`): cascades zip5, zip3, metro, state, region, national; skips levels with sample_size below 30; never blends levels.
@@ -70,7 +74,7 @@ The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS 
 - NDAS loader (`scripts/load-ndas-source.ts`, `npm run load:ndas`): loads `NMAS.csv`, `ZIPVALS_24.csv`, and optional `headings.csv` into staging tables, `ucr_benchmarks`, `zip_geo_factors`, and `cdt_codes`.
 - CDT labels (`lib/cdt/descriptions.ts`): curated short label first, then sentence-cased NDAS nomenclature, then the bare code.
 - Computation (`lib/computation/compute.ts`) with snapshot tests.
-- Paywall (`lib/report/gate.ts`): the single gating boundary; locked dollar figures are zeroed server-side before payment.
+- Paywall (`lib/report/gate.ts`): the single gating boundary; locked dollar figures (including the carrier figure) are zeroed server-side before payment. It also recomputes totals from stored code rows on read (PR #65).
 
 **Infrastructure**
 - Supabase Postgres, project "Calderwood Tech"; 10 migrations (`supabase/migrations/0001` to `0010`). `0009` adds the zip5 tier and NDAS tables; `0010` enables RLS on them.
@@ -80,7 +84,7 @@ The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS 
 - Supervised PR factory (`.claude/agents/pr-reviewer.md`, `.github/workflows/factory.yml`): runs `npm test` on PRs, auto-merges only low-risk surfaces, escalates money, auth, data, and computation. Uses `anthropics/claude-code-action` pinned to v1.0.239 by SHA.
 - Post-merge build guard (`.github/workflows/main-build-check.yml`): `npm ci`, `tsc --noEmit`, `next build` on every push to `main`.
 - Repo-local skill: `.claude/skills/brand-guide/`.
-- Tests: 8 vitest suites (`compute` plus snapshot, `parser`, `gate`, `resolve`, `supabase-source`, `descriptions`, `site-url`, `recovery-redirect`); 67 passing per PR #57.
+- Tests: 11 vitest suites (adds `pdf-columns`, `inbound/forward`, `inbound/verify`); 97 passing per PR #69.
 - Plan: `ROADMAP.md` (stages 0 to 5, last verified against the code 2026-10-02).
 
 ---
@@ -102,7 +106,7 @@ The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS 
 | Parsing | `papaparse` (CSV), `xlsx`, Claude PDF vision | `lib/parser/` |
 | Validation | `zod` 4 | |
 | Analytics | Google Tag Manager / GA4, gated on `NEXT_PUBLIC_GTM_ID` | `components/analytics/gtm.tsx` |
-| Email | none in code (Supabase Auth emails only); Resend is only in `.env.example` | |
+| Email | Resend inbound forwarding for sales@ (no outbound transactional email yet); Supabase Auth emails | `app/api/inbound/route.ts` |
 | Tests | Vitest | `npm test` |
 
 ---
@@ -117,10 +121,10 @@ The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS 
 | NDAS | Licensed fee-percentile data (758 priced codes) | unknown | licensed 2026-10-02 |
 | Google Tag Manager / GA4 | Analytics, gated on `NEXT_PUBLIC_GTM_ID` | free | live |
 | Vercel | Hosting, auto-deploy | unknown | live |
-| Resend | Transactional email | unknown | planned (env vars only, no code) |
+| Resend | Inbound forwarding of sales@newfeeschedule.com (`/api/inbound`) | unknown | live (tested 2026-10-02) |
 | PostHog | Product analytics | unknown | planned (env vars only, no code) |
 
-*Source: no MCP config files found in repo; integrations inferred from `.env.example`, `package.json`, `lib/`, and `scripts/`.*
+*Source: no MCP config files found in repo; integrations inferred from `.env.example`, `package.json`, `app/api/`, `lib/`, and `scripts/`.*
 
 ---
 
@@ -128,6 +132,11 @@ The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS 
 
 The "why" behind key choices. Newest first.
 
+- **2026-10-02: Publish only numbers we can back up.** Removed "up to 35%", "up to $120K per provider", and "$73,840 average recovery" (marketing audit Option A, approved by Finley). Mock visuals are labeled "Sample practice" and drawn from the fixture; `CLAUDE.md` now carries the rule (PR #69).
+- **2026-10-02: sales@newfeeschedule.com is the only public contact, forwarded by a Resend inbound webhook.** Replaced support@ everywhere public (PR #64). Forwarding runs in-app (`/api/inbound`) to finley@qsbsrollover.com and calderwoodra1113@gmail.com instead of a hosted mailbox (PR #68).
+- **2026-10-02: Do not regenerate existing customer PDFs after the totals fix.** Finley chose to leave already-delivered PDFs as they are. Web reports correct themselves on read through `gate.ts`; old PDFs still show the inflated headline. Whether to notify those customers is open.
+- **2026-10-02: Headline = fee-schedule gap; carrier figure reported separately with an even volume split.** The old headline summed carrier gaps times full volume across every carrier (about 7x on the fixture). Intake has no payer mix, so an even split per code is the most neutral allocation, matching the provider-variance calc (PRs #65, #67).
+- **2026-10-02: Submitted the ADA CDT Content License application.** Sent to CDT-SNODENT@ada.org as Calderwood Tech LLC (Virginia LLC, organized 2025-09-30), contact J Finley Underwood, Principal Agent, for New Fee Schedule. Exhibits use synthetic sample data and marketing pages, not customer data. Closes the pending-submission state in the 2026-07-13 entry.
 - **2026-10-02: NDAS is the licensed fee-data source.** Finley confirmed the NDAS fee-data license is signed, clearing the PR #49 gate on using NDAS data (~758 codes) in production report lookups. This supersedes the 2026-07-13 entries that ruled out the standard NDAS developer license, selected REFMed, and kept FAIR Health as fallback; those entries stay as history. Whether REFMed is still needed is open. Naming NDAS in public and report copy is unblocked, subject to the license's attribution terms. The ADA CDT content license is still required separately.
 - **2026-10-02: Pinned `anthropics/claude-code-action` to a commit SHA.** Pinned to v1.0.239 (`97c53473391bff1901034d4b454b5bac7ab7a029`) instead of floating `@v1`, after the tag moved to a broken release on 2026-09-28 and broke Kuba-Ventures/Nemat-Trading reviews. Future bumps go in their own PR (PR #60).
 - **2026-09-16: Built the geo crosswalks from public Census and OMB data, not the NDAS `ZipDetail.csv`.** Keeps the geo layer free of any licensing question whatever happens with the fee source (PR #52).
@@ -161,8 +170,9 @@ The "why" behind key choices. Newest first.
 
 Compliance and data:
 
-- [ ] Fill the two blank CDT-application fields (incorporation date/state, company URL) and submit the ADA CDT content license application to CDT-SNODENT@ada.org. The last compliance blocker. Owner: Finley
-- [ ] Check the NDAS license attribution terms, then name the data source in public copy (`components/landing/faq.tsx`, `deliverable.tsx`) and the report methodology (`components/report/methodology-section.tsx`). Owner: Finley
+- [x] Submit the ADA CDT content license application. Sent to CDT-SNODENT@ada.org 2026-10-02.
+- [ ] Review and sign ADA's template CDT license agreement when it arrives. Waiting on: ADA
+- [ ] Check the NDAS license attribution terms, then decide whether to name the data source in public copy (`components/landing/faq.tsx`, `deliverable.tsx`) and the report methodology (`components/report/methodology-section.tsx`). Copy is currently accurate and vendor-neutral (PRs #62, #63, #66). Owner: Finley
 - [ ] Decide whether REFMed is still needed now that NDAS is licensed, or drop it. The drafted REFMed verification email is moot unless it is. Waiting on: Finley
 - [ ] Decide the NDAS placeholders from PR #49: `p75` as the mean of p70 and p80, fixed `sample_size` of 500, and whether `ZIPVALS_24.available` should filter zips. Owner: Finley
 - [ ] Decide whether `lib/benchmark/supabase-source.ts` should filter by `source_version` instead of taking the highest one. Owner: Finley
@@ -170,12 +180,14 @@ Compliance and data:
 
 Launch readiness:
 
-- [ ] Transactional email: Resend is only in `.env.example`; no code sends email. Wire it or drop it. Owner: Finley
+- [x] Make the public contact address deliverable. sales@newfeeschedule.com forwards via `/api/inbound`, tested 2026-10-02 (PRs #64, #68).
+- [ ] Decide whether to notify existing customers that their PDF totals were overstated before PR #65. Owner: Finley
+- [ ] Outbound transactional email (receipts, report-ready notices): none in code yet. Owner: Finley
 - [ ] EOB OCR: `app/api/eob-ocr/route.ts` is a stub with no rate limiting, which the file says is needed before paid traffic. Owner: Finley
 - [ ] Decide manual vs automated fulfillment for the first paid customers (README runbook is manual, ~2h per customer). Owner: Finley
 - [ ] Confirm `NEXT_PUBLIC_SITE_URL` is set in Vercel production and allow-listed in Supabase Redirect URLs (`lib/site-url.ts`). Owner: Finley
 - [ ] Issue #39 (Headers, open since 2026-07-29): combine `/features` and `/sample-report` under one "Features" heading. Owner: Finley
-- [ ] Rewrite or delete the stale `README.md` (Puppeteer, a finished phase plan, old `kubatopia/calderwood` URL, retired public name; it also lists Resend and PostHog as wired). Owner: Finley
+- [ ] Rewrite or delete the stale `README.md` (Puppeteer, a finished phase plan, old `kubatopia/calderwood` URL, retired public name; it also lists PostHog as wired). Owner: Finley
 - [ ] Manually test an onboarding failure after practice creation and confirm no orphaned practice row remains (unchecked item on PR #57). Owner: Finley
 
 Later:
@@ -184,17 +196,20 @@ Later:
 - [ ] Add a preventive `next build` gate to PRs in `factory.yml` (the `main` guard is detective only). Owner: Finley
 - [ ] Move both workflows off `node-version: "20"`. Owner: Finley
 
-Open questions from `ROADMAP.md`: has the ADA CDT application been submitted? Has anyone paid for a report yet, and who fulfills it?
+Open question from `ROADMAP.md`: who fulfills paid reports? The ADA submission question is answered (sent 2026-10-02).
 
 ---
 
 ## Risks & known issues  [rewrite]
 
-- The ADA CDT content license is unsigned. CDT codes and descriptors are ADA-copyrighted, and reports now show NDAS nomenclature for up to 758 codes (PR #53).
+- PDFs delivered to customers before PR #65 show a headline about 7x too high (carrier gaps times full volume, summed across carriers). They were intentionally not regenerated. The web version of the same report now shows the corrected figure, so a customer comparing the two will see different numbers.
+- The ADA CDT content license is applied for (2026-10-02) but unsigned. CDT codes and descriptors are ADA-copyrighted, and reports show NDAS nomenclature for up to 758 codes (PR #53).
+- The carrier figure assumes patients split evenly across carriers on each code; intake does not capture payer mix.
+- Inbound mail depends on config outside the repo: Squarespace MX, Resend receiving, a webhook, and two Vercel env vars. The `RESEND_API_KEY` is full access.
 - `supabase-source.ts` does not filter by `source_version`; it takes the highest value by string sort. If the older ~19-code rows and NDAS rows coexist, which source wins depends on how the version strings sort, not on an explicit choice.
 - NDAS placeholders shape the dollar figures: `p75` is interpolated, and `sample_size` is a fixed 500, which always clears the floor of 30, so NDAS rows never trigger the low-confidence cascade skip.
-- Resolved 2026-10-02: the public FAQ no longer claims "no modeled estimates" or low-confidence flagging; it now says "a licensed national dental fee schedule covering all 50 states, adjusted to your 5-digit zip code." Revisit if the source gets named.
-- No app email and no product analytics are live, despite env vars for both. The README says otherwise.
+- Resolved 2026-10-02: the FAQ and methodology no longer claim "no modeled estimates" (PRs #62, #63), and report methodology matches the ZIP5-first cascade (PR #66).
+- No product analytics and no outbound transactional email are live. The README says otherwise.
 - The EOB OCR endpoint is pre-auth with no rate limiting.
 - The `main` build guard is detective, not preventive.
 - Password recovery depends on config outside the repo: the canonical origin must be set and allow-listed in Supabase. The bare apex `newfeeschedule.com` returns NXDOMAIN.
@@ -217,6 +232,7 @@ Open questions from `ROADMAP.md`: has the ADA CDT application been submitted? Ha
 
 ## Changelog  [append-only, never rewrite or delete]
 
+- **2026-10-02 (late):** Recorded PRs #62 to #69: FAQ and methodology copy fixes (#62, #63, #66), sales@ as the only public contact (#64), report totals and percentile fix (#65, #67), live Resend inbound forwarder (#68), unsourced marketing stats removed (#69). ADA CDT application sent; old customer PDFs left as is.
 - **2026-10-02:** PROJECT.md refreshed for PRs #49 to #60. NDAS license signed (confirmed by Finley), replacing the REFMed and FAIR Health candidates; recorded the NDAS pipeline (#49 to #53, #58), onboarding fixes (#54, #55, #57), `ROADMAP.md` (#59), and the claude-code-action SHA pin (#60). Corrected drift: Resend and PostHog are env-only, EOB OCR is a stub, the resolver does not filter by `source_version`, 10 migrations and 8 test suites.
 - **2026-09-16 to 2026-09-23:** Shipped the NDAS zip5 tier and loader (#49, #50), CDT descriptions and categories (#51), public geo crosswalks (#52), readable labels for every code (#53), signup confirm-password (#54), upload and onboarding error fixes (#55, #57), and RLS on the NDAS tables, applied to production 2026-09-23 (#58).
 - **2026-08-19:** PROJECT.md refreshed after five weeks of drift, covering the 24 PRs merged since the last update (#15 through #47). Recorded the public rebrand to "New Fee Schedule", the second landing redesign (indigo "Console" layout) and its split into five standalone routes, the ICP readability and accessibility pass, `CLAUDE.md` becoming the enforcement surface for audience, design, and style rules, the real forgot-password / reset-password flow with canonical-origin pinning, and the repo-local brand-guide skill. Data sourcing unchanged and still the critical path: neutral copy, REFMed unverified, ~19 of 142 CDT codes, nothing signed.
