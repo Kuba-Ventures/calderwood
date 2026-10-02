@@ -1,28 +1,32 @@
 import { Reveal } from "@/components/motion/reveal";
 import { PercentileBar } from "./percentile-bar";
 import { CarrierBar } from "./carrier-bar";
-import { SectionHead } from "./ui";
+import { SampleTag, SectionHead } from "./ui";
 
+// All three cards show the same sample practice
+// (test-fixtures/sample-practice/expected-output.json), so their figures agree
+// with each other and with the methodology example. Each card is labeled
+// "Sample practice".
 const percentiles = [
-  { code: "D0150", pct: 62, label: "62nd" },
-  { code: "D2150", pct: 41, label: "41st" },
-  { code: "D2740", pct: 55, label: "55th" },
+  { code: "D0150", pct: 57, label: "57th" },
+  { code: "D2150", pct: 49, label: "49th" },
+  { code: "D2740", pct: 48, label: "48th" },
   { code: "D3310", pct: 48, label: "48th" },
 ];
 
 const carriers = [
-  { name: "Cigna", value: "$32,180", pct: 100 },
-  { name: "Aetna", value: "$20,400", pct: 63 },
-  { name: "UnitedHealthcare", value: "$16,150", pct: 50 },
-  { name: "MetLife", value: "$10,290", pct: 32 },
-  { name: "Other", value: "$8,400", pct: 26 },
+  { name: "Cigna", value: "$26,857", pct: 100 },
+  { name: "UnitedHealthcare", value: "$22,467", pct: 84 },
+  { name: "Aetna", value: "$18,974", pct: 71 },
+  { name: "Delta", value: "$13,633", pct: 51 },
+  { name: "MetLife", value: "$11,694", pct: 44 },
 ];
 
 const topCodes = [
-  { code: "D2740", desc: "Crown, porcelain", annual: "$4,260" },
-  { code: "D7140", desc: "Extraction, erupted", annual: "$3,780" },
-  { code: "D2950", desc: "Build-up, post", annual: "$2,225" },
-  { code: "D3310", desc: "Endo, anterior", annual: "$1,596" },
+  { code: "D1110", desc: "Prophylaxis, adult", annual: "$7,004" },
+  { code: "D4341", desc: "Perio scaling, 4+ teeth", annual: "$6,512" },
+  { code: "D4910", desc: "Perio maintenance", annual: "$5,060" },
+  { code: "D0210", desc: "X-rays, full series", annual: "$4,464" },
 ];
 
 const cardBase =
@@ -47,7 +51,10 @@ function CardHead({
 }) {
   return (
     <>
-      <Idx>{idx}</Idx>
+      <div className="flex items-center justify-between gap-2">
+        <Idx>{idx}</Idx>
+        <SampleTag>Sample practice</SampleTag>
+      </div>
       <h3 className="mb-2 mt-3.5 text-[21px] font-bold text-brand-deep">
         {title}
       </h3>

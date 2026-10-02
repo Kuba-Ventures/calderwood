@@ -109,3 +109,12 @@ export function Arrow() {
     </span>
   );
 }
+
+/** Small visible label marking mock data as a sample. */
+export function SampleTag({ children = "Sample" }: { children?: string }) {
+  return (
+    <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[#F3D9A4] bg-[#FFF7E6] px-2.5 py-[3px] text-[12px] font-semibold uppercase tracking-[0.08em] text-[#7A4B00]">
+      {children}
+    </span>
+  );
+}

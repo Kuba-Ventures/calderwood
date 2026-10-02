@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Reveal } from "@/components/motion/reveal";
-import { Button } from "./ui";
+import { Button, SampleTag } from "./ui";
 
 /** Left-column value props, each with a small line icon. */
 const FEATURES: { icon: ReactNode; text: string }[] = [
@@ -97,9 +97,10 @@ export function Hero() {
 }
 
 /**
- * Static "Fee Assessment" card shown beside the hero copy. It leads with the
- * single savings number, then a few supporting figures and a comparison chart,
- * so a non-technical reader sees the opportunity at a glance.
+ * Static "Fee Assessment" card shown beside the hero copy. Every figure is
+ * from the sample practice (test-fixtures/sample-practice), the same D2740
+ * example the methodology section walks through, and the card is labeled
+ * "Sample practice" so nobody reads it as a typical result.
  */
 function ConsoleCard() {
   return (
@@ -111,27 +112,27 @@ function ConsoleCard() {
         <span className="ml-2 text-[13px] font-semibold text-ink-600">
           Fee Assessment
         </span>
-        <span className="ml-auto text-[13px] font-medium text-ink-500">
-          D2740 · Crown
+        <span className="ml-auto">
+          <SampleTag>Sample practice</SampleTag>
         </span>
       </div>
 
       <div className="p-6 sm:p-7">
         <div className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ink-500">
-          Annual opportunity
+          D2740 crown, per year
         </div>
         <div className="mt-1.5 font-serif text-[clamp(40px,6vw,52px)] font-semibold leading-none tracking-[-0.02em] text-coral">
-          $73,840
+          $4,260
         </div>
         <div className="mt-2.5 text-[15px] leading-relaxed text-body">
-          Recoverable across your 20 most-billed codes, at the 75th-percentile
-          benchmark.
+          Sample practice: $30 below the 75th-percentile benchmark on each of
+          142 crowns a year. Your report runs this for every code you bill.
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-3">
-          <Stat k="Your average" v="$605" tone="ink" />
-          <Stat k="Fair benchmark" v="$1,125" tone="green" />
-          <Stat k="Per procedure" v="+$520" tone="coral" />
+          <Stat k="Your fee" v="$185" tone="ink" />
+          <Stat k="75th percentile" v="$215" tone="green" />
+          <Stat k="Per procedure" v="+$30" tone="coral" />
         </div>
 
         <div className="mt-7">
@@ -182,14 +183,19 @@ function Stat({
   );
 }
 
-/** Reimbursement vs. benchmark line chart with an opportunity band on D2740. */
+/**
+ * Sample-practice fee vs. 75th-percentile benchmark for five codes, with an
+ * opportunity band on D2740. Values come from test-fixtures/sample-practice:
+ * D2150 $148/$178, D2740 $185/$215, D2750 $172/$200, D2950 $155/$180,
+ * D4341 $258/$295. Scale: y = 150 - fee * 0.44 ($0 to $300).
+ */
 function ComparisonChart() {
   return (
     <svg
       viewBox="0 0 460 200"
       className="mt-2 w-full"
       role="img"
-      aria-label="Your reimbursement runs below the 75th-percentile benchmark across five codes"
+      aria-label="Sample practice: fees run below the 75th-percentile benchmark on five codes, including D2740 at $185 against $215"
     >
       <g stroke="#EEF0F5">
         <line x1="52" y1="18" x2="452" y2="18" />
@@ -198,9 +204,9 @@ function ComparisonChart() {
         <line x1="52" y1="150" x2="452" y2="150" />
       </g>
       <g fill="#8A90A2" fontSize="11">
-        <text x="46" y="22" textAnchor="end">$1,500</text>
-        <text x="46" y="66" textAnchor="end">$1,000</text>
-        <text x="46" y="110" textAnchor="end">$500</text>
+        <text x="46" y="22" textAnchor="end">$300</text>
+        <text x="46" y="66" textAnchor="end">$200</text>
+        <text x="46" y="110" textAnchor="end">$100</text>
         <text x="46" y="154" textAnchor="end">$0</text>
       </g>
       <rect x="118" y="18" width="52" height="132" fill="rgba(79,70,229,0.10)" />
@@ -210,7 +216,7 @@ function ComparisonChart() {
         strokeWidth="2.5"
         strokeDasharray="4 4"
         strokeLinecap="round"
-        points="64,80 144,62 224,70 304,54 384,46 452,38"
+        points="64,71.7 144,55.4 224,62 304,70.8 384,20.2"
       />
       <polyline
         fill="none"
@@ -218,16 +224,16 @@ function ComparisonChart() {
         strokeWidth="2.8"
         strokeLinecap="round"
         strokeLinejoin="round"
-        points="64,122 144,106 224,126 304,120 384,106 452,98"
+        points="64,84.9 144,68.6 224,74.3 304,81.8 384,36.5"
       />
-      <circle cx="144" cy="106" r="4.5" fill="var(--brand)" />
-      <circle cx="144" cy="62" r="4.5" fill="#fff" stroke="#2f9e6a" strokeWidth="2.5" />
+      <circle cx="144" cy="68.6" r="4.5" fill="var(--brand)" />
+      <circle cx="144" cy="55.4" r="4.5" fill="#fff" stroke="#2f9e6a" strokeWidth="2.5" />
       <g fill="#8A90A2" fontSize="11" textAnchor="middle">
-        <text x="64" y="172">D2140</text>
+        <text x="64" y="172">D2150</text>
         <text x="144" y="172">D2740</text>
         <text x="224" y="172">D2750</text>
         <text x="304" y="172">D2950</text>
-        <text x="384" y="172">D3310</text>
+        <text x="384" y="172">D4341</text>
       </g>
     </svg>
   );

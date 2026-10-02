@@ -1,28 +1,38 @@
 import { Reveal } from "@/components/motion/reveal";
-import { CountUp } from "@/components/motion/count-up";
 import { Glow, SectionHead, radialGlow } from "./ui";
 
-const stats = [
+type Tile = {
+  kind: "text" | "price";
+  kicker: string;
+  headline: string;
+  label: string;
+};
+
+const tiles: Tile[] = [
   {
-    kicker: "up to",
-    value: 35,
-    suffix: "%",
-    label: "below the 75th percentile on high-volume codes",
+    kind: "text",
+    kicker: "Every billed code",
+    headline: "Code by code",
+    label: "your fee next to the local benchmark, with the gap in dollars",
   },
   {
-    kicker: "up to",
-    value: 120,
-    prefix: "$",
-    suffix: "K",
-    label: "recoverable per provider, every single year",
+    kind: "text",
+    kicker: "Every contracted carrier",
+    headline: "By carrier",
+    label: "dollars below the 75th percentile, so you know who to call first",
   },
   {
+    kind: "price",
     kicker: "flat rate",
-    value: 199,
-    prefix: "$",
+    // Matches REPORT_PRICE_USD_CENTS (19900) in lib/stripe.ts. Static text, so
+    // the price is visible without any scroll-triggered animation.
+    headline: "$199",
     label: "for the full breakdown, your report in minutes",
   },
 ];
+
+const headlineClass =
+  "font-serif font-semibold leading-none tracking-[-0.03em] text-brand";
 
 export function StatBand() {
   return (
@@ -35,28 +45,30 @@ export function StatBand() {
         })}
       />
       <div className="mx-auto max-w-wrap px-7">
-        <SectionHead
-          pill="The opportunity"
-          title="What's typically hiding in a fee schedule."
-        />
+        <SectionHead pill="The opportunity" title="What your report shows." />
         <div className="relative z-[1] grid grid-cols-1 md:grid-cols-3">
-          {stats.map((s, i) => (
+          {tiles.map((t, i) => (
             <Reveal
-              key={s.label}
+              key={t.label}
               delay={i * 100}
-              className="border-t border-line px-[26px] py-5 first:border-t-0 md:border-l md:border-t-0 md:first:border-l-0"
+              className="flex flex-col items-center border-t border-line px-[26px] py-5 first:border-t-0 md:border-l md:border-t-0 md:first:border-l-0"
             >
               <div className="mb-2.5 text-xs uppercase tracking-[0.1em] text-muted">
-                {s.kicker}
+                {t.kicker}
               </div>
-              <CountUp
-                value={s.value}
-                prefix={s.prefix}
-                suffix={s.suffix}
-                className="font-serif text-[clamp(44px,7vw,72px)] font-semibold leading-none tracking-[-0.03em] text-brand"
-              />
-              <div className="mx-auto mt-3.5 max-w-[24ch] text-[15px] text-body">
-                {s.label}
+              {t.kind === "price" ? (
+                <div className={`${headlineClass} text-[clamp(44px,7vw,72px)]`}>
+                  {t.headline}
+                </div>
+              ) : (
+                <div
+                  className={`${headlineClass} flex min-h-[clamp(44px,7vw,72px)] items-center text-[clamp(34px,4.6vw,50px)]`}
+                >
+                  {t.headline}
+                </div>
+              )}
+              <div className="mx-auto mt-3.5 max-w-[26ch] text-[15px] text-body">
+                {t.label}
               </div>
             </Reveal>
           ))}
