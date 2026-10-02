@@ -1,17 +1,15 @@
 # Calderwood (public brand: New Fee Schedule)
 *A $199 dental fee-schedule assessment that shows practices where they're underpaid.*
 
-*Last updated: 2026-08-19 by kuba-vault*
+*Last updated: 2026-10-02 12:40 ET by kuba-vault*
 
 ---
 
 ## TL;DR  [rewrite]
 
-Calderwood is the company and repo name; **New Fee Schedule** has been the public brand since 2026-07-28 (PR #17). The product is a self-serve web app that benchmarks a dental practice's fee schedule against UCR (usual, customary, reasonable) data and surfaces recoverable revenue per code and per carrier. A practice onboards, uploads fees and volumes (CSV or PDF from their practice-management system), pays $199 via Stripe, and gets a gated report on the web and as a downloadable PDF. Onboarding, computation, paywall, report rendering, and view-only sharing all work.
+Calderwood is the company and repo name; **New Fee Schedule** has been the public brand since 2026-07-28 (PR #17). The product is a self-serve web app that benchmarks a dental practice's fee schedule against UCR (usual, customary, reasonable) percentiles and shows recoverable revenue per CDT code and per carrier. A practice onboards, uploads fees and volumes (CSV or PDF), pays $199 via Stripe, and gets a gated web report plus a PDF.
 
-Since the last update (2026-07-13), 24 PRs merged (#15 through #47, latest on 2026-08-12), nearly all of it public-surface work: the rebrand, a second landing redesign (a data-forward indigo "Console" layout that supersedes the Mintlify-style rebuild), the one-page landing split into five standalone routes, a readability and accessibility pass aimed squarely at the ICP (independent practice owners and office managers, often older and less tech-savvy), and a real forgot-password / reset-password flow. `CLAUDE.md` became the enforcement surface for all of it: audience and design principles, working style, and a no-em-dash rule are now project instructions that override default behavior, not preferences.
-
-The business blocker has not moved in five weeks. Data sourcing is still unresolved: public copy stays neutral ("a national UCR benchmark database" and no vendor named), REFMed dental CDT coverage is still unverified, benchmarking is still limited to ~19 of 142 CDT codes, and nothing is signed with anyone. Latest commit on `main` is 2026-08-12; no PRs are open; one issue (#39) is open.
+The data-sourcing blocker moved. Finley confirmed on 2026-10-02 that the **NDAS fee-data license is signed**, which clears the PR #49 gate on using NDAS data in production report lookups. The NDAS pipeline merged in September (PRs #49 to #53, #58): a zip5 tier, a loader covering 758 priced codes (up from ~19), public Census crosswalks, readable labels for every code, and RLS on the new tables. The one compliance blocker left is the ADA CDT content license application. Launch-readiness gaps remain: no app email, no product analytics, and a stub EOB OCR endpoint. `ROADMAP.md` (PR #59) is now the staged plan.
 
 ---
 
@@ -19,7 +17,7 @@ The business blocker has not moved in five weeks. Data sourcing is still unresol
 
 **The problem:** Dental practices set fees blind and quietly leave money on the table. They don't know which procedure codes are priced below what carriers in their area actually reimburse.
 **The solution:** Upload your fees and volumes; get a benchmarked report showing per-code and per-carrier underpayment and total recoverable revenue.
-**The user:** Independent and small-group dental practices (office managers and owner-dentists), often older and less comfortable with software. This is now written into `CLAUDE.md` as a design constraint, not a persona note.
+**The user:** Independent and small-group dental practices (office managers and owner-dentists), often older and less comfortable with software. `CLAUDE.md` makes this a design constraint, not a persona note.
 **The value:** A $199 assessment that typically points to multiples of that in recoverable annual revenue.
 **The name:** public-facing copy says "New Fee Schedule"; the repo, Vercel project, and internal tooling stay "Calderwood".
 
@@ -27,103 +25,113 @@ The business blocker has not moved in five weeks. Data sourcing is still unresol
 
 ## Status  [rewrite]
 
-- **Phase:** post-MVP iteration; public surface converging, data sourcing stalled
+- **Phase:** post-MVP iteration, moving into launch prep (fee data licensed; CDT license and launch gaps remain)
 - **Engagement manager:** self-directed
 - **Lead:** Finley
 - **Cadence:** self-directed
-- **Next milestone:** unchanged since 2026-07-13. Send the drafted REFMed dental-CDT verification email (it gates both naming REFMed publicly and the compliance review that gates coverage expansion); FAIR Health remains the fallback.
-- **Flags:** shipping; the data-source milestone has not moved in five weeks while frontend work continued
+- **Next milestone:** submit the ADA CDT content license application (two fields still blank). TBD date.
+- **Flags:** on-track; the NDAS license cleared the main data blocker on 2026-10-02
 
 ---
 
 ## Where we are right now  [rewrite]
 
-**Brand and landing surface.** Public copy was rebranded from Calderwood to "New Fee Schedule" (PR #17); the repo, Vercel project, and internal naming were deliberately left alone. The landing page was then redesigned a second time, from the Mintlify-style rebuild into a data-forward indigo "Console" layout (PRs #18, #19, #20), and the single scrolling page was split into real routes: `/how-it-works`, `/features`, `/sample-report`, `/pricing`, `/resources` (PR #21), each composed from `components/landing/*` through a shared `LandingShell` with a sticky nav that highlights the active link (PR #23). How It Works went through three iterations and ended as the hybrid layout promoted to the main page, with the temporary `/hybrid` route dropped (PRs #36, #38). Pricing got a pay-versus-get-back value comparison card and handed its FAQ off to `/resources` (PR #37).
+**NDAS is the licensed fee source.** Finley confirmed the NDAS fee-data license is signed (2026-10-02). That replaces the REFMed (unverified) and FAIR Health (fallback) candidates this doc listed on 2026-08-19. Whether REFMed is still needed for anything is an open question. Naming the data source in public and report copy is now unblocked; check the license's attribution terms for the required wording first.
 
-**The ICP pass.** PR #24 wrote audience and design principles into `CLAUDE.md` as requirements: lead with dollars, body copy at 16px or larger, line-height at 1.5 or more, WCAG AA contrast with no light-gray body text on white, plain language paired with dental terms, one obvious primary action per screen, nothing critical behind hover or icon-only controls, and no essential content gated behind scroll reveals. PRs #28, #29, #31, and #32 then paid that down on the live pages (closing issues #25, #26, #27, and #30): a real mobile nav, darker body text, larger type, visible focus states, plain-language glosses next to billing terms, a simplified hero card, and reveal animations demoted to progressive enhancement so content is present without JS. Style rules followed in August: a personal working-style block (PR #40), a shared standard block (PR #41), and a hard no-em-dash rule covering everything committed (PR #42). Em dashes were also stripped from user-facing copy (PRs #15, #22).
+**What shipped in September.** PR #49 added a `zip5` tier ahead of `zip3` in the cascade: NDAS ships national percentiles per code plus a per-zip5 geo factor, so `lib/benchmark/supabase-source.ts` multiplies the two at lookup time. PR #50 fixed the loader against the real export (758 priced codes, 95 "individually rated" codes kept out of `ucr_benchmarks`, 42,688 zip factors, zero errors). PR #51 loaded `cdt_codes` descriptions and 12 categories from NDAS headings. PR #52 built the zip-to-state (33,791) and zip-to-metro (18,475) crosswalks from public Census and OMB files, so the zip3 and metro rungs can fire. PR #53 made `compute()` read `cdt_codes`, so all 758 codes render a readable label. PR #58 turned on RLS for the three NDAS tables, already applied to production on 2026-09-23.
 
-**Auth.** Password recovery is now a first-class flow, not a bare magic-link round trip: `/forgot-password` and `/reset-password` pages (PR #44), recovery `?code=` forwarded from the site root by `middleware.ts` (PR #46), and reset links pinned to one canonical origin because the bare apex `newfeeschedule.com` returns NXDOMAIN and only `www` resolves (PR #47). Both helpers are unit tested (`lib/site-url.test.ts`, `lib/auth/recovery-redirect.test.ts`) and the flow is documented in `docs/auth-password-reset.md`, the repo's first `docs/` entry.
+**Onboarding fixes.** Confirm-password on signup (PR #54), fee-upload state clobbering and real upload errors (PR #55), and `asMessage()` error handling plus a fixed `/api/onboard` rollback that no longer orphans the practice row (PR #57).
 
-**Data sourcing: no change.** The site and the report PDF still say the neutral "a national UCR benchmark database" and name no vendor, which remains a safe, defensible state. REFMed TruePrice is still selected-but-unverified: naming it publicly stays deferred until REFMed confirms in writing that it covers dental CDT codes with charge-based UCR percentiles rather than medical CPT/HCPCS allowed-amount deciles. The ADA CDT commercial license application is still completed and dated 2026-06-25, still pending submission, still missing two fields. Nothing is signed with anyone. Every item here is Finley's to move; none of it moved between 2026-07-13 and today.
+**CI.** PR #60 pinned `anthropics/claude-code-action` to v1.0.239 (SHA `97c53473391bff1901034d4b454b5bac7ab7a029`) in `factory.yml`. The floating `@v1` tag moved to a broken release on 2026-09-28 and broke factory reviews on every Kuba-Ventures/Nemat-Trading PR.
+
+**Next concrete steps.** Submit the ADA CDT application. Decide the three NDAS placeholders from PR #49 (p75 interpolation, fixed `sample_size` of 500, the `ZIPVALS_24.available` flag). Then update public copy to name NDAS within the license terms.
 
 ---
 
 ## What's built  [rewrite]
 
 **Frontend / UI**
-- Public marketing surface: `/` plus five standalone routes (`/how-it-works`, `/features`, `/sample-report`, `/pricing`, `/resources`), composed from `components/landing/*` through `LandingShell` (`shell.tsx`). Sticky `<LandingNav>` with active-route highlighting and a real mobile menu; the global `<Header>` returns null on marketing and app routes (`components/header.tsx`).
-- Design: data-forward indigo "Console" layout. Brand tokens in `app/globals.css` (`--brand: #4f46e5`, `--brand-deep`) sit alongside the app's ink/canvas theme, so dashboard, report, and onboarding render unchanged. Fonts via `next/font`: Inter (body), Newsreader, a display face, and a mono face for data.
-- Landing sections: hero, carrier proof bar (real provider logos, PR #16), deliverable, stat band, gap/percentile/carrier bars, methodology, how-it-works (hybrid), pricing plus `pricing-compare`, FAQ, final CTA, footer, shared `ui.tsx`.
-- Motion primitives in `components/motion/` with no framer-motion dependency (Reveal, CountUp, Odometer, useInView, useReducedMotion, useIsomorphicLayoutEffect). Content renders without JS, the hero is instant, and `prefers-reduced-motion` is honored.
-- Accessibility and readability baked to the `CLAUDE.md` bar: AA-contrast body ink, 16px-plus body copy, visible keyboard focus, labeled navigation, large tap targets, no meaning carried by color alone.
-- Auth pages: `/login`, `/signup`, `/forgot-password`, `/reset-password` (page plus client component each).
+- Public marketing surface: `/` plus five standalone routes (`/how-it-works`, `/features`, `/sample-report`, `/pricing`, `/resources`), composed from `components/landing/*` through `LandingShell` (`shell.tsx`). Sticky `<LandingNav>` with active-route highlighting and a real mobile menu.
+- Design: data-forward indigo "Console" layout. Brand tokens in `app/globals.css` (`--brand: #4f46e5`, `--brand-deep`) sit alongside the app's ink/canvas theme. Fonts via `next/font`.
+- Motion primitives in `components/motion/` with no animation dependency. Content renders without JS; `prefers-reduced-motion` is honored.
+- Accessibility and readability to the `CLAUDE.md` bar: AA-contrast body ink, 16px-plus body copy, visible focus, large tap targets.
+- Auth pages: `/login`, `/signup` (now with confirm-password, PR #54), `/forgot-password`, `/reset-password`.
 - Authenticated app under `app/(app)/`: dashboard, intake, reports, account (with a "Remove data" reset for testing).
-- Onboarding flow (`components/onboarding/`): unified upload box, staged PDF extraction progress, post-extraction review step.
-- Report UI (`components/report/`): per-code fee-vs-UCR table, ordinal percentile, carrier scorecard/heatmap, category opportunity, provider variance, methodology. Underpayment renders red as a positive recoverable figure.
+- Onboarding (`components/onboarding/`): unified upload box, staged PDF extraction progress, post-extraction review, real error messages via `lib/api-message.ts` (PRs #55, #57).
+- Report UI (`components/report/`): per-code fee-vs-UCR table with a readable label for every benchmarked code, ordinal percentile, carrier scorecard and heatmap, category opportunity, provider variance, methodology.
 - View-only shared report at `/r/<token>`, no login required.
 
 **Backend / data**
 - API routes under `app/api/`: `onboard`, `intake`, `upload-url`, `parse-pdf`, `carrier-schedule`, `eob-ocr`, `generate`, `report`, `share`, `checkout`, `stripe/webhook`, `account`, `reset-data`, plus `admin/` (seed-finley, verify-rls).
-- Auth helpers: `lib/site-url.ts` (canonical origin for browser-built redirect URLs) and `lib/auth/recovery-redirect.ts` plus `middleware.ts` (forwards a Supabase recovery `?code=` from `/` to `/reset-password`). Documented in `docs/auth-password-reset.md`.
-- Parsing (`lib/parser/`): CSV and PDF dispatch; PDF "Procedure Summary" extraction via Claude vision (`pdf-summary.ts`) for code, fee, annual volume, and per-provider fees; per-carrier fee-schedule capture (`pdf-schedule.ts`) feeds carrier ranking.
-- Benchmark resolution (`lib/benchmark/resolve.ts`): cascades zip3, metro, state, region, national; skips levels with sample_size below 30; never blends across levels.
+- `eob-ocr` is a stub: it stores the uploaded image for a human to read and returns `queued: true`. No OCR, no rate limiting yet (`app/api/eob-ocr/route.ts`).
+- Parsing (`lib/parser/`): CSV and PDF dispatch; Claude vision extracts code, fee, annual volume, and per-provider fees (`pdf-summary.ts`); per-carrier schedules (`pdf-schedule.ts`).
+- Benchmark resolution (`lib/benchmark/resolve.ts`): cascades zip5, zip3, metro, state, region, national; skips levels with sample_size below 30; never blends levels.
+- Benchmark source (`lib/benchmark/supabase-source.ts`): zip5 computes national percentile times `zip_geo_factors.geo_factor` at lookup time. Other levels pick the row with the highest `source_version`, then the largest sample. It does not filter by `source_version`.
+- NDAS loader (`scripts/load-ndas-source.ts`, `npm run load:ndas`): loads `NMAS.csv`, `ZIPVALS_24.csv`, and optional `headings.csv` into staging tables, `ucr_benchmarks`, `zip_geo_factors`, and `cdt_codes`.
+- CDT labels (`lib/cdt/descriptions.ts`): curated short label first, then sentence-cased NDAS nomenclature, then the bare code.
 - Computation (`lib/computation/compute.ts`) with snapshot tests.
-- Paywall (`lib/report/gate.ts`): the single gating boundary. Zeros locked numbers (headline $, top-carrier $, per-code annual gap, per-carrier recoverable $) pre-payment; the teaser (% codes below UCR, fee-vs-UCR columns, rounded opportunity) stays visible.
+- Paywall (`lib/report/gate.ts`): the single gating boundary; locked dollar figures are zeroed server-side before payment.
 
 **Infrastructure**
-- Supabase Postgres; 8 migrations (`supabase/migrations/0001`-`0008`) covering schema, practice name, paywall provenance, PDF input method, unique email, phone, share token, and per-provider fees.
+- Supabase Postgres, project "Calderwood Tech"; 10 migrations (`supabase/migrations/0001` to `0010`). `0009` adds the zip5 tier and NDAS tables; `0010` enables RLS on them.
 - Supabase Auth, including the password-recovery redirect allow-list (one canonical origin, `www`).
 - Stripe Checkout (hosted) plus webhook setting `paid_at` on `checkout.session.completed`.
-- Scripts: `load:zcta`, `load:ucr`, `render:sample-report`, `seed:finley`, `db:migrate`.
-- Supervised PR factory (`.claude/agents/pr-reviewer.md`, `.github/workflows/factory.yml`): runs `npm test` on PR branches, auto-merges only low-risk surfaces (landing, legal, markdown), escalates anything touching money, auth, data, or computation.
+- Scripts: `load:zcta`, `load:ucr`, `load:ndas`, `geo:build`, `render:sample-report`, `seed:finley`, `db:migrate`. `/data` is gitignored so vendor extracts can't be committed.
+- Supervised PR factory (`.claude/agents/pr-reviewer.md`, `.github/workflows/factory.yml`): runs `npm test` on PRs, auto-merges only low-risk surfaces, escalates money, auth, data, and computation. Uses `anthropics/claude-code-action` pinned to v1.0.239 by SHA.
 - Post-merge build guard (`.github/workflows/main-build-check.yml`): `npm ci`, `tsc --noEmit`, `next build` on every push to `main`.
-- Repo-local skill: `.claude/skills/brand-guide/` (PR #43).
-- Tests: 7 vitest suites (`compute` plus snapshot, `parser`, `gate`, `resolve`, `supabase-source`, `site-url`, `recovery-redirect`).
+- Repo-local skill: `.claude/skills/brand-guide/`.
+- Tests: 8 vitest suites (`compute` plus snapshot, `parser`, `gate`, `resolve`, `supabase-source`, `descriptions`, `site-url`, `recovery-redirect`); 67 passing per PR #57.
+- Plan: `ROADMAP.md` (stages 0 to 5, last verified against the code 2026-10-02).
 
 ---
 
-## Tech stack  [rewrite]
+## Tech stack  [rewrite, scanned from package.json]
 
 | Layer | Technology | Notes |
 |---|---|---|
 | Frontend | Next.js 14.2.35 (App Router), React 18, TypeScript, Tailwind 3.4 | `app/`, `components/` |
 | Backend | Next.js API routes (Node) | `app/api/` |
 | Database | Supabase Postgres (`@supabase/ssr`, `@supabase/supabase-js`) | `supabase/migrations/` |
-| Auth | Supabase Auth, email/password plus recovery flow | `app/login`, `app/forgot-password`, `app/reset-password`, `middleware.ts` |
-| Hosting | Vercel | project `calderwood`, auto-deploy on push to `main`, live on `www.newfeeschedule.com` |
-| AI/LLM | Anthropic Claude (`@anthropic-ai/sdk`), native PDF vision for extraction | `lib/parser/pdf-summary.ts` |
+| Auth | Supabase Auth, email/password plus recovery flow | `middleware.ts`, `docs/auth-password-reset.md` |
+| Hosting | Vercel | project `calderwood`, auto-deploy on `main`, live on `www.newfeeschedule.com` |
+| AI/LLM | Anthropic Claude (`@anthropic-ai/sdk`), native PDF vision | `lib/parser/pdf-summary.ts` |
 | Payments | Stripe Checkout plus webhook (`stripe`, `@stripe/stripe-js`) | `lib/stripe.ts`, `app/api/stripe/webhook` |
+| Fee data | NDAS 2026 (NMAS percentiles plus ZIPVALS_24 geo factors), licensed | `scripts/load-ndas-source.ts` |
+| Geo data | Census 2020 ZCTA-to-County, OMB CBSA delineation (July 2023) | `scripts/build-geo-crosswalk.ts` |
 | PDF report | `@react-pdf/renderer` | `lib/report/` |
 | Parsing | `papaparse` (CSV), `xlsx`, Claude PDF vision | `lib/parser/` |
 | Validation | `zod` 4 | |
-| Typography | `next/font` (Inter, Newsreader, display, mono data) | `app/layout.tsx` |
-| Motion | in-repo primitives, no animation dependency | `components/motion/` |
-| Email | Resend (configured via env) | |
-| Analytics | Google Tag Manager / GA4 (gated on `NEXT_PUBLIC_GTM_ID`), PostHog (optional) | `components/analytics/gtm.tsx` |
+| Analytics | Google Tag Manager / GA4, gated on `NEXT_PUBLIC_GTM_ID` | `components/analytics/gtm.tsx` |
+| Email | none in code (Supabase Auth emails only); Resend is only in `.env.example` | |
 | Tests | Vitest | `npm test` |
 
 ---
 
-## Integrations & MCPs  [rewrite — auto-generated from MCP config files]
+## Integrations & MCPs  [rewrite, auto-generated from MCP config files]
 
 | Integration | Purpose | Cost | Status |
 |---|---|---|---|
-| Stripe | $199 checkout + webhook unlocks the gated report | usage-based (Stripe fees) | live |
-| Supabase | Postgres persistence, auth, RLS | unknown | live |
+| Stripe | $199 checkout plus webhook unlocks the gated report | usage-based (Stripe fees) | live |
+| Supabase | Postgres, auth, RLS | unknown | live |
 | Anthropic Claude | PDF extraction of fees, volumes, carrier schedules | usage-based | live |
-| Resend | Transactional / delivery email | unknown | configured (env) |
+| NDAS | Licensed fee-percentile data (758 priced codes) | unknown | licensed 2026-10-02 |
 | Google Tag Manager / GA4 | Analytics, gated on `NEXT_PUBLIC_GTM_ID` | free | live |
-| PostHog | Product analytics (optional) | unknown | optional |
 | Vercel | Hosting, auto-deploy | unknown | live |
+| Resend | Transactional email | unknown | planned (env vars only, no code) |
+| PostHog | Product analytics | unknown | planned (env vars only, no code) |
 
-*Source: no MCP config files found in repo; integrations inferred from `.env.example`, `package.json`, and `lib/`.*
+*Source: no MCP config files found in repo; integrations inferred from `.env.example`, `package.json`, `lib/`, and `scripts/`.*
 
 ---
 
-## Decisions log  [append-only — never rewrite or delete]
+## Decisions log  [append-only, never rewrite or delete]
 
 The "why" behind key choices. Newest first.
 
+- **2026-10-02: NDAS is the licensed fee-data source.** Finley confirmed the NDAS fee-data license is signed, clearing the PR #49 gate on using NDAS data (~758 codes) in production report lookups. This supersedes the 2026-07-13 entries that ruled out the standard NDAS developer license, selected REFMed, and kept FAIR Health as fallback; those entries stay as history. Whether REFMed is still needed is open. Naming NDAS in public and report copy is unblocked, subject to the license's attribution terms. The ADA CDT content license is still required separately.
+- **2026-10-02: Pinned `anthropics/claude-code-action` to a commit SHA.** Pinned to v1.0.239 (`97c53473391bff1901034d4b454b5bac7ab7a029`) instead of floating `@v1`, after the tag moved to a broken release on 2026-09-28 and broke Kuba-Ventures/Nemat-Trading reviews. Future bumps go in their own PR (PR #60).
+- **2026-09-16: Built the geo crosswalks from public Census and OMB data, not the NDAS `ZipDetail.csv`.** Keeps the geo layer free of any licensing question whatever happens with the fee source (PR #52).
+- **2026-09-16: Multiply NDAS national percentiles by a zip5 geo factor at lookup time.** Rejected materializing a ~41,000 zip by ~800 code cross-join. NDAS "individually rated" codes stay out of `ucr_benchmarks` so they surface as no-data, not a made-up number (PRs #49, #50).
 - **2026-08-12: Pinned password-reset links to one canonical origin and forwarded recovery codes in middleware.** Building the reset link from `window.location.origin` meant the link pointed at whatever host the user happened to be on, and the bare apex `newfeeschedule.com` returns NXDOMAIN, so those links stranded. `lib/site-url.ts` now resolves a single canonical origin (one URL to allow-list in Supabase) and `middleware.ts` forwards a root `?code=` to `/reset-password` via `lib/auth/recovery-redirect.ts`. Both unit tested, documented in `docs/auth-password-reset.md` (PRs #46, #47).
 - **2026-08-11: Shipped a real forgot-password / reset-password flow.** Added `/forgot-password` and `/reset-password` as first-class labeled pages rather than leaving account recovery to a bare magic-link round trip. Rationale: the ICP skews older and less technical, and "check your email for a link" with no visible path back is exactly the kind of invisible affordance `CLAUDE.md` rules out (PR #44).
 - **2026-08-11: Vendored the brand-guide skill into the repo.** Moved it to `.claude/skills/brand-guide/` so brand deliverables render from repo state rather than a machine-local skill install (PR #43).
@@ -149,54 +157,68 @@ The "why" behind key choices. Newest first.
 
 ---
 
-## Open loops  [rewrite — but carry forward unfinished items]
+## Open loops  [rewrite, but carry forward unfinished items]
 
-Carried forward from 2026-07-13, none moved:
+Compliance and data:
 
-- [ ] Send the drafted REFMed dental-CDT verification email (`~/Desktop/Work/Calderwood/REFMed-dental-verification-email-DRAFT.txt`) requesting a sample D1110/D2740 lookup; get written confirmation of (1) dental CDT coverage and (2) charge-based UCR percentiles vs allowed-amount deciles. Gates both naming REFMed publicly and the compliance review. Finley
-- [ ] Fill the two blank CDT-application fields (incorporation date/state, company URL) and submit the ADA CDT license application to CDT-SNODENT@ada.org. Finley
-- [ ] Fallback: pursue a FAIR Health commercial license with written redistribution rights if REFMed can't confirm dental CDT charge-percentile UCR. Finley
-- [ ] Compliance review of data sourcing before expanding code coverage beyond ~19 codes, gated on written REFMed confirmation (or a FAIR Health license as fallback). Finley
-- [ ] Optional CI follow-up: add a preventive `next build` gate to PRs in `factory.yml` (the `main` build guard is still detective-only). Finley
-- [ ] Optional CI follow-up: bump CI actions off deprecated Node 20 (both workflows still pin `node-version: "20"`). Finley
-- [ ] Confirm Resend delivery email is wired and sending in production. Finley
-- [ ] Decide manual vs. automated fulfillment for first paid customers (the README runbook is still manual, ~2h/customer). Finley
+- [ ] Fill the two blank CDT-application fields (incorporation date/state, company URL) and submit the ADA CDT content license application to CDT-SNODENT@ada.org. The last compliance blocker. Owner: Finley
+- [ ] Check the NDAS license attribution terms, then name the data source in public copy (`components/landing/faq.tsx`, `deliverable.tsx`) and the report methodology (`components/report/methodology-section.tsx`). Owner: Finley
+- [ ] Decide whether REFMed is still needed now that NDAS is licensed, or drop it. The drafted REFMed verification email is moot unless it is. Waiting on: Finley
+- [ ] Decide the NDAS placeholders from PR #49: `p75` as the mean of p70 and p80, fixed `sample_size` of 500, and whether `ZIPVALS_24.available` should filter zips. Owner: Finley
+- [ ] Decide whether `lib/benchmark/supabase-source.ts` should filter by `source_version` instead of taking the highest one. Owner: Finley
+- [ ] Confirm which `source_version` rows are loaded in production `ucr_benchmarks` today. Owner: Finley
 
-New since 2026-07-13:
+Launch readiness:
 
-- [ ] Issue #39 (Headers, open since 2026-07-29): combine `/features` and `/sample-report` under a single "Features" heading. The only open issue in the repo.
-- [ ] `README.md` is stale and now actively misleading: it describes Puppeteer plus `@sparticuz/chromium` for PDF rendering (the app uses `@react-pdf/renderer`), a four-phase plan that is finished, the old `kubatopia/calderwood` repo URL, and the retired public name. Rewrite or delete.
-- [ ] Confirm `NEXT_PUBLIC_SITE_URL` is set in Vercel production and that the canonical origin is on the Supabase Redirect URLs allow-list, otherwise reset links fall back to the request origin (see `lib/site-url.ts`).
+- [ ] Transactional email: Resend is only in `.env.example`; no code sends email. Wire it or drop it. Owner: Finley
+- [ ] EOB OCR: `app/api/eob-ocr/route.ts` is a stub with no rate limiting, which the file says is needed before paid traffic. Owner: Finley
+- [ ] Decide manual vs automated fulfillment for the first paid customers (README runbook is manual, ~2h per customer). Owner: Finley
+- [ ] Confirm `NEXT_PUBLIC_SITE_URL` is set in Vercel production and allow-listed in Supabase Redirect URLs (`lib/site-url.ts`). Owner: Finley
+- [ ] Issue #39 (Headers, open since 2026-07-29): combine `/features` and `/sample-report` under one "Features" heading. Owner: Finley
+- [ ] Rewrite or delete the stale `README.md` (Puppeteer, a finished phase plan, old `kubatopia/calderwood` URL, retired public name; it also lists Resend and PostHog as wired). Owner: Finley
+- [ ] Manually test an onboarding failure after practice creation and confirm no orphaned practice row remains (unchecked item on PR #57). Owner: Finley
+
+Later:
+
+- [ ] Product analytics: PostHog is only in `.env.example`. Owner: Finley
+- [ ] Add a preventive `next build` gate to PRs in `factory.yml` (the `main` guard is detective only). Owner: Finley
+- [ ] Move both workflows off `node-version: "20"`. Owner: Finley
+
+Open questions from `ROADMAP.md`: has the ADA CDT application been submitted? Has anyone paid for a report yet, and who fulfills it?
 
 ---
 
 ## Risks & known issues  [rewrite]
 
-- Data sourcing is the critical path and it has not moved in five weeks. Public and report copy is neutral ("a national UCR benchmark database") and names no vendor, so nothing indefensible is live, but REFMed dental coverage is still unconfirmed (their public materials describe a medical CPT/HCPCS allowed-amount product; we have only a verbal claim of a national UCR database). Do not switch copy to name REFMed until written confirmation of dental CDT charge-percentile UCR is in hand.
-- Benchmark coverage is narrow (~19 of 142 CDT codes); reports may understate or feel incomplete until the compliance gate clears. Nothing is signed with anyone.
-- Licensing risk: whichever source is chosen, terms and redistribution rights still have to be negotiated; timelines are unknown and outside our control. The off-the-shelf NDAS form was ruled out because it forbids reselling embedded data.
-- The `main` build guard is detective, not preventive. A build-breaking merge still lands on `main` momentarily before going red; a PR-level `next build` gate would close the window.
-- Password recovery has a hard external dependency: the canonical origin must be set in the environment and allow-listed in Supabase. The bare apex `newfeeschedule.com` returns NXDOMAIN, so a link built from the wrong origin strands the user. Covered by unit tests and `docs/auth-password-reset.md`, but the config itself lives outside the repo.
-- The brand split (public "New Fee Schedule" vs internal "Calderwood") is a documentation trap: new copy, emails, and support material must use the public name, while infra, repo, and env references keep the old one. Expect drift.
-- PDF extraction depends on Claude vision quality across heterogeneous PM exports (Dentrix, Eaglesoft, Open Dental); the post-extraction review step mitigates but does not eliminate extraction errors.
-- Money is rendered in several places (web report, PDF, dashboard); any gating regression risks exposing locked figures pre-payment. `lib/report/gate.ts` must remain the only gate.
-- Fulfillment for early customers may still be partly manual per the README runbook, and the README itself is stale.
+- The ADA CDT content license is unsigned. CDT codes and descriptors are ADA-copyrighted, and reports now show NDAS nomenclature for up to 758 codes (PR #53).
+- `supabase-source.ts` does not filter by `source_version`; it takes the highest value by string sort. If the older ~19-code rows and NDAS rows coexist, which source wins depends on how the version strings sort, not on an explicit choice.
+- NDAS placeholders shape the dollar figures: `p75` is interpolated, and `sample_size` is a fixed 500, which always clears the floor of 30, so NDAS rows never trigger the low-confidence cascade skip.
+- Public FAQ copy says "No crowdsourced fees, no modeled estimates." PR #49 describes NDAS as a computed schedule, not survey data. Review that wording when the source gets named.
+- No app email and no product analytics are live, despite env vars for both. The README says otherwise.
+- The EOB OCR endpoint is pre-auth with no rate limiting.
+- The `main` build guard is detective, not preventive.
+- Password recovery depends on config outside the repo: the canonical origin must be set and allow-listed in Supabase. The bare apex `newfeeschedule.com` returns NXDOMAIN.
+- The brand split (public "New Fee Schedule" vs internal "Calderwood") is a documentation trap. Expect drift.
+- PDF extraction depends on Claude vision quality across PM exports; the review step mitigates but does not eliminate errors.
+- `lib/report/gate.ts` must stay the only paywall gate; any regression risks exposing locked figures pre-payment.
 
 ---
 
 ## Links  [rewrite]
 
-- **Live URL:** `https://www.newfeeschedule.com` (Vercel project `calderwood`, auto-deploy on `main`). The bare apex does not resolve; only `www` is live.
+- **Live URL:** `https://www.newfeeschedule.com` (Vercel project `calderwood`, auto-deploy on `main`). Only `www` resolves.
 - **Staging:** (none documented)
 - **Repo:** `https://github.com/Kuba-Ventures/calderwood` (the README still points at the old `kubatopia/calderwood`)
 - **Client Drive folder:** unknown
 - **Slack channel:** unknown
-- **Internal docs:** `docs/auth-password-reset.md`, `CLAUDE.md` (audience, design principles, merge policy)
+- **Internal docs:** `ROADMAP.md`, `docs/auth-password-reset.md`, `CLAUDE.md` (audience, design principles, merge policy)
 
 ---
 
-## Changelog  [append-only — never rewrite or delete]
+## Changelog  [append-only, never rewrite or delete]
 
+- **2026-10-02:** PROJECT.md refreshed for PRs #49 to #60. NDAS license signed (confirmed by Finley), replacing the REFMed and FAIR Health candidates; recorded the NDAS pipeline (#49 to #53, #58), onboarding fixes (#54, #55, #57), `ROADMAP.md` (#59), and the claude-code-action SHA pin (#60). Corrected drift: Resend and PostHog are env-only, EOB OCR is a stub, the resolver does not filter by `source_version`, 10 migrations and 8 test suites.
+- **2026-09-16 to 2026-09-23:** Shipped the NDAS zip5 tier and loader (#49, #50), CDT descriptions and categories (#51), public geo crosswalks (#52), readable labels for every code (#53), signup confirm-password (#54), upload and onboarding error fixes (#55, #57), and RLS on the NDAS tables, applied to production 2026-09-23 (#58).
 - **2026-08-19:** PROJECT.md refreshed after five weeks of drift, covering the 24 PRs merged since the last update (#15 through #47). Recorded the public rebrand to "New Fee Schedule", the second landing redesign (indigo "Console" layout) and its split into five standalone routes, the ICP readability and accessibility pass, `CLAUDE.md` becoming the enforcement surface for audience, design, and style rules, the real forgot-password / reset-password flow with canonical-origin pinning, and the repo-local brand-guide skill. Data sourcing unchanged and still the critical path: neutral copy, REFMed unverified, ~19 of 142 CDT codes, nothing signed.
 - **2026-08-11 to 2026-08-12:** Shipped account recovery: `/forgot-password` and `/reset-password` pages (#44), root `?code=` forwarding in `middleware.ts` (#46), and reset links pinned to the canonical origin with unit tests and `docs/auth-password-reset.md` (#47). Vendored the brand-guide skill into `.claude/skills/` (#43).
 - **2026-08-05 to 2026-08-09:** `CLAUDE.md` gained a personal working-style block (#40), a shared standard block (#41), and a no-em-dash rule covering everything committed (#42).
