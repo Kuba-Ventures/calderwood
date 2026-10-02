@@ -25,11 +25,14 @@ export function MethodologySection({
       <Text style={styles.h2}>How the numbers were calculated.</Text>
 
       <Text style={[styles.bodyMuted, { marginTop: 10 }]}>
-        UCR (usual, customary, and reasonable) data is sourced from a national
-        UCR benchmark database. Benchmarks are
-        resolved at the most specific geo level available (ZIP3, then metro,
-        state, region, national), with a minimum sample size of 30 at each
-        level. Levels with insufficient sample fall through to the next.
+        UCR (usual, customary, and reasonable) benchmarks are resolved at the
+        most specific geo level available. The first level is your ZIP code: a
+        national benchmark adjusted by a ZIP-level geographic factor. After
+        that come your three-digit ZIP area, metro, state, region, and
+        national. A level is used only when its benchmark rests on at least 30
+        fees; otherwise the code falls through to the next level. The ZIP-level
+        figure carries the sample size of the national benchmark it is built
+        from.
       </Text>
 
       <Text style={[styles.bodyMuted, { marginTop: 8 }]}>
@@ -86,7 +89,7 @@ function Example({ row, basis }: { row: CodeRow; basis: UnderpaymentBasis }) {
       </Text>
       <View style={{ marginTop: 10 }}>
         <Line label={`Your master fee for ${row.code}`} value={fmtUsd(row.practiceFee)} />
-        <Line label={`UCR 50th percentile (zip ${row.geoLevelUsed ?? "--"})`} value={row.p50 !== null ? fmtUsd(row.p50) : "--"} />
+        <Line label={`UCR 50th percentile (${geoLabel(row.geoLevelUsed)} level)`} value={row.p50 !== null ? fmtUsd(row.p50) : "--"} />
         <Line label="UCR 75th percentile (target)" value={row.p75 !== null ? fmtUsd(row.p75) : "--"} bold />
         <Line label="UCR 90th percentile" value={row.p90 !== null ? fmtUsd(row.p90) : "--"} />
       </View>
@@ -156,4 +159,17 @@ function Line({
       </Text>
     </View>
   );
+}
+
+function geoLabel(level: CodeRow["geoLevelUsed"]): string {
+  switch (level) {
+    case "zip5":
+      return "ZIP";
+    case "zip3":
+      return "3-digit ZIP";
+    case null:
+      return "--";
+    default:
+      return level;
+  }
 }
