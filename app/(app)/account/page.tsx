@@ -138,7 +138,7 @@ export default function AccountPage() {
           />
           <p className="mt-1 text-xs text-ink-400">
             This is the account you&rsquo;re signed in as. To change it, email
-            support@newfeeschedule.com.
+            sales@newfeeschedule.com.
           </p>
         </div>
 

@@ -69,10 +69,10 @@ export function Sidebar() {
         <p className="text-xs text-ink-400">
           Questions?{" "}
           <a
-            href="mailto:support@newfeeschedule.com"
+            href="mailto:sales@newfeeschedule.com"
             className="text-ink-700 hover:text-ink-900"
           >
-            support@newfeeschedule.com
+            sales@newfeeschedule.com
           </a>
         </p>
       </div>

@@ -110,7 +110,7 @@ function PendingView({
 
         {genError && (
           <p className="mt-6 text-sm text-red-600">
-            {genError} Please refresh, or email support@newfeeschedule.com.
+            {genError} Please refresh, or email sales@newfeeschedule.com.
           </p>
         )}
       </div>
