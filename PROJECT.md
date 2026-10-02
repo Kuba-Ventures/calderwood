@@ -1,7 +1,7 @@
 # Calderwood (public brand: New Fee Schedule)
 *A $199 dental fee-schedule assessment that shows practices where they're underpaid.*
 
-*Last updated: 2026-10-02 14:58 ET by kuba-vault*
+*Last updated: 2026-10-02 17:20 ET by kuba-vault*
 
 ---
 
@@ -9,7 +9,7 @@
 
 Calderwood is the company and repo name; **New Fee Schedule** has been the public brand since 2026-07-28 (PR #17). The product is a self-serve web app that benchmarks a dental practice's fee schedule against UCR (usual, customary, reasonable) percentiles and shows recoverable revenue per CDT code and per carrier. A practice onboards, uploads fees and volumes (CSV or PDF), pays $199 via Stripe, and gets a gated web report plus a PDF.
 
-Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and the **ADA CDT content license application went to ADA** the same day; the next step is ADA's template license agreement. Report math changed that afternoon: the headline was about 7x inflated and is now the fee-schedule gap, with a separate carrier figure (PRs #65, #67). Web reports corrected themselves on read; PDFs already sent to customers were intentionally not regenerated and still show the old numbers. sales@newfeeschedule.com is now the only public contact and forwards to Finley and Calderwood through a live Resend inbound webhook (PRs #64, #68). Marketing pages no longer show unsourced stats (PR #69). Remaining launch gaps: no product analytics, a stub EOB OCR endpoint, and a decision on telling existing customers about the corrected totals.
+Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and the **ADA CDT content license application went to ADA** the same day; the next step is ADA's template license agreement. Report math changed that afternoon: the headline was about 7x inflated and is now the fee-schedule gap, with a separate carrier figure (PRs #65, #67). Web reports corrected themselves on read; PDFs already sent to customers were intentionally not regenerated and still show the old numbers. sales@newfeeschedule.com is now the only public contact and forwards to Finley and Calderwood through a live Resend inbound webhook (PRs #64, #68). Marketing pages no longer show unsourced stats (PR #69). Remaining launch gaps: no product analytics, no outbound transactional email, a stub EOB OCR endpoint, and a decision on telling existing customers about the corrected totals. `ROADMAP.md` now dates every item and carries a Timeline.
 
 ---
 
@@ -43,6 +43,8 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 **Copy corrections.** The FAQ dropped "no modeled estimates" and the survey-of-every-practice reading of the 75th percentile (PR #62); the methodology block on `/sample-report` dropped the same claim (PR #63). Report methodology now describes the ZIP5-first cascade, the national sample size at ZIP level, the High-confidence legend, a working coverage percentage, and no write-off claim (PR #66). Marketing removed "up to 35%", "up to $120K per provider", and "$73,840 average recovery"; mock visuals are tagged "Sample practice" and drawn from the fixture, and `CLAUDE.md` now forbids unsourced stats (PR #69).
 
 **Email.** sales@newfeeschedule.com replaced support@ in all 11 public files (PR #64). `POST /api/inbound` forwards mail sent to sales@ to finley@qsbsrollover.com and calderwoodra1113@gmail.com (PR #68). Live and tested 2026-10-02: newfeeschedule.com MX points to `inbound-smtp.us-east-1.amazonaws.com` in Squarespace DNS, Resend receiving is on, and `RESEND_API_KEY` (full access) plus `RESEND_WEBHOOK_SECRET` are set in Vercel Production.
+
+**Verified this run (2026-10-02 17:20 ET).** Only PR #71 merged since the last update; it adds the owner's initiative and previews preferences to `CLAUDE.md`, no code. All 11 vitest suites pass (97 tests), and `main-build-check` is green on `68b9443`. The six public pages and `/forgot-password` return 200 on `www`. The apex `newfeeschedule.com` now 308-redirects to `www` with the query string kept, so it no longer returns NXDOMAIN. `NEXT_PUBLIC_SITE_URL` is set in Vercel Production and Preview (created 2026-08-12); the Supabase Redirect URLs allow-list is still unverified.
 
 **Next concrete steps.** Decide whether to tell existing customers their PDF totals were overstated. Watch for ADA's template agreement. Decide the three NDAS placeholders from PR #49.
 
@@ -85,7 +87,8 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 - Post-merge build guard (`.github/workflows/main-build-check.yml`): `npm ci`, `tsc --noEmit`, `next build` on every push to `main`.
 - Repo-local skill: `.claude/skills/brand-guide/`.
 - Tests: 11 vitest suites (adds `pdf-columns`, `inbound/forward`, `inbound/verify`); 97 passing per PR #69.
-- Plan: `ROADMAP.md` (stages 0 to 5, last verified against the code 2026-10-02).
+- Domain: `www.newfeeschedule.com` serves the app; the apex 308-redirects to `www` and keeps the query string (checked 2026-10-02).
+- Plan: `ROADMAP.md` (stages 0 to 5, every item dated, Timeline section, last verified against the code 2026-10-02).
 
 ---
 
@@ -132,6 +135,8 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 
 The "why" behind key choices. Newest first.
 
+- **2026-10-02: Date every ROADMAP.md item in ET from sourced records.** Done items carry the PR merge date (or commit date when there was no PR), open items the date they entered the plan. GitHub reports UTC, so evening ET merges (for example #38, #54, #55) show the ET date. Undated items get `date unknown`, never a guess.
+- **2026-10-02: Wrote the owner's initiative and previews preferences into `CLAUDE.md`.** Agents do routine, reversible steps themselves, verify before reporting, and stop before money, messages as the owner, secrets, DNS, and data deletion. The repo merge policy still wins where they conflict (PR #71).
 - **2026-10-02: Publish only numbers we can back up.** Removed "up to 35%", "up to $120K per provider", and "$73,840 average recovery" (marketing audit Option A, approved by Finley). Mock visuals are labeled "Sample practice" and drawn from the fixture; `CLAUDE.md` now carries the rule (PR #69).
 - **2026-10-02: sales@newfeeschedule.com is the only public contact, forwarded by a Resend inbound webhook.** Replaced support@ everywhere public (PR #64). Forwarding runs in-app (`/api/inbound`) to finley@qsbsrollover.com and calderwoodra1113@gmail.com instead of a hosted mailbox (PR #68).
 - **2026-10-02: Do not regenerate existing customer PDFs after the totals fix.** Finley chose to leave already-delivered PDFs as they are. Web reports correct themselves on read through `gate.ts`; old PDFs still show the inflated headline. Whether to notify those customers is open.
@@ -185,8 +190,8 @@ Launch readiness:
 - [ ] Outbound transactional email (receipts, report-ready notices): none in code yet. Owner: Finley
 - [ ] EOB OCR: `app/api/eob-ocr/route.ts` is a stub with no rate limiting, which the file says is needed before paid traffic. Owner: Finley
 - [ ] Decide manual vs automated fulfillment for the first paid customers (README runbook is manual, ~2h per customer). Owner: Finley
-- [ ] Confirm `NEXT_PUBLIC_SITE_URL` is set in Vercel production and allow-listed in Supabase Redirect URLs (`lib/site-url.ts`). Owner: Finley
-- [ ] Issue #39 (Headers, open since 2026-07-29): combine `/features` and `/sample-report` under one "Features" heading. Owner: Finley
+- [ ] Confirm the canonical origin is allow-listed in Supabase Redirect URLs (`lib/site-url.ts`). `NEXT_PUBLIC_SITE_URL` is set in Vercel Production and Preview (verified 2026-10-02). Owner: Finley
+- [ ] Issue #39 (Headers, open since 2026-07-28 ET): combine `/features` and `/sample-report` under one "Features" heading. Owner: Finley
 - [ ] Rewrite or delete the stale `README.md` (Puppeteer, a finished phase plan, old `kubatopia/calderwood` URL, retired public name; it also lists PostHog as wired). Owner: Finley
 - [ ] Manually test an onboarding failure after practice creation and confirm no orphaned practice row remains (unchecked item on PR #57). Owner: Finley
 
@@ -196,7 +201,7 @@ Later:
 - [ ] Add a preventive `next build` gate to PRs in `factory.yml` (the `main` guard is detective only). Owner: Finley
 - [ ] Move both workflows off `node-version: "20"`. Owner: Finley
 
-Open question from `ROADMAP.md`: who fulfills paid reports? The ADA submission question is answered (sent 2026-10-02).
+Open questions from `ROADMAP.md`: is REFMed still needed, and who fulfills paid reports? The ADA submission question is answered (sent 2026-10-02).
 
 ---
 
@@ -212,7 +217,7 @@ Open question from `ROADMAP.md`: who fulfills paid reports? The ADA submission q
 - No product analytics and no outbound transactional email are live. The README says otherwise.
 - The EOB OCR endpoint is pre-auth with no rate limiting.
 - The `main` build guard is detective, not preventive.
-- Password recovery depends on config outside the repo: the canonical origin must be set and allow-listed in Supabase. The bare apex `newfeeschedule.com` returns NXDOMAIN.
+- Password recovery depends on config outside the repo: the canonical origin must be allow-listed in Supabase (unverified). The Vercel side is set, and the apex now redirects to `www`, so reset links no longer strand on an NXDOMAIN host.
 - The brand split (public "New Fee Schedule" vs internal "Calderwood") is a documentation trap. Expect drift.
 - PDF extraction depends on Claude vision quality across PM exports; the review step mitigates but does not eliminate errors.
 - `lib/report/gate.ts` must stay the only paywall gate; any regression risks exposing locked figures pre-payment.
@@ -221,7 +226,7 @@ Open question from `ROADMAP.md`: who fulfills paid reports? The ADA submission q
 
 ## Links  [rewrite]
 
-- **Live URL:** `https://www.newfeeschedule.com` (Vercel project `calderwood`, auto-deploy on `main`). Only `www` resolves.
+- **Live URL:** `https://www.newfeeschedule.com` (Vercel project `calderwood`, auto-deploy on `main`). The apex 308-redirects to `www`.
 - **Staging:** (none documented)
 - **Repo:** `https://github.com/Kuba-Ventures/calderwood` (the README still points at the old `kubatopia/calderwood`)
 - **Client Drive folder:** unknown
@@ -232,6 +237,7 @@ Open question from `ROADMAP.md`: who fulfills paid reports? The ADA submission q
 
 ## Changelog  [append-only, never rewrite or delete]
 
+- **2026-10-02 (evening):** Recorded PR #71 (`CLAUDE.md` initiative and previews block). Re-verified tests (97 passing), the `main` build, and live pages. Corrected drift: the apex domain now redirects to `www`, and `NEXT_PUBLIC_SITE_URL` is set in Vercel. Dated every `ROADMAP.md` item and added its Timeline.
 - **2026-10-02 (late):** Recorded PRs #62 to #69: FAQ and methodology copy fixes (#62, #63, #66), sales@ as the only public contact (#64), report totals and percentile fix (#65, #67), live Resend inbound forwarder (#68), unsourced marketing stats removed (#69). ADA CDT application sent; old customer PDFs left as is.
 - **2026-10-02:** PROJECT.md refreshed for PRs #49 to #60. NDAS license signed (confirmed by Finley), replacing the REFMed and FAIR Health candidates; recorded the NDAS pipeline (#49 to #53, #58), onboarding fixes (#54, #55, #57), `ROADMAP.md` (#59), and the claude-code-action SHA pin (#60). Corrected drift: Resend and PostHog are env-only, EOB OCR is a stub, the resolver does not filter by `source_version`, 10 migrations and 8 test suites.
 - **2026-09-16 to 2026-09-23:** Shipped the NDAS zip5 tier and loader (#49, #50), CDT descriptions and categories (#51), public geo crosswalks (#52), readable labels for every code (#53), signup confirm-password (#54), upload and onboarding error fixes (#55, #57), and RLS on the NDAS tables, applied to production 2026-09-23 (#58).
