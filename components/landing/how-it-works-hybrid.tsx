@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Reveal } from "@/components/motion/reveal";
-import { SectionHead } from "./ui";
+import { SampleTag, SectionHead } from "./ui";
 
 const steps: {
   icon: ReactNode;
@@ -26,16 +26,16 @@ const steps: {
     ),
     title: "Get your new fee schedule",
     body: "Review your opportunities, see which carrier to call first, and build a new fee schedule with confidence.",
-    outcome: "$73,840 average recovery",
+    outcome: "Your recoverable dollars, code by code",
   },
 ];
 
-// Illustrative sample — a plain-English example of what the report shows,
-// not a computed figure.
+// Sample practice rows from test-fixtures/sample-practice (the same D2740
+// example the methodology section uses). Illustrative, not a typical result.
 const sample: { code: string; label: string; you: string; ucr: string; gap: string }[] = [
-  { code: "D2740", label: "Crown, porcelain", you: "$1,150", ucr: "$1,410", gap: "+$260" },
-  { code: "D2950", label: "Core buildup", you: "$215", ucr: "$305", gap: "+$90" },
-  { code: "D3330", label: "Root canal, molar", you: "$1,020", ucr: "$1,240", gap: "+$220" },
+  { code: "D2740", label: "Crown, porcelain", you: "$185", ucr: "$215", gap: "+$30" },
+  { code: "D2950", label: "Core buildup", you: "$155", ucr: "$180", gap: "+$25" },
+  { code: "D3330", label: "Root canal, molar", you: "$945", ucr: "$1,003", gap: "+$58" },
 ];
 
 /**
@@ -99,8 +99,11 @@ export function HowItWorksHybrid() {
           {/* Worked example */}
           <Reveal delay={120} y={20} className="lg:sticky lg:top-24">
             <div className="rounded-2xl border border-line bg-white p-7 shadow-[0_28px_70px_-44px_rgba(17,24,72,0.5)]">
-              <div className="text-[13px] font-semibold uppercase tracking-[0.14em] text-brand">
-                Sample of what you get
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-[13px] font-semibold uppercase tracking-[0.14em] text-brand">
+                  Sample of what you get
+                </div>
+                <SampleTag>Sample practice</SampleTag>
               </div>
               <h3 className="mt-1.5 font-serif text-[26px] font-semibold text-brand-deep">
                 Underpayment, code by code
@@ -140,15 +143,12 @@ export function HowItWorksHybrid() {
 
               <div className="mt-6 flex items-baseline justify-between rounded-xl bg-[#EEF1FE] px-5 py-4">
                 <span className="text-[16px] font-semibold text-brand-deep">
-                  Recoverable across all codes
-                </span>
-                <span className="font-serif text-[30px] font-semibold leading-none text-brand-deep">
-                  $73,840
+                  Your report adds up the gap on every code you bill, per year.
                 </span>
               </div>
               <p className="mt-3 text-[14px] text-muted">
-                Illustrative example. Your report reflects your own fees and
-                local benchmarks.
+                Illustrative example from a sample practice. Your report
+                reflects your own fees and local benchmarks.
               </p>
             </div>
           </Reveal>

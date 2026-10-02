@@ -47,14 +47,15 @@ export function PricingCompare() {
               <div className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#C9C6F5]">
                 What you get back
               </div>
-              <div className="mt-3 font-serif text-[64px] font-semibold leading-none tracking-[-0.02em]">
-                $73,840
+              <div className="mt-3 font-serif text-[44px] font-semibold leading-[1.05] tracking-[-0.02em]">
+                Your number,{" "}
+                <span className="whitespace-nowrap">in minutes</span>
               </div>
               <div className="mt-2 text-[17px] text-[#DAD8FA]">
-                average recovery, per year
+                your recoverable dollars, code by code and carrier by carrier
               </div>
               <div className="mt-2 text-[15px] font-semibold text-[#C9C6F5]">
-                Illustrative average, not a guarantee.
+                Based on your own fees and local benchmarks.
               </div>
             </div>
           </div>

@@ -13,8 +13,16 @@ clear over clever.
 
 **Lead with data and savings.** Every page's visual focus is the money — dollars
 recoverable, code-by-code underpayment, carrier gaps. Use big, clearly-labeled numbers
-and plain framing of what each number means ("$73,840 you're leaving on the table this
-year"). Never bury the outcome under decoration.
+and plain framing of what each number means ("the dollars you're leaving on the table
+this year"). Never bury the outcome under decoration.
+
+**Only publish numbers we can back up.** Marketing copy must not state market
+statistics, averages, or "up to" claims (e.g. "average recovery", "up to 35% below")
+unless they come from a sourced dataset. Mock or illustrative data visuals must carry a
+visible "Sample" / "Sample practice" label, should use the sample-practice fixture
+(`test-fixtures/sample-practice/`) so figures agree across sections, and must not show a
+total that conflicts with any other section. The $199 price is supported by
+`lib/stripe.ts` and is fine to state.
 
 **Readability first (older eyes).**
 - Body copy ≥ 16px (prefer 17–18px). Never render text a user needs to read below 14px;
