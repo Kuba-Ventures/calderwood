@@ -95,7 +95,13 @@ export type UnderpaymentBasis = "carrier" | "market";
 export type ComputationOutput = {
   codeRows: CodeRow[];
   executiveSummary: {
+    /** Fee-schedule gap: sum of (p75 minus your fee) x volume. The headline. */
     totalAnnualUnderpayment: number;
+    /**
+     * Contracted-rate gap to p75, volume split evenly across the carriers on
+     * each code. Optional because reports stored before it existed lack it.
+     */
+    carrierAnnualUnderpayment?: number;
     codesBelowP75InTop20: { count: number; total: number };
     topCarrier: { name: string; recoverable: number } | null;
     underpaymentBasis: UnderpaymentBasis;

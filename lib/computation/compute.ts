@@ -31,7 +31,7 @@ export async function compute(
   const codeRows: CodeRow[] = [];
 
   // Track whether any carrier schedule contributed at least one fee. If yes,
-  // the headline number is carrier-based. Otherwise market-based.
+  // the report adds carrier figures next to the fee-schedule headline.
   const carriersWithData = new Set<string>();
   for (const [carrier, schedule] of Object.entries(input.carrierSchedules)) {
     if (schedule.length > 0) carriersWithData.add(carrier);
@@ -41,7 +41,7 @@ export async function compute(
 
   if (!haveCarrierData) {
     flags.push(
-      "No carrier schedules parsed. Headline number is market-based (vs UCR p75)."
+      "No carrier schedules parsed. Carrier figures are not available."
     );
   }
 
@@ -137,19 +137,11 @@ export async function compute(
 
   // --- Executive summary --------------------------------------------------
 
-  // Total annual underpayment. Per-code clamp already applied above.
-  let totalAnnualUnderpayment = 0;
-  if (haveCarrierData) {
-    for (const row of codeRows) {
-      for (const v of Object.values(row.annualRecoverableByCarrier)) {
-        totalAnnualUnderpayment += v;
-      }
-    }
-  } else {
-    for (const row of codeRows) {
-      totalAnnualUnderpayment += row.annualRecoverableMarket;
-    }
-  }
+  // Two distinct totals (see summarizeTotals): the fee-schedule gap is the
+  // headline, the carrier gap is reported alongside it. Per-code clamp is
+  // already applied above.
+  const totals = summarizeTotals(codeRows);
+  const totalAnnualUnderpayment = totals.feeScheduleGap;
 
   // Codes below p75 in top 20 -- sort by practice volume, exclude no_data.
   const scoredCodes = codeRows.filter((r) => r.confidence !== "no_data");
@@ -163,16 +155,10 @@ export async function compute(
     total: top20.length,
   };
 
-  // Top carrier -- only meaningful if basis is carrier.
+  // Top carrier -- only meaningful if carrier schedules were parsed.
   let topCarrier: ComputationOutput["executiveSummary"]["topCarrier"] = null;
   if (haveCarrierData) {
-    const carrierTotals: Record<string, number> = {};
-    for (const row of codeRows) {
-      for (const [carrier, amt] of Object.entries(row.annualRecoverableByCarrier)) {
-        carrierTotals[carrier] = (carrierTotals[carrier] ?? 0) + amt;
-      }
-    }
-    const sorted = Object.entries(carrierTotals).sort((a, b) => b[1] - a[1]);
+    const sorted = Object.entries(totals.byCarrier).sort((a, b) => b[1] - a[1]);
     if (sorted.length > 0 && sorted[0][1] > 0) {
       topCarrier = { name: sorted[0][0], recoverable: sorted[0][1] };
     }
@@ -192,16 +178,10 @@ export async function compute(
     .slice(0, 10)
     .map((x) => x.row);
 
-  // Recoverable by carrier -- total per carrier, descending.
+  // Recoverable by carrier -- volume-weighted total per carrier, descending.
   const recoverableByCarrier: ComputationOutput["recoverableByCarrier"] = [];
   if (haveCarrierData) {
-    const totals: Record<string, number> = {};
-    for (const row of codeRows) {
-      for (const [c, amt] of Object.entries(row.annualRecoverableByCarrier)) {
-        totals[c] = (totals[c] ?? 0) + amt;
-      }
-    }
-    for (const [carrier, recoverable] of Object.entries(totals)) {
+    for (const [carrier, recoverable] of Object.entries(totals.byCarrier)) {
       if (recoverable > 0) recoverableByCarrier.push({ carrier, recoverable });
     }
     recoverableByCarrier.sort((a, b) => b.recoverable - a.recoverable);
@@ -215,6 +195,7 @@ export async function compute(
     codeRows,
     executiveSummary: {
       totalAnnualUnderpayment,
+      carrierAnnualUnderpayment: totals.carrierGap,
       codesBelowP75InTop20,
       topCarrier,
       underpaymentBasis: basis,
@@ -226,7 +207,43 @@ export async function compute(
   };
 }
 
-function computePercentileRank(fee: number, b: Benchmark): number {
+/**
+ * The two report totals, derived from the code rows so stored reports can be
+ * re-summarized without re-running compute.
+ *
+ * - feeScheduleGap: the headline. Sum over codes of (UCR p75 minus your own
+ *   fee, clamped at zero) times annual volume. This is what the code table
+ *   and the category breakdown add up to.
+ * - carrierGap: what contracted carriers pay below p75. A code's volume is
+ *   split evenly across the carriers that list a rate for it, because intake
+ *   does not capture payer mix. Each row's annualRecoverableByCarrier is that
+ *   carrier's gap times the code's full volume, so it is divided by the
+ *   number of carriers on the code before summing. Without the split, five
+ *   carriers would count the same procedures five times.
+ * - byCarrier: carrierGap broken out per carrier (sums to carrierGap).
+ */
+export function summarizeTotals(rows: CodeRow[]): {
+  feeScheduleGap: number;
+  carrierGap: number;
+  byCarrier: Record<string, number>;
+} {
+  let feeScheduleGap = 0;
+  let carrierGap = 0;
+  const byCarrier: Record<string, number> = {};
+  for (const row of rows) {
+    feeScheduleGap += row.annualRecoverableMarket;
+    const entries = Object.entries(row.annualRecoverableByCarrier);
+    if (entries.length === 0) continue;
+    for (const [carrier, amt] of entries) {
+      const share = amt / entries.length;
+      byCarrier[carrier] = (byCarrier[carrier] ?? 0) + share;
+      carrierGap += share;
+    }
+  }
+  return { feeScheduleGap, carrierGap, byCarrier };
+}
+
+export function computePercentileRank(fee: number, b: Benchmark): number {
   if (fee >= b.p90) return 99;
   if (fee >= b.p75) {
     const span = b.p90 - b.p75;

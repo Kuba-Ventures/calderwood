@@ -32,7 +32,7 @@ export function Cover({
         <SummaryCard
           label="Annual underpayment"
           value={fmtUsd(s.totalAnnualUnderpayment, { round: true })}
-          sub={`Across ${s.codesBelowP75InTop20.total} most-billed CDT codes`}
+          sub={`Your fees vs UCR p75 across ${s.codesBelowP75InTop20.total} most-billed CDT codes`}
         />
         <SummaryCard
           label={`Codes below ${ordinal(75)} percentile`}
@@ -61,12 +61,16 @@ export function Cover({
           }
         />
         <SummaryCard
-          label="Underpayment basis"
-          value={s.underpaymentBasis === "carrier" ? "Contracted rates" : "Master fees"}
+          label="Carrier rates vs p75"
+          value={
+            s.underpaymentBasis === "carrier" && s.carrierAnnualUnderpayment != null
+              ? fmtUsd(s.carrierAnnualUnderpayment, { round: true })
+              : "Not available"
+          }
           sub={
             s.underpaymentBasis === "carrier"
-              ? "Per-carrier schedules compared to UCR p75."
-              : "Master fee schedule compared to UCR p75."
+              ? "Contracted rates below UCR p75, volume split evenly across carriers."
+              : "Carrier upload required to compare contracted rates."
           }
         />
       </View>

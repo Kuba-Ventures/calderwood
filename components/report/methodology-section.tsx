@@ -43,9 +43,12 @@ export function MethodologySection({
 
       <Text style={[styles.bodyMuted, { marginTop: 8 }]}>
         Annual recoverable is the per-code gap multiplied by your annual
-        frequency for that code (sourced from your PMS export). Headline
-        figures aggregate per-code totals; the per-code clamp is never
-        applied at the aggregate level.
+        frequency for that code (sourced from your PMS export). The headline
+        is the sum of your own fee&apos;s gap to p75 across codes; the per-code
+        clamp is never applied at the aggregate level. Carrier totals use
+        contracted rates instead. We do not know your payer mix, so each
+        code&apos;s volume is split evenly across the carriers that list a
+        rate for it.
       </Text>
 
       <Text style={[styles.sectionLabel, { marginTop: 24 }]}>
@@ -71,7 +74,10 @@ function Example({ row, basis }: { row: CodeRow; basis: UnderpaymentBasis }) {
   const carrierName = worstCarrier?.[0];
   const carrierFee = carrierName ? row.carrierFees[carrierName] : null;
   const carrierGap = carrierName ? row.carrierGaps[carrierName] : null;
-  const carrierRecoverable = worstCarrier?.[1];
+  // Same even volume split as the carrier totals (see summarizeTotals).
+  const carriersOnCode = Object.keys(row.annualRecoverableByCarrier).length;
+  const carrierRecoverable =
+    worstCarrier && carriersOnCode > 0 ? worstCarrier[1] / carriersOnCode : undefined;
 
   return (
     <View style={{ marginTop: 6 }}>
@@ -93,8 +99,9 @@ function Example({ row, basis }: { row: CodeRow; basis: UnderpaymentBasis }) {
           <Line label={`${carrierName} contracted rate`} value={fmtUsd(carrierFee)} />
           <Line label="Gap to UCR p75" value={fmtUsd(carrierGap)} />
           <Line label="Annual frequency" value={row.annualFrequency.toLocaleString()} />
+          <Line label="Carriers sharing that volume" value={carriersOnCode.toLocaleString()} />
           <Line
-            label="Annual recoverable revenue"
+            label={`Annual recoverable from ${carrierName}`}
             value={fmtUsd(carrierRecoverable ?? 0, { round: true })}
             bold
             accent

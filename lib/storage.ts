@@ -54,6 +54,8 @@ export type CodeRow = {
   annualVolume: number;
   gapPerProc: number; // ucrMedian - yourFee (positive means underpaid)
   annualGap: number; // gapPerProc * annualVolume
+  /** Fee's percentile rank in local UCR, from compute (same value the PDF prints). */
+  percentileRank?: number | null;
 };
 
 export type CarrierRow = {

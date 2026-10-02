@@ -96,15 +96,38 @@ describe("compute -- Underwood Family Dental fixture", () => {
     expect(order[order.length - 1]).toBe("MetLife");
   });
 
-  it("totalAnnualUnderpayment is the sum of per-carrier per-code recoverable", async () => {
+  it("totalAnnualUnderpayment is the fee-schedule gap (sum of per-code market recoverable)", async () => {
+    const out = await compute(input, resolve);
+    const manual = out.codeRows.reduce((s, r) => s + r.annualRecoverableMarket, 0);
+    expect(out.executiveSummary.totalAnnualUnderpayment).toBe(manual);
+    expect(out.executiveSummary.totalAnnualUnderpayment).toBe(67651);
+  });
+
+  it("carrierAnnualUnderpayment splits each code's volume evenly across its carriers", async () => {
     const out = await compute(input, resolve);
     let manual = 0;
     for (const row of out.codeRows) {
-      for (const amt of Object.values(row.annualRecoverableByCarrier)) {
-        manual += amt;
-      }
+      const gaps = Object.values(row.carrierGaps);
+      if (gaps.length === 0) continue;
+      manual += (gaps.reduce((a, b) => a + b, 0) / gaps.length) * row.annualFrequency;
     }
-    expect(out.executiveSummary.totalAnnualUnderpayment).toBe(manual);
+    expect(out.executiveSummary.carrierAnnualUnderpayment).toBeCloseTo(manual, 6);
+    expect(Math.round(out.executiveSummary.carrierAnnualUnderpayment!)).toBe(93624);
+    // Not the old 5x-counted figure (every carrier billed for all the volume).
+    expect(out.executiveSummary.carrierAnnualUnderpayment).toBeLessThan(468121 / 4);
+  });
+
+  it("per-carrier recoverable sums to the carrier total", async () => {
+    const out = await compute(input, resolve);
+    const sum = out.recoverableByCarrier.reduce((s, c) => s + c.recoverable, 0);
+    expect(sum).toBeCloseTo(out.executiveSummary.carrierAnnualUnderpayment!, 6);
+    expect(Math.round(out.executiveSummary.topCarrier!.recoverable)).toBe(26857);
+  });
+
+  it("D3330 percentile rank is 48 (fee $945 vs p50 $980)", async () => {
+    const out = await compute(input, resolve);
+    const d3330 = out.codeRows.find((r) => r.code === "D3330")!;
+    expect(Math.round(d3330.percentileRank!)).toBe(48);
   });
 
   it("codesBelowP75InTop20 counts top-20 codes by volume where practice fee < p75", async () => {
@@ -152,12 +175,14 @@ describe("compute -- Underwood Family Dental fixture", () => {
   it("snapshot: total under brief's spec produces stable headline numbers", async () => {
     const out = await compute(input, resolve);
     // Capture the actual numbers the engine produces for visibility.
-    // These are the gap-to-p75 sums per the Phase 5 spec; if the spec
-    // changes (e.g. gap-to-best-carrier-rate), update the snapshot.
+    // total = fee-schedule gap to p75; carrier = contracted-rate gap to p75
+    // with each code's volume split evenly across its carriers.
     expect({
       total: out.executiveSummary.totalAnnualUnderpayment,
-      cigna: out.recoverableByCarrier.find((c) => c.carrier === "Cigna")
-        ?.recoverable,
+      carrier: Math.round(out.executiveSummary.carrierAnnualUnderpayment!),
+      cigna: Math.round(
+        out.recoverableByCarrier.find((c) => c.carrier === "Cigna")?.recoverable ?? 0
+      ),
       below_p75: out.executiveSummary.codesBelowP75InTop20,
     }).toMatchSnapshot();
   });

@@ -5,11 +5,11 @@
 
 import type { CodeRow } from "@/lib/storage";
 
-function estimatePercentile(row: CodeRow): number {
-  const span = row.ucrP75 - row.ucrMedian;
-  if (span <= 0) return 50;
-  const p = 50 + 25 * ((row.yourFee - row.ucrMedian) / span);
-  return Math.max(1, Math.min(99, Math.round(p)));
+// Uses the rank compute() stored on the row, so the web chart and the PDF
+// print the same number for the same code.
+function displayPercentile(row: CodeRow): number | null {
+  if (row.percentileRank == null) return null;
+  return Math.round(row.percentileRank);
 }
 function ordinal(n: number): string {
   const t = n % 100;
@@ -18,7 +18,9 @@ function ordinal(n: number): string {
 }
 
 export function ReportPercentile({ codes }: { codes: CodeRow[] }) {
-  const rows = codes.filter((c) => c.ucrP75 > 0).slice(0, 12);
+  const rows = codes
+    .filter((c) => c.ucrP75 > 0 && c.percentileRank != null)
+    .slice(0, 12);
   if (rows.length === 0) return null;
   return (
     <div className="rounded-xl border border-canvas-border bg-canvas px-6 py-6 shadow-sm">
@@ -29,14 +31,14 @@ export function ReportPercentile({ codes }: { codes: CodeRow[] }) {
       </p>
       <ul className="mt-5 space-y-2.5">
         {rows.map((row) => {
-          const pct = estimatePercentile(row);
+          const pct = displayPercentile(row) ?? 0;
           return (
             <li key={row.code} className="grid grid-cols-[58px_1fr_44px] items-center gap-3">
               <div>
                 <div className="font-mono text-xs font-bold text-accent">{row.code}</div>
               </div>
               <div className="relative h-2.5 rounded-full bg-canvas-tint2">
-                <div className="absolute left-0 top-0 h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
+                <div className="absolute left-0 top-0 h-full rounded-full bg-accent" style={{ width: `${Math.max(1, Math.min(100, pct))}%` }} />
                 <div aria-hidden className="absolute -top-1 h-4.5 w-px bg-accent-ink" style={{ left: "75%", height: "1.1rem" }} />
               </div>
               <div className="text-right font-serif text-sm text-ink-900 tabular-nums">

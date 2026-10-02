@@ -179,13 +179,13 @@ function DeliveredView({
             <span className="font-serif font-semibold text-accent-ink">
               {formatUsd(report.annualUnderpaymentUsd)}
             </span>{" "}
-            on the table against local UCR. Of that, about{" "}
+            a year on the table against local UCR. Separately, your contracted
+            carriers pay about{" "}
             <span className="font-serif font-semibold text-accent-ink">
-              {formatUsd(
-                report.carrierGrid.carriers.reduce((s, c) => s + c.annualRecoverable, 0)
-              )}
+              {formatUsd(report.carrierUnderpaymentUsd)}
             </span>{" "}
-            is attributable to specific carriers paying below the 75th percentile.
+            a year below the 75th percentile, assuming your patients are split
+            evenly across them.
             That is the part you recover at the negotiating table, broken down below.
           </p>
         </div>

@@ -17,6 +17,7 @@ import type {
 } from "@/lib/storage";
 import type { ComputationOutput } from "@/lib/types/pipeline";
 import { categoryFor } from "@/lib/data/cdt-categories";
+import { summarizeTotals } from "@/lib/computation/compute";
 
 /** Recoverable rolled up by procedure category. */
 export type CategoryRollup = {
@@ -65,6 +66,12 @@ export type GatedReport = Omit<ReportData, "worstCarrier"> & {
   unlocked: boolean;
   /** Rounded-down headline used as the unlock hook. Safe to show when locked. */
   teaserUsd: number;
+  /**
+   * Contracted-rate gap to p75 across all carriers (volume split evenly across
+   * the carriers on each code). Equals the sum of carrierGrid.carriers. 0 when
+   * locked or when no carrier schedules were parsed.
+   */
+  carrierUnderpaymentUsd: number;
   /** Non-gated teaser stat: how many top codes sit below UCR. */
   codesBelowP75: { count: number; total: number };
   /** Recoverable by procedure category (benchmarked codes). */
@@ -113,8 +120,9 @@ function buildRich(output: ComputationOutput): {
   for (const r of output.codeRows) {
     for (const k of Object.keys(r.carrierFees)) present.add(k);
   }
-  const recByCarrier: Record<string, number> = {};
-  output.recoverableByCarrier.forEach((c) => (recByCarrier[c.carrier] = c.recoverable));
+  // Re-derived from the code rows (not output.recoverableByCarrier) so reports
+  // stored before the volume split was introduced render corrected figures.
+  const recByCarrier = summarizeTotals(output.codeRows).byCarrier;
 
   const carriers: CarrierScore[] = Array.from(present)
     .map((name) => {
@@ -188,10 +196,17 @@ export function computationToReportData(
     annualVolume: r.annualFrequency,
     gapPerProc: r.marketGap,
     annualGap: r.annualRecoverableMarket,
+    percentileRank: r.percentileRank,
   }));
 
-  const totalRecoverable =
-    output.recoverableByCarrier.reduce((s, c) => s + c.recoverable, 0) || 1;
+  // Totals are re-derived from the code rows so a stored report always
+  // renders the current definitions (see summarizeTotals), even if it was
+  // computed before they changed.
+  const totals = summarizeTotals(output.codeRows);
+  const recoverableByCarrier = Object.entries(totals.byCarrier)
+    .filter(([, recoverable]) => recoverable > 0)
+    .map(([carrier, recoverable]) => ({ carrier, recoverable }));
+  const totalRecoverable = totals.carrierGap || 1;
 
   // Blended "% below UCR" per carrier from the code-level carrier gaps, when
   // carrier schedules were parsed. Falls back to 0 (chart hides the line).
@@ -207,7 +222,7 @@ export function computationToReportData(
     return den > 0 ? Math.min(0.99, num / den) : 0;
   };
 
-  const carriers: CarrierRow[] = output.recoverableByCarrier
+  const carriers: CarrierRow[] = recoverableByCarrier
     .map((c) => ({
       name: c.carrier as CarrierRow["name"],
       annualGapUsd: c.recoverable,
@@ -216,17 +231,16 @@ export function computationToReportData(
     }))
     .sort((a, b) => b.annualGapUsd - a.annualGapUsd);
 
-  const top = output.executiveSummary.topCarrier;
-  const worstCarrier = top
+  const worstCarrier = carriers[0]
     ? {
-        name: top.name as CarrierRow["name"],
-        annualGapUsd: top.recoverable,
-        gapPct: carrierGapPct(top.name),
+        name: carriers[0].name,
+        annualGapUsd: carriers[0].annualGapUsd,
+        gapPct: carriers[0].gapPct,
       }
-    : carriers[0] ?? { name: "Other" as CarrierRow["name"], annualGapUsd: 0, gapPct: 0 };
+    : { name: "Other" as CarrierRow["name"], annualGapUsd: 0, gapPct: 0 };
 
   return {
-    annualUnderpaymentUsd: output.executiveSummary.totalAnnualUnderpayment,
+    annualUnderpaymentUsd: totals.feeScheduleGap,
     worstCarrier,
     carriers,
     codes: codes.sort((a, b) => b.annualGap - a.annualGap),
@@ -261,6 +275,9 @@ export function toGatedReport(
       ...full,
       unlocked: true,
       teaserUsd,
+      carrierUnderpaymentUsd: rich.carrierGrid.hasData
+        ? summarizeTotals(output.codeRows).carrierGap
+        : 0,
       codesBelowP75,
       categories: rich.categories,
       carrierGrid: rich.carrierGrid,
@@ -277,7 +294,7 @@ export function toGatedReport(
     .map((c) => ({ name: c.name, share: 0, annualGapUsd: 0, gapPct: 0 }))
     .sort((a, b) => a.name.localeCompare(b.name));
   const lockedCodes = full.codes
-    .map((c) => ({ ...c, gapPerProc: 0, annualGap: 0 }))
+    .map((c) => ({ ...c, gapPerProc: 0, annualGap: 0, percentileRank: null }))
     .sort((a, b) => a.code.localeCompare(b.code));
 
   // Locked rich views: keep structure + names so the sections render a teaser,
@@ -318,6 +335,7 @@ export function toGatedReport(
     codesBelowP75,
     zip: full.zip,
     annualUnderpaymentUsd: 0,
+    carrierUnderpaymentUsd: 0,
     worstCarrier: { name: "", annualGapUsd: 0, gapPct: 0 },
     carriers: lockedCarriers,
     codes: lockedCodes,
