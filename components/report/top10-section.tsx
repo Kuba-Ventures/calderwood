@@ -3,11 +3,13 @@ import React from "react";
 
 import { Text, View } from "@react-pdf/renderer";
 import type { ComputationOutput } from "@/lib/types/pipeline";
+import { top10Rows } from "@/lib/report/pdf-columns";
 import { COLORS, fmtUsd, styles } from "./styles";
 
 export function Top10Section({ data }: { data: ComputationOutput }) {
-  const basis = data.executiveSummary.underpaymentBasis;
-  const rows = data.top10ByImpact;
+  const rows = top10Rows(data);
+  const top10Total = rows.reduce((s, r) => s + r.annual, 0);
+  const headline = data.executiveSummary.totalAnnualUnderpayment;
 
   return (
     <View>
@@ -16,8 +18,11 @@ export function Top10Section({ data }: { data: ComputationOutput }) {
         The codes where the gap costs you the most.
       </Text>
       <Text style={[styles.bodyMuted, { marginTop: 6 }]}>
-        Sorted by annual recoverable revenue ({basis === "carrier" ? "worst-paying carrier per code" : "gap to UCR p75"} × annual frequency).
-        These are the codes worth opening a renegotiation conversation about.
+        Sorted by annual gap: UCR p75 minus your fee, times annual volume (the
+        same figure as the code-by-code table). Together these 10 codes are{" "}
+        {fmtUsd(top10Total, { round: true })} of your{" "}
+        {fmtUsd(headline, { round: true })} annual underpayment. Start your fee
+        review with them.
       </Text>
 
       <View style={[styles.tableHeader, { marginTop: 16 }]}>
@@ -30,13 +35,7 @@ export function Top10Section({ data }: { data: ComputationOutput }) {
         <View style={{ width: 72 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>Annual</Text></View>
       </View>
 
-      {rows.map((r) => {
-        const impact = basis === "carrier"
-          ? Math.max(0, ...Object.values(r.annualRecoverableByCarrier))
-          : r.annualRecoverableMarket;
-        const gap = basis === "carrier"
-          ? Math.max(0, ...Object.values(r.carrierGaps))
-          : r.marketGap;
+      {rows.map(({ row: r, gap, annual: impact }) => {
         return (
           <View key={r.code} style={styles.tableRow}>
             <View style={{ width: 44 }}><Text style={[styles.tableCell, { fontFamily: "Helvetica-Bold", fontSize: 8 }]}>{r.code}</Text></View>

@@ -164,19 +164,15 @@ export async function compute(
     }
   }
 
-  // Top 10 by impact: max recoverable across carriers (or market if no
-  // carrier data), exclude no_data and zero-recoverable.
+  // Top 10 by impact: ranked by the same per-code fee-schedule gap the code
+  // table shows (annualRecoverableMarket), so the ten rows are a subset of the
+  // headline. Excludes no_data and zero-gap codes. Ranking by the worst
+  // carrier's gap times the code's full volume would reconcile with neither
+  // total.
   const top10ByImpact = [...scoredCodes]
-    .map((row) => {
-      const impact = haveCarrierData
-        ? maxValue(Object.values(row.annualRecoverableByCarrier))
-        : row.annualRecoverableMarket;
-      return { row, impact };
-    })
-    .filter((x) => x.impact > 0)
-    .sort((a, b) => b.impact - a.impact)
-    .slice(0, 10)
-    .map((x) => x.row);
+    .filter((row) => row.annualRecoverableMarket > 0)
+    .sort((a, b) => b.annualRecoverableMarket - a.annualRecoverableMarket)
+    .slice(0, 10);
 
   // Recoverable by carrier -- volume-weighted total per carrier, descending.
   const recoverableByCarrier: ComputationOutput["recoverableByCarrier"] = [];
@@ -269,10 +265,6 @@ function pickWorkedExample(top10: CodeRow[]): CodeRow | null {
   );
   if (relaxed) return relaxed;
   return top10.find((r) => r.marketGap > 0) ?? null;
-}
-
-function maxValue(values: number[]): number {
-  return values.length ? Math.max(...values) : 0;
 }
 
 // Re-export the GeoLevel type for ergonomic imports downstream.
