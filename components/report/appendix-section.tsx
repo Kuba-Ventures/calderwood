@@ -3,6 +3,7 @@ import React from "react";
 
 import { Text, View } from "@react-pdf/renderer";
 import type { ComputationOutput } from "@/lib/types/pipeline";
+import { appendixAnnual } from "@/lib/report/pdf-columns";
 import { COLORS, fmtUsd, pillStyle, styles } from "./styles";
 
 export function AppendixSection({ data }: { data: ComputationOutput }) {
@@ -17,6 +18,8 @@ export function AppendixSection({ data }: { data: ComputationOutput }) {
         confidence = your ZIP, 3-digit ZIP area, or metro. Medium = state.
         Low = region or national.
         No-data codes are flagged and excluded from dollar totals.
+        Annual = UCR p75 minus your fee, times annual volume. The column adds
+        up to the annual underpayment on the cover.
       </Text>
 
       <View style={[styles.tableHeader, { marginTop: 14 }]}>
@@ -32,10 +35,7 @@ export function AppendixSection({ data }: { data: ComputationOutput }) {
       </View>
 
       {rows.map((r) => {
-        const annualImpact = Math.max(
-          r.annualRecoverableMarket,
-          ...Object.values(r.annualRecoverableByCarrier)
-        );
+        const annualImpact = appendixAnnual(r);
         return (
           <View key={r.code} style={styles.tableRow} wrap={false}>
             <View style={{ width: 44 }}><Text style={[styles.tableCell, { fontFamily: "Helvetica-Bold", fontSize: 8 }]}>{r.code}</Text></View>
