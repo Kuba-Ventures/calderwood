@@ -14,7 +14,8 @@ export function AppendixSection({ data }: { data: ComputationOutput }) {
       <Text style={styles.h2}>Every code on your master schedule.</Text>
       <Text style={[styles.bodyMuted, { marginTop: 6 }]}>
         Confidence reflects the geo level used for the benchmark. High
-        confidence = ZIP3 or metro. Medium = state. Low = region or national.
+        confidence = your ZIP, 3-digit ZIP area, or metro. Medium = state.
+        Low = region or national.
         No-data codes are flagged and excluded from dollar totals.
       </Text>
 

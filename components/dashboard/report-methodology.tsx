@@ -1,7 +1,8 @@
 "use client";
 
-// Static methodology section for the unlocked report. Explains how the numbers
-// were calculated so the figures are defensible.
+// Methodology section for the unlocked report. Explains how the numbers were
+// calculated so the figures are defensible. Pass coverage (0..1, share of
+// captured production with a benchmark) to print it.
 
 import { formatPct } from "@/lib/storage";
 
@@ -9,11 +10,11 @@ export function ReportMethodology({ coverage }: { coverage?: number }) {
   const items: [string, string][] = [
     [
       "UCR geography.",
-      "Each code's benchmark is resolved at the most specific geography available: ZIP3, then metro, then state, then region, then national, requiring a minimum sample of 30 to use a level.",
+      "Each code's benchmark comes from the most specific geography available. First is your ZIP code: a national benchmark adjusted by a geographic factor for your ZIP. If that is not available, we use your three-digit ZIP area, then your metro area, state, region, and finally the national figure. A level is used only if its benchmark rests on at least 30 fees. The ZIP-level figure uses the sample size of the national benchmark it is built from.",
     ],
     [
       "Your fee.",
-      "Your practice fee is the production-weighted average across providers, with $0 bundled and write-off lines excluded so they don't drag the average down.",
+      "Your fee for each code is the fee you uploaded. For a practice-management report, that is the code's \"Average $\" figure, which already blends all providers. Codes with a $0 or blank average are left out, and provider rows at $0 are dropped from the per-provider comparison.",
     ],
     [
       "Per-code recoverable.",
@@ -25,9 +26,9 @@ export function ReportMethodology({ coverage }: { coverage?: number }) {
     ],
     [
       "Coverage.",
-      `Benchmark coverage for this report is ${
-        coverage != null ? formatPct(coverage) : "shown above"
-      } of captured production; codes without a benchmark at the required sample are excluded from totals.`,
+      coverage != null
+        ? `Benchmarks cover ${formatPct(coverage)} of your captured production. Codes without a benchmark are left out of every total.`
+        : "Codes without a benchmark are left out of every total.",
     ],
   ];
   return (

@@ -212,7 +212,21 @@ function DeliveredView({
       {unlocked && report.providerVariance?.length > 0 && (
         <ProviderVariance rows={report.providerVariance} unlocked={unlocked} />
       )}
-      {unlocked && <ReportMethodology />}
+      {unlocked && <ReportMethodology coverage={benchmarkCoverage(report.codes)} />}
     </div>
   );
+}
+
+/** Share of captured production (fee x volume) on codes that have a benchmark. */
+function benchmarkCoverage(
+  codes: import("@/lib/report/gate").GatedReport["codes"]
+): number | undefined {
+  let total = 0;
+  let covered = 0;
+  for (const c of codes) {
+    const production = c.yourFee * c.annualVolume;
+    total += production;
+    if (c.ucrP75 > 0) covered += production;
+  }
+  return total > 0 ? covered / total : undefined;
 }

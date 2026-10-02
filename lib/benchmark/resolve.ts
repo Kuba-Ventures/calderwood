@@ -1,6 +1,8 @@
-// resolveBenchmark cascades through geo levels: zip3 → metro → state →
-// region → national. Levels with sample_size < 30 are skipped; the cascade
-// falls through to the next level. The function never averages or blends
+// resolveBenchmark cascades through geo levels: zip5 → zip3 → metro → state
+// → region → national. The zip5 row is not stored: the source builds it from
+// the national percentile times a per-zip5 geo_factor and reports the national
+// row's sample_size (see supabase-source.ts). Levels with sample_size < 30 are
+// skipped; the cascade falls through to the next level. The function never averages or blends
 // across levels -- it picks one level per code, end of story.
 //
 // The function is parameterized over a BenchmarkSource so unit tests can
