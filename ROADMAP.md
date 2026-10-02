@@ -1,6 +1,6 @@
-# New Fee Schedule Roadmap: license a defensible fee source and sell the $199 assessment
+# New Fee Schedule Roadmap: sell the $199 assessment on licensed NDAS fee data
 
-*Owner: Finley · Started: 2026-10-02 · Status: product built, fee-data licensing is the blocker · last verified against the code 2026-10-02*
+*Owner: Finley · Started: 2026-10-02 · Status: product built, NDAS license signed, ADA CDT license is the remaining blocker · last verified against the code 2026-10-02*
 
 ## What this is
 
@@ -40,16 +40,16 @@ New Fee Schedule (repo and company name: Calderwood) is a self-serve $199 assess
 
 ## Stage 3: Fee-data coverage (in progress) ⚠️
 
-The report currently depends on which rows are loaded in `ucr_benchmarks`. The code to go from ~19 codes to ~758 is merged; the licensing to use it is not confirmed in the repo.
+The report currently depends on which rows are loaded in `ucr_benchmarks`. The code to go from ~19 codes to ~758 is merged, and the NDAS license to use it is signed (confirmed by Finley 2026-10-02).
 
 - [x] **(build)** `zip5` tier and NDAS loader: national percentile times zip5 geo factor at lookup time (Kuba-Ventures/calderwood#49, #50; `scripts/load-ndas-source.ts`, migration `0009`)
 - [x] **(build)** CDT descriptions and categories loaded from NDAS headings; every benchmarked code renders a readable label (Kuba-Ventures/calderwood#51, #53; `lib/cdt/descriptions.ts`)
 - [x] **(build)** ZIP-to-state and ZIP-to-metro crosswalks from public Census/OMB data, so the zip3 and metro rungs can fire (Kuba-Ventures/calderwood#52; `scripts/build-geo-crosswalk.ts`)
 - [x] **(compliance)** RLS on the NDAS tables, applied to production 2026-09-23 (Kuba-Ventures/calderwood#58; migration `0010`)
-- [ ] ⚠️ **(compliance)** Execute a fee-data license that permits showing benchmarks to paying customers. PR #49 says NDAS data must stay out of production report lookups until its content license is signed. PROJECT.md (2026-08-19) still lists REFMed (unverified) and FAIR Health (fallback) as the candidates.
+- [x] **(compliance)** NDAS fee-data license signed, clearing the PR #49 gate on using NDAS in production report lookups (confirmed by Finley 2026-10-02). PROJECT.md (2026-08-19) still lists REFMed and FAIR Health as candidates and needs updating.
 - [ ] ⚠️ **(compliance)** Submit the ADA CDT content license application (two fields still blank per PROJECT.md). Needed whatever the fee source is.
 - [ ] **(build)** Decide the NDAS placeholders flagged in PR #49: `p75` interpolated as the mean of p70 and p80, fixed `sample_size` of 500, and whether `ZIPVALS_24.available` should filter zips.
-- [ ] **(compliance)** Name the data source in public and report copy only once the license is in writing.
+- [ ] **(compliance)** Name the data source in public and report copy, now unblocked by the signed NDAS license (check the license terms for attribution wording).
 
 ## Stage 4: Launch readiness (next)
 
@@ -68,7 +68,6 @@ The report currently depends on which rows are loaded in `ucr_benchmarks`. The c
 
 ## Open questions
 
-- Is any fee-data license signed? PR #58 reports NDAS rows in production (42,688 zip factors) and PR #53 cites 758 codes resolving against live data, while PR #49 says production report lookups must not use NDAS before its license is executed. `lib/benchmark/supabase-source.ts` does not filter by `source_version`, so whatever is loaded is what reports use. Which is the real state?
-- Has the REFMed verification email been sent, and is REFMed still a candidate now that NDAS is loaded?
+- Is REFMed still needed now that NDAS is licensed, or can it be dropped?
 - Has the ADA CDT application been submitted?
 - Has anyone paid for a report yet, and who fulfills it?
