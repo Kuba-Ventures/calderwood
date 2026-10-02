@@ -33,7 +33,7 @@ export default function ForgotPasswordClient() {
     }
     if (!hasSupabaseEnv()) {
       setError(
-        "Password reset is not yet configured. Email support@newfeeschedule.com."
+        "Password reset is not yet configured. Email sales@newfeeschedule.com."
       );
       return;
     }
@@ -159,10 +159,10 @@ export default function ForgotPasswordClient() {
         <p className="mt-4 text-center text-sm leading-relaxed text-ink-500">
           Need help? Email{" "}
           <a
-            href="mailto:support@newfeeschedule.com"
+            href="mailto:sales@newfeeschedule.com"
             className="text-accent hover:underline"
           >
-            support@newfeeschedule.com
+            sales@newfeeschedule.com
           </a>
           .
         </p>

@@ -88,7 +88,7 @@ export default function OnboardingWizard() {
     }
     if (!hasSupabaseEnv()) {
       return setError(
-        "Sign-up is not yet configured. Email support@newfeeschedule.com."
+        "Sign-up is not yet configured. Email sales@newfeeschedule.com."
       );
     }
     const feePayload = buildFeePayload(fee);

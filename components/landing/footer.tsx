@@ -18,10 +18,10 @@ export function Footer() {
           <div>
             Built for independent practices ·{" "}
             <a
-              href="mailto:support@newfeeschedule.com"
+              href="mailto:sales@newfeeschedule.com"
               className="transition hover:text-heading"
             >
-              support@newfeeschedule.com
+              sales@newfeeschedule.com
             </a>
           </div>
         </div>

@@ -20,7 +20,7 @@ export default function TermsStub() {
         Placeholder. Full terms of service are published before payments go live.
       </p>
       <p className="mt-4 max-w-prose text-base leading-relaxed text-ink-700">
-        Questions: <a href="mailto:support@newfeeschedule.com" className="text-accent hover:underline">support@newfeeschedule.com</a>
+        Questions: <a href="mailto:sales@newfeeschedule.com" className="text-accent hover:underline">sales@newfeeschedule.com</a>
       </p>
     </main>
   );

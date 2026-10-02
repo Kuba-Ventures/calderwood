@@ -40,7 +40,7 @@ function LoginForm() {
       return;
     }
     if (!hasSupabaseEnv()) {
-      setError("Sign-in is not yet configured. Email support@newfeeschedule.com.");
+      setError("Sign-in is not yet configured. Email sales@newfeeschedule.com.");
       return;
     }
     setSubmitting(true);
@@ -167,10 +167,10 @@ function LoginForm() {
         <p className="mt-6 text-center text-sm leading-relaxed text-ink-500">
           Need help? Email{" "}
           <a
-            href="mailto:support@newfeeschedule.com"
+            href="mailto:sales@newfeeschedule.com"
             className="text-accent hover:underline"
           >
-            support@newfeeschedule.com
+            sales@newfeeschedule.com
           </a>
           .
         </p>

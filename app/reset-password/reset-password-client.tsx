@@ -234,10 +234,10 @@ export default function ResetPasswordClient() {
         <p className="mt-8 text-center text-sm leading-relaxed text-ink-500">
           Need help? Email{" "}
           <a
-            href="mailto:support@newfeeschedule.com"
+            href="mailto:sales@newfeeschedule.com"
             className="text-accent hover:underline"
           >
-            support@newfeeschedule.com
+            sales@newfeeschedule.com
           </a>
           .
         </p>
