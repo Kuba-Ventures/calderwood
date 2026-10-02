@@ -4,11 +4,11 @@ import { SectionHead } from "./ui";
 const faqs = [
   {
     q: "Where does the UCR data come from?",
-    a: "A national UCR benchmark database covering all 50 states. No crowdsourced fees, no modeled estimates. Where confidence is low for a specific code or zip (low-volume codes, rural markets), we flag it on the report instead of reporting a false-precision number.",
+    a: "A licensed national dental fee schedule covering all 50 states, adjusted to your 5-digit zip code. No crowdsourced fees.",
   },
   {
     q: "What does the '75th percentile' mean?",
-    a: "It's a simple way to rank fees. Line up what every practice in your area charges for a code: the 75th percentile is the point where three out of four charge less and one in four charges more. We benchmark you against it because it's a fair, defensible target for what you should be paid, not the average and not the very top.",
+    a: "It's a simple way to rank fees. Picture the typical range of fees for a code in your area: the 75th percentile is roughly the point where three out of four fees fall below it and one in four above. We benchmark you against it because it's a fair, defensible target for what you should be paid, not the average and not the very top.",
   },
   {
     q: "What if my fee schedule isn't in a clean format?",

@@ -193,7 +193,7 @@ Open questions from `ROADMAP.md`: has the ADA CDT application been submitted? Ha
 - The ADA CDT content license is unsigned. CDT codes and descriptors are ADA-copyrighted, and reports now show NDAS nomenclature for up to 758 codes (PR #53).
 - `supabase-source.ts` does not filter by `source_version`; it takes the highest value by string sort. If the older ~19-code rows and NDAS rows coexist, which source wins depends on how the version strings sort, not on an explicit choice.
 - NDAS placeholders shape the dollar figures: `p75` is interpolated, and `sample_size` is a fixed 500, which always clears the floor of 30, so NDAS rows never trigger the low-confidence cascade skip.
-- Public FAQ copy says "No crowdsourced fees, no modeled estimates." PR #49 describes NDAS as a computed schedule, not survey data. Review that wording when the source gets named.
+- Resolved 2026-10-02: the public FAQ no longer claims "no modeled estimates" or low-confidence flagging; it now says "a licensed national dental fee schedule covering all 50 states, adjusted to your 5-digit zip code." Revisit if the source gets named.
 - No app email and no product analytics are live, despite env vars for both. The README says otherwise.
 - The EOB OCR endpoint is pre-auth with no rate limiting.
 - The `main` build guard is detective, not preventive.
