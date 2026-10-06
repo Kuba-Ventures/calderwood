@@ -52,6 +52,10 @@ export async function POST(request: Request) {
       customer_email: user.email,
       client_reference_id: practice.id,
       metadata: { practice_id: practice.id },
+      // Founding practices enter a 100% off promotion code (created in the
+      // Stripe dashboard). A $0 total then skips card collection entirely.
+      allow_promotion_codes: true,
+      payment_method_collection: "if_required",
       line_items: [
         {
           quantity: 1,

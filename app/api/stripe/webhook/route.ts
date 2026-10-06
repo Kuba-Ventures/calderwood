@@ -45,7 +45,11 @@ export async function POST(request: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const practiceId =
       session.metadata?.practice_id ?? session.client_reference_id ?? null;
-    if (practiceId && session.payment_status === "paid") {
+    // "no_payment_required" is a $0 checkout (a 100% off founding promo code).
+    const settled =
+      session.payment_status === "paid" ||
+      session.payment_status === "no_payment_required";
+    if (practiceId && settled) {
       const paymentId =
         typeof session.payment_intent === "string"
           ? session.payment_intent
