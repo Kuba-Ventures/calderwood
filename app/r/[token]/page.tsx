@@ -9,6 +9,7 @@ import { serviceSupabase } from "@/lib/db/server";
 import { getReportByPracticeId } from "@/lib/db/practices";
 import type { PracticeRow } from "@/lib/db/practices";
 import { toGatedReport } from "@/lib/report/gate";
+import { FeeInputWarning } from "@/components/report/fee-input-warning";
 import {
   CarrierRankingChart,
   CodeGapTable,
@@ -67,6 +68,7 @@ export default async function SharedReportPage({
           </div>
         )}
 
+        {gated.inputCheck.suspect && <FeeInputWarning check={gated.inputCheck} />}
         <SummaryCards data={gated} unlocked={unlocked} />
         {unlocked && gated.carrierGrid?.hasData ? (
           <CarrierAnalysis grid={gated.carrierGrid} />

@@ -23,6 +23,7 @@ import { ProviderVariance } from "@/components/dashboard/provider-variance";
 import { ReportPercentile } from "@/components/dashboard/report-percentile";
 import { ReportMethodology } from "@/components/dashboard/report-methodology";
 import { UnlockBanner } from "@/components/report/lock-overlay";
+import { FeeInputWarning } from "@/components/report/fee-input-warning";
 import { ShareReport } from "@/components/report/share-report";
 
 export default function ReportsPage() {
@@ -162,16 +163,20 @@ function DeliveredView({
         </div>
       </div>
 
-      {!unlocked && (
-        <UnlockBanner
-          teaserUsd={report.teaserUsd}
-          onUnlock={onUnlock}
-          busy={checkingOut}
-        />
+      {report.inputCheck?.suspect ? (
+        <FeeInputWarning check={report.inputCheck} />
+      ) : (
+        !unlocked && (
+          <UnlockBanner
+            teaserUsd={report.teaserUsd}
+            onUnlock={onUnlock}
+            busy={checkingOut}
+          />
+        )
       )}
 
       <SummaryCards data={report} unlocked={unlocked} />
-      {unlocked && report.carrierGrid?.hasData && (
+      {unlocked && report.carrierGrid?.hasData && !report.inputCheck?.suspect && (
         <div className="rounded-xl border-l-[3px] border-accent bg-canvas-tint px-6 py-5">
           <h3 className="text-base font-semibold text-ink-900">The full picture</h3>
           <p className="mt-1.5 text-sm text-ink-600">
