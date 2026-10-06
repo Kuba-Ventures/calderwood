@@ -119,8 +119,11 @@ function BrandHeader() {
 function Footer({ basisLine }: { basisLine: string }) {
   return (
     <View style={styles.footer} fixed>
-      <Text>{basisLine}</Text>
+      <Text style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, marginRight: 16 }}>
+        {basisLine}
+      </Text>
       <Text
+        style={{ width: 130, flexShrink: 0, textAlign: "right" }}
         render={({ pageNumber, totalPages }) =>
           `newfeeschedule.com  ·  page ${pageNumber} of ${totalPages}`
         }
