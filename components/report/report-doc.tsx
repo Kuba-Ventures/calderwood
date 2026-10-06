@@ -4,7 +4,7 @@ import React from "react";
 // works for any practice. Footer disclosure of underpaymentBasis is
 // required per Phase 6 spec.
 
-import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 import type { ComputationOutput } from "@/lib/types/pipeline";
 import { COLORS, fmtUsd, styles } from "./styles";
 import { Cover } from "./cover";
@@ -15,6 +15,7 @@ import { ProviderVarianceSection, providerVarianceRows } from "./provider-varian
 import { CategorySection } from "./category-section";
 import { MethodologySection } from "./methodology-section";
 import { AppendixSection } from "./appendix-section";
+import { LOGO_DATA_URI } from "./logo-data";
 
 export type ReportMeta = {
   practiceName: string;
@@ -101,13 +102,9 @@ function BrandHeader() {
   return (
     <View style={styles.brandHeader} fixed>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <View
-          style={{
-            width: 8,
-            height: 8,
-            backgroundColor: COLORS.accent,
-            marginRight: 6,
-          }}
+        <Image
+          src={LOGO_DATA_URI}
+          style={{ width: 19, height: 22, marginRight: 8 }}
         />
         <Text style={styles.brandName}>New Fee Schedule</Text>
       </View>
