@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingBottom: 12,
+    paddingBottom: 14,
     borderBottom: `1pt solid ${COLORS.canvasBorder}`,
   },
   brandName: {
@@ -57,11 +57,11 @@ export const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 9,
     color: COLORS.ink400,
-    lineHeight: 1.4,
+    lineHeight: 1.7,
   },
   sectionLabel: {
-    marginTop: 28,
-    marginBottom: 10,
+    marginTop: 32,
+    marginBottom: 12,
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
     color: COLORS.ink400,
@@ -83,13 +83,13 @@ export const styles = StyleSheet.create({
   },
   body: {
     fontSize: 10,
-    lineHeight: 1.5,
+    lineHeight: 1.7,
     color: COLORS.ink700,
   },
   bodyMuted: {
     fontSize: 9,
     color: COLORS.ink500,
-    lineHeight: 1.45,
+    lineHeight: 1.7,
   },
   numberHero: {
     fontSize: 28,
@@ -109,7 +109,7 @@ export const styles = StyleSheet.create({
   },
   summaryCard: {
     width: "50%",
-    paddingVertical: 10,
+    paddingVertical: 14,
     paddingRight: 14,
   },
   summaryCardLabel: {
@@ -123,7 +123,8 @@ export const styles = StyleSheet.create({
   summaryCardSub: {
     fontSize: 8.5,
     color: COLORS.ink500,
-    marginTop: 4,
+    marginTop: 6,
+    lineHeight: 1.5,
   },
   tableHeader: {
     flexDirection: "row",
@@ -134,7 +135,7 @@ export const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 5,
+    paddingVertical: 8,
     paddingHorizontal: 4,
     borderBottom: `0.5pt solid ${COLORS.canvasBorder}`,
   },
@@ -165,8 +166,8 @@ export const styles = StyleSheet.create({
     color: COLORS.ink400,
   },
   callout: {
-    marginTop: 18,
-    padding: 14,
+    marginTop: 22,
+    padding: 16,
     backgroundColor: COLORS.canvasTint,
     borderLeft: `2pt solid ${COLORS.accent}`,
   },
