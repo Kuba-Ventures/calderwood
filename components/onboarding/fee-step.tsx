@@ -196,8 +196,10 @@ export function FeeStep({
       <h2 className="text-2xl font-semibold tracking-tighter2 text-ink-900">
         Send us your fee schedule.
       </h2>
-      <p className="mt-2 text-sm text-ink-500">
-        Your master fees, not contracted rates. Pick whichever method is easiest.
+      <p className="mt-2 text-base leading-relaxed text-ink-700">
+        Use your full office fees: what you charge a patient with no insurance.
+        Not contracted rates, and not averages from a production report. Pick
+        whichever method is easiest.
       </p>
 
       <div className="mt-6 inline-flex flex-wrap rounded-md border border-canvas-border bg-canvas-tint p-0.5 text-sm">
@@ -438,7 +440,7 @@ function UploadPane({
           pdfStatus: "error",
           pdfMessage:
             parseJson.error === "no_codes_found"
-              ? "We couldn't find any fee rows in that PDF. Try a Procedure Summary / production report, or another method."
+              ? "We couldn't find any fee rows in that PDF. Try a CSV or Excel export of your fee schedule, or type your top 20 fees."
               : parseJson.error || "Couldn't read that PDF.",
         });
         return;
@@ -567,8 +569,13 @@ function UploadPane({
         <p className="mt-3 text-sm font-medium text-ink-700">
           Drag &amp; drop your fee schedule
         </p>
-        <p className="mt-1 text-xs text-ink-400">
-          CSV, Excel, a PDF production report, or a photo of an EOB
+        <p className="mt-1 text-sm text-ink-600">
+          Best: a CSV or Excel export of your office fee schedule.
+        </p>
+        <p className="mt-1 max-w-readable text-sm text-ink-600">
+          A production report (like a Procedure Summary) shows average charges
+          after insurance discounts, which makes your fees look lower than they
+          are. If that is all you have, type your top 20 fees instead.
         </p>
       </div>
 

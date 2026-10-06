@@ -17,6 +17,7 @@ import type {
 } from "@/lib/storage";
 import type { ComputationOutput } from "@/lib/types/pipeline";
 import { categoryFor } from "@/lib/data/cdt-categories";
+import { assessFeeSanity, type FeeSanity } from "@/lib/computation/fee-sanity";
 import { summarizeTotals } from "@/lib/computation/compute";
 
 /** Recoverable rolled up by procedure category. */
@@ -80,6 +81,8 @@ export type GatedReport = Omit<ReportData, "worstCarrier"> & {
   carrierGrid: CarrierGrid;
   /** Cross-provider fee variance per code. */
   providerVariance: ProviderVarianceRow[];
+  /** Input sanity check. When suspect, the UI shows a re-upload prompt, not dollars. */
+  inputCheck: FeeSanity;
 };
 
 function gradeFor(blended: number): string {
@@ -267,7 +270,9 @@ export function toGatedReport(
 ): GatedReport {
   const full = computationToReportData(output, zip);
   const codesBelowP75 = output.executiveSummary.codesBelowP75InTop20;
-  const teaserUsd = teaserFigure(full.annualUnderpaymentUsd);
+  const inputCheck = assessFeeSanity(output.codeRows);
+  // A suspect input (averages, not office fees) never gets a dollar teaser.
+  const teaserUsd = inputCheck.suspect ? 0 : teaserFigure(full.annualUnderpaymentUsd);
   const rich = buildRich(output);
 
   if (unlocked) {
@@ -275,6 +280,7 @@ export function toGatedReport(
       ...full,
       unlocked: true,
       teaserUsd,
+      inputCheck,
       carrierUnderpaymentUsd: rich.carrierGrid.hasData
         ? summarizeTotals(output.codeRows).carrierGap
         : 0,
@@ -332,6 +338,7 @@ export function toGatedReport(
   return {
     unlocked: false,
     teaserUsd,
+    inputCheck,
     codesBelowP75,
     zip: full.zip,
     annualUnderpaymentUsd: 0,

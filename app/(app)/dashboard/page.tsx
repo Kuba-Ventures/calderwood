@@ -17,6 +17,7 @@ import {
   PaymentConfirmation,
   UnlockBanner,
 } from "@/components/report/lock-overlay";
+import { FeeInputWarning } from "@/components/report/fee-input-warning";
 
 export default function DashboardPage() {
   const { state, loading, checkingOut, startCheckout } = useReport();
@@ -174,7 +175,9 @@ function StateDelivered({
       {/* Returning from checkout: show the payment confirmation (success once
           the webhook lands, "finalizing" while it's pending). Otherwise, the
           standard unlock prompt while still gated. */}
-      {justPaid ? (
+      {report.inputCheck?.suspect ? (
+        <FeeInputWarning check={report.inputCheck} />
+      ) : justPaid ? (
         <PaymentConfirmation unlocked={unlocked} />
       ) : (
         !unlocked && (

@@ -45,11 +45,19 @@ export function SummaryCards({
       <SummaryCard
         label="Estimated annual underpayment"
         value={
-          <LockedInline unlocked={unlocked}>
-            {formatUsd(data.annualUnderpaymentUsd)}
-          </LockedInline>
+          data.inputCheck?.suspect ? (
+            "Check upload"
+          ) : (
+            <LockedInline unlocked={unlocked}>
+              {formatUsd(data.annualUnderpaymentUsd)}
+            </LockedInline>
+          )
         }
-        sublabel="vs UCR in your ZIP"
+        sublabel={
+          data.inputCheck?.suspect
+            ? "Fees look like averages, not your fee schedule"
+            : "vs UCR in your ZIP"
+        }
         tone="warn"
       />
       <SummaryCard
