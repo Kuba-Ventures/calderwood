@@ -40,6 +40,12 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  // Apex is the live host; www and http 308 to it. Every page declares its own
+  // URL as canonical so Google stops guessing between variants.
+  metadataBase: new URL("https://newfeeschedule.com"),
+  alternates: {
+    canonical: "./",
+  },
   title: "New Fee Schedule: How much is each carrier underpaying you?",
   description:
     "A code-by-code benchmark of your dental fee schedule against UCR data in your zip code, delivered in minutes. $199 flat. No sales call.",
