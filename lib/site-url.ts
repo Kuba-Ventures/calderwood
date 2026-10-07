@@ -3,11 +3,11 @@
 //
 // Why this exists: if we hand Supabase `window.location.origin`, the recovery
 // link points at whatever host the user happened to be on when they asked for
-// the reset. That host can be an alias that does not resolve (the bare apex
-// `newfeeschedule.com` returns NXDOMAIN; only `www` is live), which strands the
-// link. Pinning to one canonical origin means there is exactly one URL to add
-// to the Supabase Redirect URLs allow-list, and every recovery link targets a
-// host that actually loads.
+// the reset. The apex `newfeeschedule.com` is the primary host (`www` and http
+// 308 to it), so links built from an alias take an extra redirect, and older
+// deploys hit an apex that did not resolve. Pinning to one canonical origin
+// means there is exactly one URL to add to the Supabase Redirect URLs
+// allow-list, and every recovery link targets the live host directly.
 //
 // NEXT_PUBLIC_SITE_URL must be read with static `process.env.FOO` syntax so
 // Webpack inlines it into the client bundle (see lib/db/client.ts).
