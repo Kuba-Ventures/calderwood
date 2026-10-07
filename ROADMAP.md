@@ -34,6 +34,7 @@ New Fee Schedule (repo and company name: Calderwood) is a self-serve $199 assess
 - **2026-10-06** · Founding practices can get a free report through Stripe promo codes, for field sales in Newport (#73).
 - **2026-10-06** · Reports built from averaged PM fees now show a "Check upload" warning instead of a dollar teaser (#74); PDF gets the real logo and a readable footer (#75, #76).
 - **2026-10-07** · Apex `newfeeschedule.com` becomes the canonical host: canonical tags, robots.txt and sitemap live, Vercel and Supabase moved to the apex, sitemap submitted and Search Console validation started (#77, #78).
+- **2026-10-07** · 15-second demo videos made for founding-practice outreach in three cuts: email (ends "Reply with your fee schedule"), LinkedIn and Facebook (both end on newfeeschedule.com). All use the sample report rendered from main's corrected code: headline $67,651, carriers anonymized as Carrier A to E, labeled "Sample report". They replace earlier cuts that showed the pre-#65 inflated $468,121 headline and the removed $73,840 figure.
 
 ## Stage 0: Core product (done, 2026-05-12 to 2026-07-13)
 
@@ -97,6 +98,13 @@ The report currently depends on which rows are loaded in `ucr_benchmarks`. The c
 - [ ] **added 2026-10-02** · **(build)** Manually test an onboarding failure after practice creation and confirm no orphaned practice row remains (unchecked item on Kuba-Ventures/calderwood#57).
 - [ ] **added 2026-08-18** · **(build)** Rewrite the stale `README.md` (it still describes Puppeteer, the finished phase plan, and the old `kubatopia/calderwood` URL).
 
+### Founding practices outreach (2026-10-07 to present)
+
+- [~] **added 2026-10-07** · **(growth)** Cold email from Finley's inbox to 16 independent practices (5 with verified emails, 11 needing a phone call first) on Aquidneck Island and nearby (Middletown, Portsmouth, Tiverton, Jamestown, Newport, Bristol), with the email video attached. Target list and per-practice hooks in `field-day/cold-email-scripts.md` (local, untracked). Drafts staged in Gmail; nothing sent yet.
+- [ ] **added 2026-10-07** · **(growth)** LinkedIn post from Finley's personal profile with the LinkedIn cut, linking to `https://newfeeschedule.com/?utm_source=linkedin&utm_medium=social&utm_campaign=founding_oct26`.
+- [ ] **added 2026-10-07** · **(growth)** Allen posts the Facebook cut in the dental Facebook group he used in May 2026 (organic, not paid), linking with `utm_source=facebook&utm_medium=group&utm_campaign=founding_oct26` (issue to be filed).
+- [ ] **added 2026-10-07** · **(growth)** After 7 days, compare replies, DMs and reports started by channel (GTM/GA4 UTM data) and pick the channel to double down on.
+
 ## Stage 5: Later (2026-07-13 to present)
 
 - [ ] **added 2026-10-02** · **(growth)** Product analytics. PostHog is only in `.env.example`; GTM/GA4 is wired via `components/analytics/gtm.tsx`.
@@ -108,3 +116,4 @@ The report currently depends on which rows are loaded in `ucr_benchmarks`. The c
 - Is REFMed still needed now that NDAS is licensed, or can it be dropped?
 - Has the ADA CDT application been submitted? **Answered:** yes, sent to CDT-SNODENT@ada.org on 2026-10-02. Next is ADA's template license agreement.
 - Has anyone paid for a report yet, and who fulfills it?
+- Which outreach channel (cold email, LinkedIn, Allen's Facebook groups) converts founding practices best?
