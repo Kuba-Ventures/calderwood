@@ -1,7 +1,7 @@
 # Calderwood (public brand: New Fee Schedule)
 *A $199 dental fee-schedule assessment that shows practices where they're underpaid.*
 
-*Last updated: 2026-10-02 17:20 ET by kuba-vault*
+*Last updated: 2026-10-07 11:35 ET by kuba-vault*
 
 ---
 
@@ -9,7 +9,7 @@
 
 Calderwood is the company and repo name; **New Fee Schedule** has been the public brand since 2026-07-28 (PR #17). The product is a self-serve web app that benchmarks a dental practice's fee schedule against UCR (usual, customary, reasonable) percentiles and shows recoverable revenue per CDT code and per carrier. A practice onboards, uploads fees and volumes (CSV or PDF), pays $199 via Stripe, and gets a gated web report plus a PDF.
 
-Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and the **ADA CDT content license application went to ADA** the same day; the next step is ADA's template license agreement. Report math changed that afternoon: the headline was about 7x inflated and is now the fee-schedule gap, with a separate carrier figure (PRs #65, #67). Web reports corrected themselves on read; PDFs already sent to customers were intentionally not regenerated and still show the old numbers. sales@newfeeschedule.com is now the only public contact and forwards to Finley and Calderwood through a live Resend inbound webhook (PRs #64, #68). Marketing pages no longer show unsourced stats (PR #69). Remaining launch gaps: no product analytics, no outbound transactional email, a stub EOB OCR endpoint, and a decision on telling existing customers about the corrected totals. `ROADMAP.md` now dates every item and carries a Timeline.
+The **NDAS fee-data license is signed** and the **ADA CDT application is with ADA** (both 2026-10-02); the next licensing step is ADA's template agreement. The report headline was fixed on 2026-10-02 (about 7x inflated before PRs #65, #67); already-sent PDFs still show the old numbers. On 2026-10-06 founding practices got free reports through Stripe promo codes (PR #73), reports built from averaged PM fees now show a "Check upload" warning instead of a dollar teaser (PR #74), and the PDF got the real logo and readable footers (PRs #75, #76). On 2026-10-07 the canonical host became the apex `https://newfeeschedule.com`, with canonical tags, `robots.txt`, and `sitemap.xml` live (PRs #77, #78) and Search Console validation running. Remaining launch gaps: no product analytics, no outbound transactional email, a stub EOB OCR endpoint, the PDF parser still reading "Average $", and a decision on telling existing customers about the corrected totals.
 
 ---
 
@@ -29,24 +29,28 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 - **Engagement manager:** self-directed
 - **Lead:** Finley
 - **Cadence:** self-directed
-- **Next milestone:** receive and sign ADA's template CDT license agreement. TBD date.
-- **Flags:** on-track; NDAS signed and CDT application sent on 2026-10-02
+- **Next milestone:** receive and sign ADA's template CDT license agreement (TBD date). Check the Search Console validation result around 2026-10-21.
+- **Flags:** on-track
 
 ---
 
 ## Where we are right now  [rewrite]
 
-**Licensing.** Finley confirmed the NDAS fee-data license is signed (2026-10-02). The ADA CDT Content License application went to CDT-SNODENT@ada.org the same day. Applicant: Calderwood Tech LLC, a Virginia LLC organized 2025-09-30; contact J Finley Underwood, Principal Agent; product New Fee Schedule. Exhibits came from synthetic sample data and the marketing pages. ADA sends a template license agreement next. Whether REFMed is still needed is open.
+**Search Console fix (2026-10-07, PR #77).** Google flagged "Page with redirect" and "Duplicate without user-selected canonical" (the duplicates were `www.newfeeschedule.com/terms` and `/privacy`). The site had no canonical tags, no `robots.txt`, and no sitemap. `app/layout.tsx` now sets `metadataBase` to `https://newfeeschedule.com` and `alternates.canonical: "./"`, so every page names its own apex URL. `app/robots.ts` allows `/` and blocks `/api/`, `/dashboard`, `/reports`, `/account`, `/intake`, and `/r/`. `app/sitemap.ts` lists the 8 public pages. Sitemap submitted in Search Console on 2026-10-07 (it showed "Couldn't fetch" at first, which is normal right after submit; Googlebot gets 200 `application/xml`). "Validate fix" started the same day for the duplicate-canonical issue. "Page with redirect" was not validated on purpose: http and `www` 308 to the apex by design. "Crawled, currently not indexed" (3 pages) is left to Google. Expect results in 1 to 2 weeks.
 
-**Report totals fixed (PRs #65, #67).** The headline summed every carrier's gap to p75 times each code's full volume, so a five-carrier practice counted each procedure five times. On the sample fixture that was $468,121 against tables summing to $67,651, about 7x. The headline is now the fee-schedule gap (your fee vs p75, times volume). A separate carrier figure splits each code's volume evenly across the carriers that list a rate ($93,624 on the fixture). `lib/report/gate.ts` re-derives totals from stored code rows, so web reports already in the database render correctly. PR #67 made the PDF Top 10 and appendix Annual columns add up to the headline. Web and PDF percentile ranks now come from the same `percentileRank`. Per Finley, PDFs already generated for customers were intentionally not regenerated, so they still show the inflated numbers.
+**Apex is now the canonical host (2026-10-07, PR #78).** `www` and `http` 308 to `https://newfeeschedule.com`; the old NXDOMAIN notes are obsolete. `NEXT_PUBLIC_SITE_URL` moved from `www` to the apex in Vercel Production and Preview and is inlined in the live forgot-password bundle. Supabase "Calderwood Tech" (ref `rompbyxhgiwcvjpfhijv`) Site URL is now the apex; the redirect allow-list holds the apex and `www` `/reset-password` and `/**` entries plus `http://localhost:3000/reset-password`. A reset email for finley@qsbsrollover.com carried `redirect_to=https://newfeeschedule.com/reset-password` and landed on "Choose a new password" (password not changed). One watch item: the first automated submit cleared the form without sending a request; the second (Enter key) worked. Probably automation timing, not confirmed.
 
-**Copy corrections.** The FAQ dropped "no modeled estimates" and the survey-of-every-practice reading of the 75th percentile (PR #62); the methodology block on `/sample-report` dropped the same claim (PR #63). Report methodology now describes the ZIP5-first cascade, the national sample size at ZIP level, the High-confidence legend, a working coverage percentage, and no write-off claim (PR #66). Marketing removed "up to 35%", "up to $120K per provider", and "$73,840 average recovery"; mock visuals are tagged "Sample practice" and drawn from the fixture, and `CLAUDE.md` now forbids unsourced stats (PR #69).
+**Founding-practice field sales (2026-10-06).** Checkout now accepts Stripe promotion codes and skips the card form when the total is $0; the webhook unlocks on `paid` or `no_payment_required` (PR #73). The code itself lives in the Stripe dashboard. Everyone without a code still pays $199.
 
-**Email.** sales@newfeeschedule.com replaced support@ in all 11 public files (PR #64). `POST /api/inbound` forwards mail sent to sales@ to finley@qsbsrollover.com and calderwoodra1113@gmail.com (PR #68). Live and tested 2026-10-02: newfeeschedule.com MX points to `inbound-smtp.us-east-1.amazonaws.com` in Squarespace DNS, Resend receiving is on, and `RESEND_API_KEY` (full access) plus `RESEND_WEBHOOK_SECRET` are set in Vercel Production.
+**Averaged-fee uploads (2026-10-06, PR #74).** A test practice showed $1,545,000 recoverable on $1,284,000 of production because the parser read Open Dental's "Average $" column, which blends office and PPO fees. `lib/computation/fee-sanity.ts` now flags a report when the volume-weighted fee is under 0.7x the local median or recoverable exceeds 60% of production (5+ benchmarked codes). Flagged reports show a "Check upload" warning in place of the dollar teaser, checked at read time. The fee step now asks for full office fees. The parser fix (quantities from the Procedure Summary, fees from the office fee schedule) is still open.
 
-**Verified this run (2026-10-02 17:20 ET).** Only PR #71 merged since the last update; it adds the owner's initiative and previews preferences to `CLAUDE.md`, no code. All 11 vitest suites pass (97 tests), and `main-build-check` is green on `68b9443`. The six public pages and `/forgot-password` return 200 on `www`. The apex `newfeeschedule.com` now 308-redirects to `www` with the query string kept, so it no longer returns NXDOMAIN. `NEXT_PUBLIC_SITE_URL` is set in Vercel Production and Preview (created 2026-08-12); the Supabase Redirect URLs allow-list is still unverified.
+**PDF polish (2026-10-06, PRs #75, #76).** The footer no longer overlaps the page number. The header uses the real logo, inlined as a data URI, and line height and table padding went up; the sample report grew from 7 to 9 pages.
 
-**Next concrete steps.** Decide whether to tell existing customers their PDF totals were overstated. Watch for ADA's template agreement. Decide the three NDAS placeholders from PR #49.
+**Licensing (2026-10-02).** NDAS fee-data license signed. ADA CDT application sent to CDT-SNODENT@ada.org as Calderwood Tech LLC; ADA's template agreement is next. Whether REFMed is still needed is open.
+
+**Verified this run (2026-10-07 11:35 ET).** `/`, `/robots.txt` (text/plain), and `/sitemap.xml` (application/xml) return 200 on the apex. `www` and `http` 308 to the apex. `/terms` emits `<link rel="canonical" href="https://newfeeschedule.com/terms">`. `main-build-check` is green on `8fdb8cd`. Tests: 12 vitest files, 101 passing per PR #74.
+
+**Next concrete steps.** Around 2026-10-21, check the Search Console validation outcome and confirm the sitemap shows "Success". Fix the PDF parser to stop reading "Average $". Decide whether to tell existing customers their PDF totals were overstated. Watch for ADA's template agreement.
 
 ---
 
@@ -59,7 +63,10 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 - Accessibility and readability to the `CLAUDE.md` bar: AA-contrast body ink, 16px-plus body copy, visible focus, large tap targets.
 - Auth pages: `/login`, `/signup` (now with confirm-password, PR #54), `/forgot-password`, `/reset-password`.
 - Authenticated app under `app/(app)/`: dashboard, intake, reports, account (with a "Remove data" reset for testing).
-- Onboarding (`components/onboarding/`): unified upload box, staged PDF extraction progress, post-extraction review, real error messages via `lib/api-message.ts` (PRs #55, #57).
+- Onboarding (`components/onboarding/`): unified upload box, staged PDF extraction progress, post-extraction review, real error messages via `lib/api-message.ts` (PRs #55, #57). The fee step asks for full office fees, not production averages (PR #74).
+- Fee-input warning (`components/report/fee-input-warning.tsx`): reports, dashboard, and shared reports show a "Check upload" alert with a link to `/intake` when `assessFeeSanity` flags the fees (PR #74).
+- PDF report: real logo in the header, looser line height and table padding, footer that no longer overlaps the page number (PRs #75, #76).
+- SEO: per-page canonical URLs on the apex via `metadataBase` in `app/layout.tsx`; `app/robots.ts` and `app/sitemap.ts` (8 public pages) (PR #77).
 - Report UI (`components/report/`): per-code fee-vs-UCR table with a readable label for every benchmarked code, ordinal percentile (same `percentileRank` on web and PDF), carrier scorecard and heatmap, category opportunity, provider variance, methodology with a coverage percentage.
 - Report totals: headline = fee-schedule gap; separate carrier figure with an even volume split across carriers per code (`summarizeTotals` in `lib/computation/compute.ts`, PR #65). PDF Top 10 and appendix columns reconcile with the headline (`lib/report/pdf-columns.ts`, PR #67).
 - Marketing mocks are tagged "Sample practice" and use `test-fixtures/sample-practice/` figures (PR #69).
@@ -76,19 +83,21 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 - NDAS loader (`scripts/load-ndas-source.ts`, `npm run load:ndas`): loads `NMAS.csv`, `ZIPVALS_24.csv`, and optional `headings.csv` into staging tables, `ucr_benchmarks`, `zip_geo_factors`, and `cdt_codes`.
 - CDT labels (`lib/cdt/descriptions.ts`): curated short label first, then sentence-cased NDAS nomenclature, then the bare code.
 - Computation (`lib/computation/compute.ts`) with snapshot tests.
-- Paywall (`lib/report/gate.ts`): the single gating boundary; locked dollar figures (including the carrier figure) are zeroed server-side before payment. It also recomputes totals from stored code rows on read (PR #65).
+- Paywall (`lib/report/gate.ts`): the single gating boundary; locked dollar figures (including the carrier figure) are zeroed server-side before payment. It also recomputes totals from stored code rows on read (PR #65) and adds an `inputCheck` with no dollar figures; flagged reports get no dollar teaser (PR #74).
+- Fee sanity check (`lib/computation/fee-sanity.ts`): flags fees under 0.7x the local median or recoverable above 60% of production, with 4 unit tests (PR #74).
+- Checkout (`app/api/checkout/route.ts`): Stripe promotion codes allowed, card collection only if required; the webhook unlocks on `paid` or `no_payment_required` (PR #73).
 
 **Infrastructure**
 - Supabase Postgres, project "Calderwood Tech"; 10 migrations (`supabase/migrations/0001` to `0010`). `0009` adds the zip5 tier and NDAS tables; `0010` enables RLS on them.
-- Supabase Auth, including the password-recovery redirect allow-list (one canonical origin, `www`).
+- Supabase Auth: Site URL `https://newfeeschedule.com`; redirect allow-list covers apex and `www` (`/reset-password` and `/**`) plus localhost (updated 2026-10-07).
 - Stripe Checkout (hosted) plus webhook setting `paid_at` on `checkout.session.completed`.
 - Scripts: `load:zcta`, `load:ucr`, `load:ndas`, `geo:build`, `render:sample-report`, `seed:finley`, `db:migrate`. `/data` is gitignored so vendor extracts can't be committed.
 - Supervised PR factory (`.claude/agents/pr-reviewer.md`, `.github/workflows/factory.yml`): runs `npm test` on PRs, auto-merges only low-risk surfaces, escalates money, auth, data, and computation. Uses `anthropics/claude-code-action` pinned to v1.0.239 by SHA.
 - Post-merge build guard (`.github/workflows/main-build-check.yml`): `npm ci`, `tsc --noEmit`, `next build` on every push to `main`.
 - Repo-local skill: `.claude/skills/brand-guide/`.
-- Tests: 11 vitest suites (adds `pdf-columns`, `inbound/forward`, `inbound/verify`); 97 passing per PR #69.
-- Domain: `www.newfeeschedule.com` serves the app; the apex 308-redirects to `www` and keeps the query string (checked 2026-10-02).
-- Plan: `ROADMAP.md` (stages 0 to 5, every item dated, Timeline section, last verified against the code 2026-10-02).
+- Tests: 12 vitest files (adds `fee-sanity`); 101 passing per PR #74.
+- Domain: the apex `https://newfeeschedule.com` is canonical; `www` and `http` 308 to it (checked 2026-10-07). `NEXT_PUBLIC_SITE_URL` is the apex in Vercel Production and Preview. Sitemap submitted to Google Search Console 2026-10-07.
+- Plan: `ROADMAP.md` (stages 0 to 5, every item dated, Timeline section, last verified 2026-10-07).
 
 ---
 
@@ -100,7 +109,7 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 | Backend | Next.js API routes (Node) | `app/api/` |
 | Database | Supabase Postgres (`@supabase/ssr`, `@supabase/supabase-js`) | `supabase/migrations/` |
 | Auth | Supabase Auth, email/password plus recovery flow | `middleware.ts`, `docs/auth-password-reset.md` |
-| Hosting | Vercel | project `calderwood`, auto-deploy on `main`, live on `www.newfeeschedule.com` |
+| Hosting | Vercel | project `calderwood`, auto-deploy on `main`, live on `newfeeschedule.com` (apex canonical) |
 | AI/LLM | Anthropic Claude (`@anthropic-ai/sdk`), native PDF vision | `lib/parser/pdf-summary.ts` |
 | Payments | Stripe Checkout plus webhook (`stripe`, `@stripe/stripe-js`) | `lib/stripe.ts`, `app/api/stripe/webhook` |
 | Fee data | NDAS 2026 (NMAS percentiles plus ZIPVALS_24 geo factors), licensed | `scripts/load-ndas-source.ts` |
@@ -118,16 +127,17 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 
 | Integration | Purpose | Cost | Status |
 |---|---|---|---|
-| Stripe | $199 checkout plus webhook unlocks the gated report | usage-based (Stripe fees) | live |
+| Stripe | $199 checkout plus webhook unlocks the gated report; promotion codes allow $0 founding checkouts | usage-based (Stripe fees) | live |
 | Supabase | Postgres, auth, RLS | unknown | live |
 | Anthropic Claude | PDF extraction of fees, volumes, carrier schedules | usage-based | live |
 | NDAS | Licensed fee-percentile data (758 priced codes) | unknown | licensed 2026-10-02 |
 | Google Tag Manager / GA4 | Analytics, gated on `NEXT_PUBLIC_GTM_ID` | free | live |
 | Vercel | Hosting, auto-deploy | unknown | live |
 | Resend | Inbound forwarding of sales@newfeeschedule.com (`/api/inbound`) | unknown | live (tested 2026-10-02) |
+| Google Search Console | Indexing for newfeeschedule.com; sitemap submitted 2026-10-07 | free | live (validation pending) |
 | PostHog | Product analytics | unknown | planned (env vars only, no code) |
 
-*Source: no MCP config files found in repo; integrations inferred from `.env.example`, `package.json`, `app/api/`, `lib/`, and `scripts/`.*
+*Source: no MCP config files found in repo; integrations inferred from `.env.example`, `package.json`, `app/api/`, `lib/`, `scripts/`, and owner-reported dashboard work (Search Console).*
 
 ---
 
@@ -135,6 +145,11 @@ Both licenses moved on 2026-10-02. The **NDAS fee-data license is signed**, and 
 
 The "why" behind key choices. Newest first.
 
+- **2026-10-07: The apex `https://newfeeschedule.com` is the canonical host.** Every page declares its apex URL as canonical; `www` and `http` 308 to it. `NEXT_PUBLIC_SITE_URL` and the Supabase Site URL moved to the apex; `www` stays in the redirect allow-list for older links. Supersedes the 2026-08-12 entry's `www`-only premise, which assumed the apex was NXDOMAIN (PRs #77, #78).
+- **2026-10-07: Validate only the duplicate-canonical issue in Search Console.** "Page with redirect" is the intended http/`www` to apex 308, so validating it would only reconfirm a redirect we want. "Crawled, currently not indexed" (3 pages) is Google's call and left alone.
+- **2026-10-06: Guard against averaged fees at read time instead of only fixing the parser.** Open Dental's Procedure Summary "Average $" blends office and PPO fees and produced impossible totals. A read-time sanity check covers stored reports without recomputing and hides the dollar teaser on flagged reports. The parser fix is a follow-up (PR #74).
+- **2026-10-06: Founding practices get the full report free through Stripe promotion codes.** For field sales in Newport. The code lives in Stripe and can be deactivated anytime; everyone else still pays $199 (PR #73).
+- **2026-10-06: Inline the PDF logo as a data URI.** Avoids depending on `public/` being present inside Vercel serverless functions at render time (PR #76).
 - **2026-10-02: Date every ROADMAP.md item in ET from sourced records.** Done items carry the PR merge date (or commit date when there was no PR), open items the date they entered the plan. GitHub reports UTC, so evening ET merges (for example #38, #54, #55) show the ET date. Undated items get `date unknown`, never a guess.
 - **2026-10-02: Wrote the owner's initiative and previews preferences into `CLAUDE.md`.** Agents do routine, reversible steps themselves, verify before reporting, and stop before money, messages as the owner, secrets, DNS, and data deletion. The repo merge policy still wins where they conflict (PR #71).
 - **2026-10-02: Publish only numbers we can back up.** Removed "up to 35%", "up to $120K per provider", and "$73,840 average recovery" (marketing audit Option A, approved by Finley). Mock visuals are labeled "Sample practice" and drawn from the fixture; `CLAUDE.md` now carries the rule (PR #69).
@@ -190,7 +205,11 @@ Launch readiness:
 - [ ] Outbound transactional email (receipts, report-ready notices): none in code yet. Owner: Finley
 - [ ] EOB OCR: `app/api/eob-ocr/route.ts` is a stub with no rate limiting, which the file says is needed before paid traffic. Owner: Finley
 - [ ] Decide manual vs automated fulfillment for the first paid customers (README runbook is manual, ~2h per customer). Owner: Finley
-- [ ] Confirm the canonical origin is allow-listed in Supabase Redirect URLs (`lib/site-url.ts`). `NEXT_PUBLIC_SITE_URL` is set in Vercel Production and Preview (verified 2026-10-02). Owner: Finley
+- [x] Confirm the canonical origin is allow-listed in Supabase Redirect URLs. Done 2026-10-07: apex Site URL and allow-list, reset email tested end to end.
+- [ ] Check the Search Console "Validate fix" outcome for "Duplicate without user-selected canonical" around 2026-10-21. Owner: Finley
+- [ ] Confirm the sitemap status in Search Console flips from "Couldn't fetch" to "Success". Owner: Finley
+- [ ] Fix the PDF parser to take quantities from the Procedure Summary and fees from the office fee schedule, not "Average $" (follow-up named in PR #74). Owner: Finley
+- [ ] Watch the forgot-password form: on 2026-10-07 the first automated submit cleared without sending a request; the second worked. Not confirmed as a bug. Owner: Finley
 - [ ] Issue #39 (Headers, open since 2026-07-28 ET): combine `/features` and `/sample-report` under one "Features" heading. Owner: Finley
 - [ ] Rewrite or delete the stale `README.md` (Puppeteer, a finished phase plan, old `kubatopia/calderwood` URL, retired public name; it also lists PostHog as wired). Owner: Finley
 - [ ] Manually test an onboarding failure after practice creation and confirm no orphaned practice row remains (unchecked item on PR #57). Owner: Finley
@@ -217,7 +236,11 @@ Open questions from `ROADMAP.md`: is REFMed still needed, and who fulfills paid 
 - No product analytics and no outbound transactional email are live. The README says otherwise.
 - The EOB OCR endpoint is pre-auth with no rate limiting.
 - The `main` build guard is detective, not preventive.
-- Password recovery depends on config outside the repo: the canonical origin must be allow-listed in Supabase (unverified). The Vercel side is set, and the apex now redirects to `www`, so reset links no longer strand on an NXDOMAIN host.
+- Password recovery depends on config outside the repo: `NEXT_PUBLIC_SITE_URL` in Vercel and the Supabase Site URL and allow-list, all set to the apex and verified 2026-10-07. Changing the host again means changing all three.
+- The forgot-password form once cleared without sending a request during an automated test (2026-10-07). Unconfirmed; watch for user reports.
+- Search Console validation is pending. Until it passes, Google may still index `www` duplicates.
+- The PDF parser still reads "Average $" from Procedure Summary PDFs. The fee sanity check catches the worst cases but does not fix the input; reports that fall just inside the thresholds can still understate fees.
+- Founding promo codes produce $0 unlocked reports. Anyone holding a code gets a free report until it is deactivated in Stripe.
 - The brand split (public "New Fee Schedule" vs internal "Calderwood") is a documentation trap. Expect drift.
 - PDF extraction depends on Claude vision quality across PM exports; the review step mitigates but does not eliminate errors.
 - `lib/report/gate.ts` must stay the only paywall gate; any regression risks exposing locked figures pre-payment.
@@ -226,7 +249,8 @@ Open questions from `ROADMAP.md`: is REFMed still needed, and who fulfills paid 
 
 ## Links  [rewrite]
 
-- **Live URL:** `https://www.newfeeschedule.com` (Vercel project `calderwood`, auto-deploy on `main`). The apex 308-redirects to `www`.
+- **Live URL:** `https://newfeeschedule.com` (Vercel project `calderwood`, auto-deploy on `main`). `www` and `http` 308 to the apex.
+- **Sitemap / robots:** `https://newfeeschedule.com/sitemap.xml`, `https://newfeeschedule.com/robots.txt`
 - **Staging:** (none documented)
 - **Repo:** `https://github.com/Kuba-Ventures/calderwood` (the README still points at the old `kubatopia/calderwood`)
 - **Client Drive folder:** unknown
@@ -237,6 +261,7 @@ Open questions from `ROADMAP.md`: is REFMed still needed, and who fulfills paid 
 
 ## Changelog  [append-only, never rewrite or delete]
 
+- **2026-10-07:** Recorded PRs #73 to #78: founding promo codes (#73), averaged-fee warning (#74), PDF footer and logo (#75, #76), canonical tags, robots, sitemap (#77), and the apex as canonical host (#78). Logged the Search Console sitemap submit and validation, the Vercel and Supabase apex config, and the end-to-end reset test.
 - **2026-10-02 (evening):** Recorded PR #71 (`CLAUDE.md` initiative and previews block). Re-verified tests (97 passing), the `main` build, and live pages. Corrected drift: the apex domain now redirects to `www`, and `NEXT_PUBLIC_SITE_URL` is set in Vercel. Dated every `ROADMAP.md` item and added its Timeline.
 - **2026-10-02 (late):** Recorded PRs #62 to #69: FAQ and methodology copy fixes (#62, #63, #66), sales@ as the only public contact (#64), report totals and percentile fix (#65, #67), live Resend inbound forwarder (#68), unsourced marketing stats removed (#69). ADA CDT application sent; old customer PDFs left as is.
 - **2026-10-02:** PROJECT.md refreshed for PRs #49 to #60. NDAS license signed (confirmed by Finley), replacing the REFMed and FAIR Health candidates; recorded the NDAS pipeline (#49 to #53, #58), onboarding fixes (#54, #55, #57), `ROADMAP.md` (#59), and the claude-code-action SHA pin (#60). Corrected drift: Resend and PostHog are env-only, EOB OCR is a stub, the resolver does not filter by `source_version`, 10 migrations and 8 test suites.
