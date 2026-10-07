@@ -1,10 +1,10 @@
 # New Fee Schedule Roadmap: sell the $199 assessment on licensed NDAS fee data
 
-*Owner: Finley · Started: 2026-10-02 · Status: product built, NDAS license signed, ADA CDT application sent 2026-10-02 and waiting on ADA's template agreement · last verified against the code and live site 2026-10-02*
+*Owner: Finley · Started: 2026-10-02 · Status: product built, NDAS license signed, ADA CDT application sent 2026-10-02 and waiting on ADA's template agreement; apex host canonical and Search Console validation pending · last verified against the code and live site 2026-10-07*
 
 ## What this is
 
-New Fee Schedule (repo and company name: Calderwood) is a self-serve $199 assessment that benchmarks a dental practice's fee schedule against UCR percentiles and shows, per CDT code and per carrier, how much revenue the practice is leaving on the table. The audience is independent practice owners and office managers, often older and less tech-savvy, so readability and plain language are hard requirements (see `CLAUDE.md`). Stack: Next.js 14 App Router, Supabase (Postgres, Auth, RLS), Stripe Checkout, Claude vision for PDF extraction, `@react-pdf/renderer` for the report, Vercel hosting at `www.newfeeschedule.com`.
+New Fee Schedule (repo and company name: Calderwood) is a self-serve $199 assessment that benchmarks a dental practice's fee schedule against UCR percentiles and shows, per CDT code and per carrier, how much revenue the practice is leaving on the table. The audience is independent practice owners and office managers, often older and less tech-savvy, so readability and plain language are hard requirements (see `CLAUDE.md`). Stack: Next.js 14 App Router, Supabase (Postgres, Auth, RLS), Stripe Checkout, Claude vision for PDF extraction, `@react-pdf/renderer` for the report, Vercel hosting at `newfeeschedule.com` (apex canonical; `www` redirects to it).
 
 ### Status legend
 
@@ -31,6 +31,9 @@ New Fee Schedule (repo and company name: Calderwood) is a self-serve $199 assess
 - **2026-10-02** · ADA CDT application sent to CDT-SNODENT@ada.org.
 - **2026-10-02** · Report headline fixed: it was about 7x inflated; now the fee-schedule gap plus a separate carrier figure. Already-sent PDFs left as is (#65, #67).
 - **2026-10-02** · sales@newfeeschedule.com live through a Resend inbound forwarder, and unsourced marketing numbers removed (#64, #68, #69).
+- **2026-10-06** · Founding practices can get a free report through Stripe promo codes, for field sales in Newport (#73).
+- **2026-10-06** · Reports built from averaged PM fees now show a "Check upload" warning instead of a dollar teaser (#74); PDF gets the real logo and a readable footer (#75, #76).
+- **2026-10-07** · Apex `newfeeschedule.com` becomes the canonical host: canonical tags, robots.txt and sitemap live, Vercel and Supabase moved to the apex, sitemap submitted and Search Console validation started (#77, #78).
 
 ## Stage 0: Core product (done, 2026-05-12 to 2026-07-13)
 
@@ -75,6 +78,13 @@ The report currently depends on which rows are loaded in `ucr_benchmarks`. The c
 
 ## Stage 4: Launch readiness (in progress, 2026-06-26 to present)
 
+- [x] **2026-10-06** · **(build)** Founding promo codes: Stripe promotion codes at checkout, $0 sessions unlock the report (Kuba-Ventures/calderwood#73).
+- [x] **2026-10-06** · **(build)** Flag fee uploads that look like averages and ask for office fees; flagged reports show a "Check upload" warning (Kuba-Ventures/calderwood#74).
+- [x] **2026-10-06** · **(design)** PDF footer no longer overlaps the page number; real logo and looser spacing (Kuba-Ventures/calderwood#75, #76).
+- [x] **2026-10-07** · **(growth)** Fix Search Console indexing alerts: per-page apex canonical, `robots.txt`, `sitemap.xml` with the 8 public pages (Kuba-Ventures/calderwood#77).
+- [ ] **added 2026-10-07** · **(growth)** Check the Search Console "Validate fix" outcome for "Duplicate without user-selected canonical" around 2026-10-21.
+- [ ] **added 2026-10-07** · **(growth)** Confirm the sitemap status flips from "Couldn't fetch" to "Success" in Search Console.
+- [ ] **added 2026-10-06** · **(build)** Fix the PDF parser to take quantities from the Procedure Summary and fees from the office fee schedule, not "Average $" (follow-up named in Kuba-Ventures/calderwood#74).
 - [x] **2026-10-02** · **(compliance)** Copy corrections: FAQ and methodology wording, methodology matches the cascade, unsourced marketing numbers removed and mock visuals labeled "Sample practice" (Kuba-Ventures/calderwood#62, #63, #66, #69).
 - [x] **2026-10-02** · **(build)** Report totals fixed: headline is the fee-schedule gap, carrier figure reported separately, PDF columns reconcile (Kuba-Ventures/calderwood#65, #67).
 - [x] **2026-10-02** · **(build)** Make the public contact address deliverable: sales@newfeeschedule.com only, forwarded by a Resend inbound webhook (Kuba-Ventures/calderwood#64, #68).
@@ -82,7 +92,7 @@ The report currently depends on which rows are loaded in `ucr_benchmarks`. The c
 - [ ] **added 2026-06-26** · **(build)** Transactional email. Resend now forwards inbound sales@ mail (Kuba-Ventures/calderwood#68), but no code sends receipts or report-ready notices (Supabase Auth emails aside).
 - [ ] **added 2026-10-02** · **(build)** EOB OCR. `app/api/eob-ocr/route.ts` is a stub that stores the image for a human to read; it also lacks rate limiting, which the file says is needed before paid traffic.
 - [ ] **added 2026-06-26** · **(build)** Decide manual vs automated fulfillment for the first paid customers (README still describes a manual, ~2h-per-customer runbook).
-- [~] **started 2026-08-12** · **(build)** Confirm `NEXT_PUBLIC_SITE_URL` is set in Vercel production and allow-listed in Supabase Redirect URLs (`lib/site-url.ts`, `docs/auth-password-reset.md`). Vercel half verified 2026-10-02: set in Production and Preview, created 2026-08-12. Supabase allow-list not yet checked.
+- [x] **2026-10-07** · **(build)** Confirm `NEXT_PUBLIC_SITE_URL` is set in Vercel production and allow-listed in Supabase Redirect URLs (`lib/site-url.ts`, `docs/auth-password-reset.md`). Both moved to the apex `https://newfeeschedule.com` on 2026-10-07; reset email tested end to end (Kuba-Ventures/calderwood#78).
 - [ ] **added 2026-07-28** · **(design)** Combine `/features` and `/sample-report` under one "Features" heading (Kuba-Ventures/calderwood#39).
 - [ ] **added 2026-10-02** · **(build)** Manually test an onboarding failure after practice creation and confirm no orphaned practice row remains (unchecked item on Kuba-Ventures/calderwood#57).
 - [ ] **added 2026-08-18** · **(build)** Rewrite the stale `README.md` (it still describes Puppeteer, the finished phase plan, and the old `kubatopia/calderwood` URL).
