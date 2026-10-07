@@ -84,7 +84,7 @@ The report currently depends on which rows are loaded in `ucr_benchmarks`. The c
 - [x] **2026-10-07** · **(growth)** Fix Search Console indexing alerts: per-page apex canonical, `robots.txt`, `sitemap.xml` with the 8 public pages (Kuba-Ventures/calderwood#77).
 - [ ] **added 2026-10-07** · **(growth)** Check the Search Console "Validate fix" outcome for "Duplicate without user-selected canonical" around 2026-10-21.
 - [ ] **added 2026-10-07** · **(growth)** Confirm the sitemap status flips from "Couldn't fetch" to "Success" in Search Console.
-- [ ] **added 2026-10-06** · **(build)** Fix the PDF parser to take quantities from the Procedure Summary and fees from the office fee schedule, not "Average $" (follow-up named in Kuba-Ventures/calderwood#74).
+- [ ] **added 2026-10-06** · **(build)** Fix the PDF parser to take quantities from the Procedure Summary and fees from the office fee schedule, not "Average $" (follow-up named in Kuba-Ventures/calderwood#74; tracked in [#80](https://github.com/Kuba-Ventures/calderwood/issues/80)).
 - [x] **2026-10-02** · **(compliance)** Copy corrections: FAQ and methodology wording, methodology matches the cascade, unsourced marketing numbers removed and mock visuals labeled "Sample practice" (Kuba-Ventures/calderwood#62, #63, #66, #69).
 - [x] **2026-10-02** · **(build)** Report totals fixed: headline is the fee-schedule gap, carrier figure reported separately, PDF columns reconcile (Kuba-Ventures/calderwood#65, #67).
 - [x] **2026-10-02** · **(build)** Make the public contact address deliverable: sales@newfeeschedule.com only, forwarded by a Resend inbound webhook (Kuba-Ventures/calderwood#64, #68).

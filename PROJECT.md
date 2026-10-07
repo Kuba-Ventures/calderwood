@@ -208,7 +208,7 @@ Launch readiness:
 - [x] Confirm the canonical origin is allow-listed in Supabase Redirect URLs. Done 2026-10-07: apex Site URL and allow-list, reset email tested end to end.
 - [ ] Check the Search Console "Validate fix" outcome for "Duplicate without user-selected canonical" around 2026-10-21. Owner: Finley
 - [ ] Confirm the sitemap status in Search Console flips from "Couldn't fetch" to "Success". Owner: Finley
-- [ ] Fix the PDF parser to take quantities from the Procedure Summary and fees from the office fee schedule, not "Average $" (follow-up named in PR #74). Owner: Finley
+- [ ] Fix the PDF parser to take quantities from the Procedure Summary and fees from the office fee schedule, not "Average $" (follow-up named in PR #74; tracked in issue #80). Owner: Finley
 - [ ] Watch the forgot-password form: on 2026-10-07 the first automated submit cleared without sending a request; the second worked. Not confirmed as a bug. Owner: Finley
 - [ ] Issue #39 (Headers, open since 2026-07-28 ET): combine `/features` and `/sample-report` under one "Features" heading. Owner: Finley
 - [ ] Rewrite or delete the stale `README.md` (Puppeteer, a finished phase plan, old `kubatopia/calderwood` URL, retired public name; it also lists PostHog as wired). Owner: Finley
