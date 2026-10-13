@@ -32,7 +32,9 @@ export function MethodologySection({
         national. A level is used only when its benchmark rests on at least 30
         fees; otherwise the code falls through to the next level. The ZIP-level
         figure carries the sample size of the national benchmark it is built
-        from.
+        from. Where the benchmark source does not publish a 75th percentile,
+        we estimate it as the midpoint of its published 70th and 80th
+        percentiles.
       </Text>
 
       <Text style={[styles.bodyMuted, { marginTop: 8 }]}>
