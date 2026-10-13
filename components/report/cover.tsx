@@ -32,7 +32,7 @@ export function Cover({
         <SummaryCard
           label="Annual underpayment"
           value={fmtUsd(s.totalAnnualUnderpayment, { round: true })}
-          sub={`Your fees vs UCR p75 across ${s.codesBelowP75InTop20.total} most-billed CDT codes`}
+          sub={`Your own fees vs the local 75th percentile, across your ${s.codesBelowP75InTop20.total} most-billed CDT codes`}
         />
         <SummaryCard
           label={`Codes below ${ordinal(75)} percentile`}
@@ -61,7 +61,7 @@ export function Cover({
           }
         />
         <SummaryCard
-          label="Carrier rates vs p75"
+          label="Insurer payment gap"
           value={
             s.underpaymentBasis === "carrier" && s.carrierAnnualUnderpayment != null
               ? fmtUsd(s.carrierAnnualUnderpayment, { round: true })
@@ -69,7 +69,7 @@ export function Cover({
           }
           sub={
             s.underpaymentBasis === "carrier"
-              ? "Contracted rates below UCR p75, volume split evenly across carriers."
+              ? "What your insurers' contracted rates fall short of the local 75th percentile. A separate measure from the headline; don't add the two."
               : "Carrier upload required to compare contracted rates."
           }
         />
