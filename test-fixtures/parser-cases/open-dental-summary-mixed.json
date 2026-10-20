@@ -1,0 +1,12 @@
+{
+  "entries": [
+    { "code": "D0120", "fee": 41.6, "annualVolume": 412, "providers": { "DDS0": 44.1, "HYG2": 39.8 } },
+    { "code": "D0274", "fee": 52.75, "annualVolume": 288 },
+    { "code": "D1110", "fee": 71.2, "annualVolume": 1050, "providers": { "HYG2": 70.15, "HYG3": 72.4 } },
+    { "code": "D2392", "fee": 139.9, "annualVolume": 164 },
+    { "code": "D2740", "fee": 702.35, "annualVolume": 200, "providers": { "DDS0": 731.5, "DDS3": 680.1 } },
+    { "code": "D4910", "fee": 88.4, "annualVolume": 96 },
+    { "code": "D7140", "fee": 118.55, "annualVolume": 73 }
+  ],
+  "notes": ["All billing types. Skipped [None] and BA rows."]
+}

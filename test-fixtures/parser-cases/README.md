@@ -11,6 +11,8 @@ needs to survive.
 | `partial-junk.csv` | low | 12 valid rows + 5 garbage rows, validator rejects |
 | `empty.csv` | failed | Headers only, no data |
 | `junk.txt` | failed | Random text, no parseable structure |
+| `open-dental-summary-mixed.json` | n/a | Model output for an Open Dental "Procedure Summary" run over all billing types. "Average $" blends office and PPO fees (about 0.6x the office fee) |
+| `open-dental-office-schedule.csv` | high | The same practice's office fee schedule. Pairs with the summary above. D4910 is deliberately missing |
 
 PDF fixtures live next to these once the rasterizer is wired in. They
 are not committed: PDFs of dental fee schedules contain provider info
