@@ -1,5 +1,6 @@
 // POST /api/parse-pdf — extract fees + annual volumes from an uploaded PM
-// Procedure Summary PDF. Takes the storage `path` (from /api/upload-url),
+// Procedure Summary PDF, or (fallback) fees alone from an office fee schedule
+// PDF. Takes the storage `path` (from /api/upload-url),
 // downloads the bytes with the service role, and runs Claude's native-PDF
 // extractor. Returns the parsed rows for the wizard to preview and submit.
 //
@@ -8,7 +9,8 @@
 
 import { NextResponse } from "next/server";
 import { serviceSupabase } from "@/lib/db/server";
-import { parsePdfSummary } from "@/lib/parser/pdf-summary";
+import { parsePdfSummary, type PdfSummaryResult } from "@/lib/parser/pdf-summary";
+import { parsePdfSchedule } from "@/lib/parser/pdf-schedule";
 
 export const dynamic = "force-dynamic";
 // Streamed Opus extraction of a 14-page report can run past a minute; give the
@@ -41,9 +43,29 @@ export async function POST(request: Request) {
 
   const pdfBase64 = Buffer.from(bytes).toString("base64");
 
-  let result;
+  let result: PdfSummaryResult;
+  // "report": production report (fees are post-discount averages, has counts).
+  // "schedule": the office fee schedule itself (full fees, no counts).
+  let source: "report" | "schedule" = "report";
   try {
     result = await parsePdfSummary({ pdfBase64 });
+    // A production report always carries procedure counts. No counts on any
+    // row means this is most likely the office fee schedule itself (the file
+    // we ask dentists for), whether the report reader refused it or read fees
+    // off it anyway (it does both, run to run). Re-read it with the
+    // fee-schedule reader, which reliably picks the full, non-member fee
+    // column when there are several.
+    if (!result.entries.some((e) => e.annualVolume > 0)) {
+      source = "schedule";
+      const schedule = await parsePdfSchedule({ pdfBase64, want: "office" });
+      if (schedule.entries.length > 0) {
+        result = {
+          entries: schedule.entries.map((e) => ({ ...e, annualVolume: 0 })),
+          notes: ["Read as an office fee schedule (no procedure counts).", ...schedule.notes],
+          confidence: schedule.confidence,
+        };
+      }
+    }
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "extraction failed" },
@@ -72,6 +94,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    source,
     count: rows.length,
     rows,
     frequencies,

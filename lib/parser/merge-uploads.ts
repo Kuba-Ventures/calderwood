@@ -6,7 +6,8 @@
 //   - Procedure counts add up across files (per-provider / per-location
 //     exports each hold part of the year's volume).
 //   - Fee per code comes from the first file that lists it, but fee-schedule
-//     files (CSV / Excel) win over production reports (PDF): a production
+//     files (CSV / Excel / an office fee schedule PDF) win over production
+//     reports (PDF): a production
 //     report's "Average $" is after insurance discounts and understates fees.
 //   - A file whose contents match an earlier file exactly is a duplicate. It
 //     is left out entirely so nothing is counted twice, and flagged.
@@ -21,6 +22,11 @@ export type MergeSource = {
   id: string;
   name: string;
   kind: UploadKind;
+  /**
+   * For PDFs: true when the file is the office fee schedule itself rather than
+   * a production report, so its fees are full office fees.
+   */
+  officeSchedule?: boolean;
   rows: Array<{ code: string; fee: string | number }>;
   volumes: Record<string, number>;
   providerFees: Record<string, Record<string, number>>;
@@ -38,7 +44,8 @@ export type MergeResult = {
   feesFromReportsOnly: boolean;
 };
 
-const isSchedule = (k: UploadKind) => k === "csv" || k === "xlsx";
+const isSchedule = (s: Pick<MergeSource, "kind" | "officeSchedule">) =>
+  s.kind === "csv" || s.kind === "xlsx" || s.officeSchedule === true;
 
 /** Content signature, independent of file name and row order. */
 export function fingerprint(src: Pick<MergeSource, "rows" | "volumes">): string {
@@ -65,8 +72,8 @@ export function mergeUploads(sources: MergeSource[]): MergeResult {
 
   // Fee precedence: schedules first, then reports, each in upload order.
   const byPrecedence = [
-    ...unique.filter((s) => isSchedule(s.kind)),
-    ...unique.filter((s) => !isSchedule(s.kind)),
+    ...unique.filter((s) => isSchedule(s)),
+    ...unique.filter((s) => !isSchedule(s)),
   ];
   const fees = new Map<string, string>();
   let scheduleFeeUsed = false;
@@ -75,7 +82,7 @@ export function mergeUploads(sources: MergeSource[]): MergeResult {
       const code = r.code.toUpperCase();
       if (fees.has(code)) continue;
       fees.set(code, String(r.fee));
-      if (isSchedule(src.kind)) scheduleFeeUsed = true;
+      if (isSchedule(src)) scheduleFeeUsed = true;
     }
   }
 

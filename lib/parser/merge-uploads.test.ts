@@ -36,6 +36,15 @@ describe("mergeUploads", () => {
     expect(r.feesFromReportsOnly).toBe(false);
   });
 
+  it("treats an office fee schedule PDF as a schedule, not a report", () => {
+    const r = mergeUploads([
+      src({ id: "report", kind: "pdf", rows: [{ code: "D2740", fee: 864 }], volumes: { D2740: 200 } }),
+      src({ id: "sched", kind: "pdf", officeSchedule: true, rows: [{ code: "D2740", fee: 1454 }] }),
+    ]);
+    expect(r.rows).toEqual([{ code: "D2740", fee: "1454" }]);
+    expect(r.feesFromReportsOnly).toBe(false);
+  });
+
   it("flags when every fee came from production reports", () => {
     const r = mergeUploads([src({ id: "a", kind: "pdf", rows: [{ code: "D0120", fee: 50 }] })]);
     expect(r.feesFromReportsOnly).toBe(true);
