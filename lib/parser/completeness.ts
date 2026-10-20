@@ -45,7 +45,7 @@ export const PARTIAL_VOLUME_RATIO = 0.5;
 export const FEW_CODES_THRESHOLD = 10;
 
 const COUNTS_FIX =
-  "For exact totals, add a column with how many times you did each code last year (name it Quantity), then upload the file again.";
+  "For exact totals, also add a production report (like a Procedure Summary), or add a Quantity column to your fee file with how many times you did each code last year.";
 const PROVIDERS_FIX = "To compare providers, run the export for all providers, not just one.";
 const FEW_CODES_FIX = "Check that you uploaded your full fee schedule, not one page.";
 

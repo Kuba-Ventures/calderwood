@@ -3,7 +3,8 @@
 // "What we found in your file" checklist shown under a fee upload that is
 // missing something the report needs (procedure counts, a per-provider
 // breakdown, or most of the codes). Shows what the file has next to what it
-// lacks, says what that means for the report, and offers a one-click replace.
+// lacks, says what that means for the report, and offers a one-click fix
+// (add another file).
 // Non-blocking: Continue still works with the file as-is.
 
 import {
@@ -12,9 +13,10 @@ import {
 } from "@/lib/parser/completeness";
 
 export function UploadChecklist({
-  onReplace,
+  onAction,
+  actionLabel = "Upload a different file",
   ...input
-}: CompletenessInput & { onReplace: () => void }) {
+}: CompletenessInput & { onAction: () => void; actionLabel?: string }) {
   const report = checkUploadCompleteness(input);
   if (!report.hasGaps) return null;
 
@@ -62,12 +64,12 @@ export function UploadChecklist({
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
         <button
           type="button"
-          onClick={onReplace}
+          onClick={onAction}
           className="min-h-[44px] rounded-md border-2 border-amber-800 bg-canvas px-5 py-2.5 text-base font-medium text-amber-900 transition hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-800 focus-visible:ring-offset-2"
         >
-          Upload a different file
+          {actionLabel}
         </button>
-        <span className="text-base text-ink-700">Or press Continue to use this file anyway.</span>
+        <span className="text-base text-ink-700">Or press Continue to go ahead as is.</span>
       </div>
     </div>
   );

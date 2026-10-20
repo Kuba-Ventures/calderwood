@@ -14,6 +14,7 @@ import { z } from "zod";
 import { serviceSupabase } from "@/lib/db/server";
 import { insertFeeSchedule, insertFrequencies, upsertPractice } from "@/lib/db/practices";
 import { parseUpload } from "@/lib/parser/dispatch";
+import { filesAsPdf, filesFeeSchema, inputMethodFor } from "@/lib/parser/files-payload";
 import type { ProviderBucket } from "@/lib/types/pipeline";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,9 @@ const feeSchema = z.discriminatedUnion("method", [
     pdfPath: z.string().optional(),
     filename: z.string().optional(),
   }),
+  // Several files combined in the browser (fee-step mergeUploads). Stored like
+  // a PDF payload: rows + summed volumes + per-provider fees.
+  filesFeeSchema,
 ]);
 
 const bodySchema = z.object({
@@ -128,7 +132,10 @@ export async function POST(request: Request) {
     if (userId) await sb.auth.admin.deleteUser(userId).catch(() => {});
   }
 
-  const fee = body.fee;
+  // A combined multi-file upload is stored exactly like a single PDF payload.
+  const fee = body.fee.method === "files" ? filesAsPdf(body.fee) : body.fee;
+  const inputMethod =
+    body.fee.method === "files" ? inputMethodFor(body.fee.kinds) : body.fee.method;
   try {
     // 2. Practice row.
     const practice = await upsertPractice(sb, {
@@ -140,7 +147,7 @@ export async function POST(request: Request) {
       recredentialing_dates: null,
       stripe_payment_id: null,
       paid_at: null,
-      fee_input_method: fee.method,
+      fee_input_method: inputMethod,
       // EOB needs a human to extract fees; everything else is ready to compute.
       status: fee.method === "eob" ? "review_queue" : "awaiting_uploads",
     });
