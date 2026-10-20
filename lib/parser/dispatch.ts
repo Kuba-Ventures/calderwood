@@ -20,6 +20,8 @@ export type ParseOutcome = {
   notes: string[];
   /** Rejected raw rows with the reason. Surfaced to the review queue. */
   rejected: Array<{ raw: unknown; reason: string }>;
+  /** code -> annual procedure count, when the upload carried counts. */
+  frequencies: Record<string, number>;
 };
 
 export type ParserDeps = {
@@ -42,6 +44,7 @@ export async function parseUpload(
         ? [`matched ${result.matchedColumns.code}/${result.matchedColumns.fee}`]
         : ["no header match; used first-row fallback"],
       rejected: result.rejected,
+      frequencies: result.volumes,
     };
   }
 
@@ -61,6 +64,7 @@ export async function parseUpload(
         ? [`${validated.rejected.length} rejected during paste validation`]
         : [],
       rejected: validated.rejected,
+      frequencies: {},
     };
   }
 
@@ -84,6 +88,7 @@ export async function parseUpload(
         : "medium",
     notes: result.notes,
     rejected: result.rejected,
+    frequencies: {},
   };
 }
 

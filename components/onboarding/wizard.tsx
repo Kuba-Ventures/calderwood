@@ -191,7 +191,9 @@ export default function OnboardingWizard() {
               setProviderCount={setProviderCount}
             />
           )}
-          {step === 1 && <FeeStep draft={fee} setDraft={setFee} />}
+          {step === 1 && (
+            <FeeStep draft={fee} setDraft={setFee} providerCount={providerCount} />
+          )}
           {step === 2 && (
             <CarriersStep carriers={carriers} setCarriers={setCarriers} />
           )}

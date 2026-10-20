@@ -22,6 +22,8 @@ import {
 import { parseCsv } from "@/lib/parser/csv";
 import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 import { TOP_CDT } from "@/lib/data/top-cdt";
+import { providerLabelsFrom } from "@/lib/parser/completeness";
+import { UploadChecklist } from "@/components/onboarding/upload-checklist";
 
 export type FeeTab = "upload" | "paste" | "manual";
 export type FeeMethod = "csv" | "xlsx" | "pdf" | "paste" | "manual" | "eob";
@@ -39,6 +41,8 @@ export type FeeDraft = {
   csvText: string | null;
   uploadError: string | null;
   previewCount: number | null;
+  /** Codes in the CSV/Excel that came with a procedure count. */
+  previewVolumeCount: number | null;
   // pdf (PM "Procedure Summary" report — extracted via Claude)
   pdfFile: File | null;
   pdfStatus: "idle" | "uploading" | "parsing" | "done" | "error";
@@ -81,6 +85,7 @@ export function emptyFeeDraft(): FeeDraft {
     csvText: null,
     uploadError: null,
     previewCount: null,
+    previewVolumeCount: null,
     pdfFile: null,
     pdfStatus: "idle",
     pdfPath: null,
@@ -181,9 +186,12 @@ const TABS: [FeeTab, string][] = [
 export function FeeStep({
   draft,
   setDraft,
+  providerCount,
 }: {
   draft: FeeDraft;
   setDraft: Dispatch<SetStateAction<FeeDraft>>;
+  /** Providers at the practice, for the per-provider completeness check. */
+  providerCount?: number;
 }) {
   // Functional update: the upload handlers below patch the draft several times
   // across awaits, so spreading the render-time draft would clobber the earlier
@@ -220,7 +228,9 @@ export function FeeStep({
       </div>
 
       <div className="mt-6">
-        {draft.tab === "upload" && <UploadPane draft={draft} patch={patch} />}
+        {draft.tab === "upload" && (
+          <UploadPane draft={draft} patch={patch} providerCount={providerCount} />
+        )}
         {draft.tab === "paste" && (
           <PastePane
             value={draft.pasteText}
@@ -307,9 +317,11 @@ async function readJson(res: Response): Promise<Record<string, unknown>> {
 function UploadPane({
   draft,
   patch,
+  providerCount,
 }: {
   draft: FeeDraft;
   patch: (p: Partial<FeeDraft>) => void;
+  providerCount?: number;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -354,6 +366,7 @@ function UploadPane({
         uploadKind: isXlsx ? "xlsx" : "csv",
         csvText: text,
         previewCount: preview.valid.length,
+        previewVolumeCount: Object.keys(preview.volumes).length,
         uploadError:
           preview.valid.length === 0
             ? "We couldn't find a code + fee column. Check the file or switch to Paste."
@@ -366,6 +379,7 @@ function UploadPane({
         uploadKind: null,
         csvText: null,
         previewCount: null,
+        previewVolumeCount: null,
         uploadError: "Couldn't read that file. Try CSV, or switch methods.",
       });
     }
@@ -531,6 +545,31 @@ function UploadPane({
     if (f) dispatch(f);
   }
 
+  // Clear the current file and reopen the picker (from the checklist).
+  function replaceFile() {
+    patch({
+      uploadedKind: null,
+      file: null,
+      uploadKind: null,
+      csvText: null,
+      uploadError: null,
+      previewCount: null,
+      previewVolumeCount: null,
+      pdfFile: null,
+      pdfStatus: "idle",
+      pdfPath: null,
+      pdfRows: [],
+      pdfFrequencies: {},
+      pdfProviderFees: {},
+      pdfCount: null,
+      pdfMessage: null,
+    });
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.click();
+    }
+  }
+
   const k = draft.uploadedKind;
 
   return (
@@ -591,6 +630,17 @@ function UploadPane({
           {draft.uploadError && (
             <p className="mt-2 text-xs text-red-600">{draft.uploadError}</p>
           )}
+          {!draft.uploadError && draft.previewCount !== null && (
+            <UploadChecklist
+              codeCount={draft.previewCount}
+              volumeCount={draft.previewVolumeCount ?? 0}
+              // CSV/Excel parsing reads one fee per code, so a per-provider
+              // check here would flag every multi-provider practice. Only the
+              // PDF report path carries a provider breakdown.
+              providerLabels={[]}
+              onReplace={replaceFile}
+            />
+          )}
         </>
       )}
 
@@ -601,7 +651,18 @@ function UploadPane({
             <ExtractionProgress status={draft.pdfStatus} elapsed={elapsed} />
           )}
           {draft.pdfStatus === "done" && (
-            <PdfReview draft={draft} patch={patch} />
+            <>
+              <UploadChecklist
+                codeCount={draft.pdfRows.length}
+                volumeCount={
+                  draft.pdfRows.filter((r) => draft.pdfFrequencies[r.code] > 0).length
+                }
+                providerLabels={providerLabelsFrom(draft.pdfProviderFees)}
+                providerCount={providerCount}
+                onReplace={replaceFile}
+              />
+              <PdfReview draft={draft} patch={patch} />
+            </>
           )}
           {draft.pdfStatus === "error" && (
             <p className="mt-2 text-xs text-red-600">{draft.pdfMessage}</p>
