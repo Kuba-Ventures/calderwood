@@ -196,11 +196,13 @@ export async function POST(request: Request) {
       provider_fees: fee.method === "pdf" ? fee.providerFees ?? null : null,
     });
 
-    // PDF reports carry the practice's real annual volumes — persist them so
-    // generateReport uses actual frequencies instead of the per-provider
-    // defaults.
+    // PDF reports and CSV/Excel files with a quantity column carry the
+    // practice's real annual volumes. Persist them so generateReport uses
+    // actual frequencies instead of the per-provider defaults.
     if (fee.method === "pdf" && fee.frequencies) {
       await insertFrequencies(sb, practice.id, fee.frequencies);
+    } else if (Object.keys(parsed.frequencies).length > 0) {
+      await insertFrequencies(sb, practice.id, parsed.frequencies);
     }
 
     return NextResponse.json({

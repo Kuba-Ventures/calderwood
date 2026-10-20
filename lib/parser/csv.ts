@@ -8,10 +8,16 @@ import { parseFee, validateEntries, type ValidationResult } from "./validate";
 
 const CODE_KEYWORDS = ["code", "cdt", "procedure", "proc"];
 const FEE_KEYWORDS = ["fee", "amount", "charge", "allowed", "rate", "price"];
+// Procedure counts ("Quantity", "Qty", "Count", "# Performed"). Whole-word match
+// so "Discount" or "Account" never read as a count column, and a bare "#" is
+// not enough ("Code #" is a code column).
+const QUANTITY_RE = /\b(qty|quantity|count|volume|frequency|times)\b|#\s*(of|performed|done)\b/i;
 
 export type CsvParseResult = ValidationResult & {
-  matchedColumns: { code: string; fee: string } | null;
+  matchedColumns: { code: string; fee: string; quantity?: string } | null;
   rowCount: number;
+  /** code -> annual procedure count, when the file has a quantity column. */
+  volumes: Record<string, number>;
 };
 
 export function parseCsv(text: string): CsvParseResult {
@@ -28,21 +34,25 @@ export function parseCsv(text: string): CsvParseResult {
       rejected: [],
       matchedColumns: null,
       rowCount: 0,
+      volumes: {},
     };
   }
 
   const headers = Object.keys(rows[0] ?? {});
-  const matched = matchHeaders(headers);
+  const quantity = headers.find((h) => QUANTITY_RE.test(h));
+  const matched = matchHeaders(headers.filter((h) => h !== quantity));
 
   if (matched) {
     const raws = rows.map((row) => ({
       code: row[matched.code] ?? "",
       fee: parseFee(row[matched.fee]),
     }));
+    const validated = validateEntries(raws);
     return {
-      ...validateEntries(raws),
-      matchedColumns: matched,
+      ...validated,
+      matchedColumns: quantity ? { ...matched, quantity } : matched,
       rowCount: rows.length,
+      volumes: quantity ? readVolumes(rows, matched.code, quantity, validated.valid) : {},
     };
   }
 
@@ -61,6 +71,7 @@ export function parseCsv(text: string): CsvParseResult {
         fee: `column ${fallback.feeIdx}`,
       },
       rowCount: fallback.rows.length,
+      volumes: {},
     };
   }
 
@@ -70,7 +81,27 @@ export function parseCsv(text: string): CsvParseResult {
     rejected: [{ raw: rows[0], reason: "Could not identify code or fee columns" }],
     matchedColumns: null,
     rowCount: rows.length,
+    volumes: {},
   };
+}
+
+// Counts for the codes that passed validation. First row per code wins, the
+// same rule validateEntries uses for fees. Blank or zero counts are skipped.
+function readVolumes(
+  rows: Record<string, string>[],
+  codeCol: string,
+  qtyCol: string,
+  valid: Array<{ code: string }>
+): Record<string, number> {
+  const keep = new Set(valid.map((v) => v.code));
+  const volumes: Record<string, number> = {};
+  for (const row of rows) {
+    const code = (row[codeCol] ?? "").trim().toUpperCase();
+    if (!keep.has(code) || code in volumes) continue;
+    const n = Number((row[qtyCol] ?? "").replace(/[,\s]/g, ""));
+    if (Number.isFinite(n) && n > 0) volumes[code] = Math.round(n);
+  }
+  return volumes;
 }
 
 function matchHeaders(headers: string[]): { code: string; fee: string } | null {

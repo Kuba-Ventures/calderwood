@@ -71,6 +71,7 @@ export async function POST(request: Request) {
   let entries: { code: string; fee: number }[] = [];
   let confidence: "high" | "medium" | "low" | "failed" = "low";
   let notes: string[] = [];
+  let parsedFrequencies: Record<string, number> = {};
   if (fee.method !== "eob") {
     const parsed =
       fee.method === "csv" || fee.method === "xlsx"
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
     entries = parsed.entries;
     confidence = parsed.confidence;
     notes = parsed.notes;
+    parsedFrequencies = parsed.frequencies;
   }
 
   // Replace the master schedule (unique one-per-practice).
@@ -113,12 +115,17 @@ export async function POST(request: Request) {
     provider_fees: fee.method === "pdf" ? fee.providerFees ?? null : null,
   });
 
-  // Replace stored frequencies with the report's real volumes on a PDF resubmit.
+  // Replace stored frequencies with the upload's real volumes on a PDF
+  // resubmit, or a CSV/Excel resubmit that has a quantity column. A fee-only
+  // file leaves the stored volumes alone.
   if (fee.method === "pdf") {
     await service.from("frequency_data").delete().eq("practice_id", practice.id);
     if (fee.frequencies) {
       await insertFrequencies(service, practice.id, fee.frequencies);
     }
+  } else if (Object.keys(parsedFrequencies).length > 0) {
+    await service.from("frequency_data").delete().eq("practice_id", practice.id);
+    await insertFrequencies(service, practice.id, parsedFrequencies);
   }
 
   const update: Record<string, unknown> = {

@@ -26,6 +26,7 @@ export default function IntakePage() {
   const [step, setStep] = useState(0);
   const [fee, setFee] = useState<FeeDraft>(emptyFeeDraft());
   const [carriers, setCarriers] = useState<string[]>([]);
+  const [providerCount, setProviderCount] = useState<number | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -46,7 +47,7 @@ export default function IntakePage() {
       }
       const { data: practice } = await sb
         .from("practices")
-        .select("practice_name, contracted_carriers")
+        .select("practice_name, contracted_carriers, provider_count_bucket")
         .eq("email", user.email)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -55,6 +56,10 @@ export default function IntakePage() {
       if (practice) {
         setPracticeName(practice.practice_name);
         setCarriers((practice.contracted_carriers as string[]) ?? []);
+        // Lower bound of the stored bucket ("1" | "2-5" | "6+"): enough to know
+        // whether the per-provider check applies.
+        const bucket = practice.provider_count_bucket as string | null;
+        if (bucket) setProviderCount(parseInt(bucket, 10));
       }
       setHydrated(true);
     }
@@ -140,7 +145,9 @@ export default function IntakePage() {
       </div>
 
       <div className="mt-6 rounded-xl border border-canvas-border bg-canvas px-8 py-10 shadow-sm sm:px-12">
-        {step === 0 && <FeeStep draft={fee} setDraft={setFee} />}
+        {step === 0 && (
+          <FeeStep draft={fee} setDraft={setFee} providerCount={providerCount} />
+        )}
         {step === 1 && (
           <CarriersStep carriers={carriers} setCarriers={setCarriers} />
         )}

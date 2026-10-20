@@ -132,3 +132,35 @@ describe("parseUpload dispatcher", () => {
     expect(r.notes.some((n) => n.includes("ANTHROPIC_API_KEY"))).toBe(true);
   });
 });
+
+describe("parseCsv quantity column", () => {
+  it("reads procedure counts from a Quantity column", () => {
+    const r = parseCsv("Code,Description,Quantity,Fee\nD0120,Periodic eval,412,65\nD1110,Prophy,\"1,050\",118\nD2740,Crown,,1250\n");
+    expect(r.valid).toHaveLength(3);
+    expect(r.matchedColumns?.quantity).toBe("Quantity");
+    expect(r.volumes).toEqual({ D0120: 412, D1110: 1050 });
+  });
+
+  it("matches Qty and '# of' headers but not Discount or Code #", () => {
+    expect(parseCsv("CDT Code,Qty,Office Fee\nD0120,10,65\n").volumes).toEqual({ D0120: 10 });
+    expect(parseCsv("Proc,# of procedures,Fee\nD0120,7,65\n").volumes).toEqual({ D0120: 7 });
+    const discount = parseCsv("Code #,Fee,Discount\nD0120,65,5\n");
+    expect(discount.matchedColumns?.code).toBe("Code #");
+    expect(discount.volumes).toEqual({});
+  });
+
+  it("does not let a 'Procedure Count' column steal the code column", () => {
+    const r = parseCsv("Procedure Count,Procedure Code,Fee\n30,D0120,65\n");
+    expect(r.matchedColumns?.code).toBe("Procedure Code");
+    expect(r.volumes).toEqual({ D0120: 30 });
+  });
+
+  it("returns no volumes for a fee-only file", () => {
+    expect(parseCsv(loadFixture("clean.csv")).volumes).toEqual({});
+  });
+
+  it("flows counts through parseUpload as frequencies", async () => {
+    const out = await parseUpload({ kind: "csv", text: "Code,Quantity,Fee\nD0120,5,65\n" });
+    expect(out.frequencies).toEqual({ D0120: 5 });
+  });
+});
