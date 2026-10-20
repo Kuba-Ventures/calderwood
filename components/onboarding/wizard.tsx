@@ -15,6 +15,7 @@ import {
   FeeStep,
   buildFeePayload,
   emptyFeeDraft,
+  isFeeBusy,
   isFeeValid,
 } from "@/components/onboarding/fee-step";
 import { CarriersStep } from "@/components/onboarding/carriers-step";
@@ -53,12 +54,8 @@ export default function OnboardingWizard() {
         return "Provider count must be at least 1.";
     }
     if (s === 1 && !isFeeValid(fee)) {
-      if (
-        fee.tab === "upload" &&
-        fee.uploadedKind === "pdf" &&
-        (fee.pdfStatus === "uploading" || fee.pdfStatus === "parsing")
-      )
-        return "Still reading your file. Give it a moment, then continue.";
+      if (isFeeBusy(fee))
+        return "Still reading your files. Give it a moment, then continue.";
       return "Add your fee schedule, or switch to Paste / Top 20.";
     }
     if (s === 2 && carriers.length === 0) return "Select at least one carrier.";

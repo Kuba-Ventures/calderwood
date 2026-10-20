@@ -14,6 +14,7 @@ import {
   FeeStep,
   buildFeePayload,
   emptyFeeDraft,
+  isFeeBusy,
   isFeeValid,
 } from "@/components/onboarding/fee-step";
 import { CarriersStep } from "@/components/onboarding/carriers-step";
@@ -71,12 +72,8 @@ export default function IntakePage() {
 
   function next() {
     if (step === 0 && !isFeeValid(fee)) {
-      if (
-        fee.tab === "upload" &&
-        fee.uploadedKind === "pdf" &&
-        (fee.pdfStatus === "uploading" || fee.pdfStatus === "parsing")
-      ) {
-        setError("Still reading your file. Give it a moment, then continue.");
+      if (isFeeBusy(fee)) {
+        setError("Still reading your files. Give it a moment, then continue.");
       } else {
         setError("Add your fee schedule, or switch to Paste / Top 20.");
       }

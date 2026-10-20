@@ -11,6 +11,7 @@ import { z } from "zod";
 import { serverSupabase, serviceSupabase } from "@/lib/db/server";
 import { getPracticeByEmail, insertFeeSchedule, insertFrequencies } from "@/lib/db/practices";
 import { parseUpload } from "@/lib/parser/dispatch";
+import { filesAsPdf, filesFeeSchema, inputMethodFor } from "@/lib/parser/files-payload";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -32,6 +33,8 @@ const feeSchema = z.discriminatedUnion("method", [
     providerFees: z.record(z.string(), z.record(z.string(), z.number())).optional(),
     pdfPath: z.string().optional(),
   }),
+  // Several files combined in the browser; stored like a PDF payload.
+  filesFeeSchema,
 ]);
 
 const bodySchema = z.object({
@@ -64,7 +67,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "no practice found" }, { status: 404 });
   }
 
-  const fee = body.fee;
+  const isFiles = body.fee.method === "files";
+  const fee = body.fee.method === "files" ? filesAsPdf(body.fee) : body.fee;
+  const inputMethod =
+    body.fee.method === "files" ? inputMethodFor(body.fee.kinds) : body.fee.method;
 
   // Parse (non-EOB) before mutating anything, so a bad file doesn't wipe the
   // existing schedule.
@@ -118,7 +124,8 @@ export async function POST(request: Request) {
   // Replace stored frequencies with the upload's real volumes on a PDF
   // resubmit, or a CSV/Excel resubmit that has a quantity column. A fee-only
   // file leaves the stored volumes alone.
-  if (fee.method === "pdf") {
+  // A combined upload with no counts (fee files only) leaves stored volumes alone.
+  if (fee.method === "pdf" && (!isFiles || Object.keys(fee.frequencies ?? {}).length > 0)) {
     await service.from("frequency_data").delete().eq("practice_id", practice.id);
     if (fee.frequencies) {
       await insertFrequencies(service, practice.id, fee.frequencies);
@@ -129,7 +136,7 @@ export async function POST(request: Request) {
   }
 
   const update: Record<string, unknown> = {
-    fee_input_method: fee.method,
+    fee_input_method: inputMethod,
     status: fee.method === "eob" ? "review_queue" : "awaiting_uploads",
   };
   if (body.carriers) update.contracted_carriers = body.carriers;
