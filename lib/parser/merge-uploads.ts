@@ -5,10 +5,13 @@
 // Rules:
 //   - Procedure counts add up across files (per-provider / per-location
 //     exports each hold part of the year's volume).
-//   - Fee per code comes from the first file that lists it, but fee-schedule
-//     files (CSV / Excel / an office fee schedule PDF) win over production
-//     reports (PDF): a production
-//     report's "Average $" is after insurance discounts and understates fees.
+//   - Fee per code comes from the first file that lists it. When any fee
+//     schedule file (CSV / Excel / an office fee schedule PDF) is present, fees
+//     come ONLY from schedules: a production report's "Average $" blends full
+//     office fees with PPO contracted fees and understates them, so a code
+//     missing from the schedule is left unpriced (listed in unpricedCodes)
+//     rather than priced at the average. With no schedule at all, report
+//     averages are the only fees there are (flagged by feesFromReportsOnly).
 //   - A file whose contents match an earlier file exactly is a duplicate. It
 //     is left out entirely so nothing is counted twice, and flagged.
 //   - Per-provider fees merge by provider label; the first file wins a clash.
@@ -42,6 +45,8 @@ export type MergeResult = {
   duplicateOf: Record<string, string>;
   /** True when no CSV/Excel fee schedule supplied any fee. */
   feesFromReportsOnly: boolean;
+  /** Codes a production report listed that the fee schedule does not price. */
+  unpricedCodes: string[];
 };
 
 const isSchedule = (s: Pick<MergeSource, "kind" | "officeSchedule">) =>
@@ -70,19 +75,24 @@ export function mergeUploads(sources: MergeSource[]): MergeResult {
     unique.push(src);
   }
 
-  // Fee precedence: schedules first, then reports, each in upload order.
-  const byPrecedence = [
-    ...unique.filter((s) => isSchedule(s)),
-    ...unique.filter((s) => !isSchedule(s)),
-  ];
+  // Fee sources: the schedules if there are any, else the reports, each in
+  // upload order.
+  const schedules = unique.filter((s) => isSchedule(s));
   const fees = new Map<string, string>();
-  let scheduleFeeUsed = false;
-  for (const src of byPrecedence) {
+  for (const src of schedules.length > 0 ? schedules : unique) {
     for (const r of src.rows) {
       const code = r.code.toUpperCase();
       if (fees.has(code)) continue;
       fees.set(code, String(r.fee));
-      if (isSchedule(src)) scheduleFeeUsed = true;
+    }
+  }
+  const scheduleFeeUsed = schedules.length > 0 && fees.size > 0;
+
+  const unpriced = new Set<string>();
+  for (const src of unique) {
+    for (const r of src.rows) {
+      const code = r.code.toUpperCase();
+      if (!fees.has(code)) unpriced.add(code);
     }
   }
 
@@ -109,6 +119,7 @@ export function mergeUploads(sources: MergeSource[]): MergeResult {
     providerFees,
     duplicateOf,
     feesFromReportsOnly: rows.length > 0 && !scheduleFeeUsed,
+    unpricedCodes: Array.from(unpriced).sort(),
   };
 }
 

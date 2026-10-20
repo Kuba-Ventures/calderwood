@@ -48,6 +48,17 @@ describe("mergeUploads", () => {
   it("flags when every fee came from production reports", () => {
     const r = mergeUploads([src({ id: "a", kind: "pdf", rows: [{ code: "D0120", fee: 50 }] })]);
     expect(r.feesFromReportsOnly).toBe(true);
+    expect(r.unpricedCodes).toEqual([]);
+  });
+
+  it("never prices a code from a report's average once a schedule is present", () => {
+    const r = mergeUploads([
+      src({ id: "report", kind: "pdf", rows: [{ code: "D2740", fee: 864 }, { code: "D4910", fee: 88 }], volumes: { D2740: 200, D4910: 96 } }),
+      src({ id: "sched", kind: "csv", rows: [{ code: "D2740", fee: 1250 }] }),
+    ]);
+    expect(r.rows).toEqual([{ code: "D2740", fee: "1250" }]);
+    expect(r.frequencies).toEqual({ D2740: 200 });
+    expect(r.unpricedCodes).toEqual(["D4910"]);
   });
 
   it("leaves an identical file out and flags it, whatever its name or row order", () => {
