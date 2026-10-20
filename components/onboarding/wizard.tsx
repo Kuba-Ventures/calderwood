@@ -13,6 +13,7 @@ import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 import {
   FeeDraft,
   FeeStep,
+  feeGapMessage,
   buildFeePayload,
   emptyFeeDraft,
   hasProcedureCounts,
@@ -60,6 +61,8 @@ export default function OnboardingWizard() {
     if (s === 1 && !isFeeValid(fee)) {
       if (isFeeBusy(fee))
         return "Still reading your files. Give it a moment, then continue.";
+      const gap = feeGapMessage(fee);
+      if (gap) return gap;
       return "Add your fee schedule, or switch to Paste / Top 20.";
     }
     if (s === 2 && carriers.length === 0) return "Select at least one carrier.";

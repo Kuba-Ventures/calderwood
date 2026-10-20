@@ -24,11 +24,10 @@ import { parseCsv } from "@/lib/parser/csv";
 import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 import { TOP_CDT } from "@/lib/data/top-cdt";
 import { providerLabelsFrom } from "@/lib/parser/completeness";
+import { isTypedFeeValid, resolveFeeGaps, type FeeGap } from "@/lib/parser/fee-gaps";
+import { CDT_BY_CODE } from "@/lib/seed/cdt-codes";
 import {
-  applyEdits,
   emptyEdits,
-  mergeUploads,
-  type MergeResult,
   type ReviewEdits,
   type UploadKind,
 } from "@/lib/parser/merge-uploads";
@@ -68,6 +67,12 @@ export type FeeDraft = {
   uploadError: string | null;
   /** Review-table corrections, applied on top of the merged files. */
   edits: ReviewEdits;
+  /** No fee schedule file: the practice chose to type its fees instead. */
+  typingFees: boolean;
+  /** Fees typed for codes no fee schedule prices (lib/parser/fee-gaps). */
+  typedFees: Record<string, string>;
+  /** Codes the practice chose to leave out rather than price. */
+  leftOut: string[];
   // paste
   pasteText: string;
   // manual
@@ -99,6 +104,9 @@ export function emptyFeeDraft(): FeeDraft {
     files: [],
     uploadError: null,
     edits: emptyEdits(),
+    typingFees: false,
+    typedFees: {},
+    leftOut: [],
     pasteText: "",
     manual: TOP_CDT.map((c) => ({ code: c.code, fee: "" })),
     eobFile: null,
@@ -125,15 +133,27 @@ export function parsePasteRows(text: string): ManualRow[] {
 
 const fileBusy = (f: UploadedFile) => f.status === "uploading" || f.status === "parsing";
 
-/** Combined schedule from every successfully read file. */
-export function mergeDraftFiles(d: FeeDraft): MergeResult {
-  return mergeUploads(d.files.filter((f) => f.status === "done"));
+/**
+ * Final rows + counts: merged files plus typed fees, with the review edits
+ * applied, and what is still missing (no fee schedule, or unpriced codes).
+ */
+export function draftSchedule(d: FeeDraft) {
+  return resolveFeeGaps({
+    files: d.files.filter((f) => f.status === "done"),
+    typing: d.typingFees,
+    typedFees: d.typedFees,
+    leftOut: d.leftOut,
+    edits: d.edits,
+  });
 }
 
-/** Final rows + counts: merged files with the review edits applied. */
-export function draftSchedule(d: FeeDraft) {
-  const merged = mergeDraftFiles(d);
-  return { merged, ...applyEdits(merged, d.edits) };
+/** Why Continue can't go ahead with these files yet, or null. */
+export function feeGapMessage(d: FeeDraft): string | null {
+  if (d.tab !== "upload" || d.uploadedKind !== "files" || isFeeBusy(d)) return null;
+  const s = draftSchedule(d);
+  if (s.needsSchedule) return "Add your office fee schedule, or type your fees, to continue.";
+  if (s.unresolved.length > 0) return "Give each code a fee, or leave it out, to continue.";
+  return null;
 }
 
 /**
@@ -159,7 +179,9 @@ export function isFeeValid(d: FeeDraft): boolean {
     case "upload":
       switch (d.uploadedKind) {
         case "files":
-          return !isFeeBusy(d) && draftSchedule(d).rows.length > 0;
+          if (isFeeBusy(d)) return false;
+          const s = draftSchedule(d);
+          return s.rows.length > 0 && !s.needsSchedule && s.unresolved.length === 0;
         case "eob":
           return d.eobStatus === "done" && !!d.eobPath;
         default:
@@ -610,7 +632,7 @@ function UploadPane({
   }
 
   const isFiles = draft.uploadedKind === "files" && files.length > 0;
-  const { merged, rows, frequencies } = draftSchedule(draft);
+  const { merged, rows, frequencies, needsSchedule, gaps, unresolved } = draftSchedule(draft);
   const readCount = files.filter((f) => f.status === "done").length;
   const attention = files.filter((f) => f.status === "error" || merged.duplicateOf[f.id]);
   // Forced open while reading or when a file needs attention.
@@ -761,16 +783,25 @@ function UploadPane({
             </button>
           )}
 
-          {readCount > 0 && !filesBusy && rows.length > 0 && (
+          {readCount > 0 && !filesBusy && needsSchedule && (
+            <NeedsScheduleCard
+              onAddFile={openPicker}
+              onType={() => patch({ typingFees: true })}
+            />
+          )}
+
+          {readCount > 0 && !filesBusy && gaps.length > 0 && (
+            <FeeGapList
+              draft={draft}
+              patch={patch}
+              gaps={gaps}
+              unresolved={unresolved}
+              reportOnly={draft.typingFees && !hasScheduleFile(draft)}
+            />
+          )}
+
+          {readCount > 0 && !filesBusy && !needsSchedule && rows.length > 0 && (
             <>
-              {merged.feesFromReportsOnly && (
-                <p className="mt-4 rounded-md border border-amber-700 bg-amber-50 px-4 py-3 text-base leading-relaxed text-ink-900">
-                  <span className="font-semibold">These fees come from a production report.</span>{" "}
-                  A production report shows average charges after insurance
-                  discounts, which makes your fees look lower than they are. Add
-                  your office fee schedule file for accurate fees.
-                </p>
-              )}
               <UploadChecklist
                 codeCount={rows.length}
                 volumeCount={Object.keys(frequencies).length}
@@ -876,6 +907,194 @@ function FileRow({
 // Review of the combined schedule: the dentist eyeballs what we pulled and can
 // edit a fee/volume, remove a wrong row, or add a code we missed. Edits are
 // stored apart from the files (draft.edits) so they survive adding a file.
+/** True when any read file is a fee schedule (CSV, Excel, or office fee schedule PDF). */
+function hasScheduleFile(d: FeeDraft): boolean {
+  return d.files.some(
+    (f) => f.status === "done" && (f.kind !== "pdf" || f.officeSchedule === true)
+  );
+}
+
+const primaryButton =
+  "min-h-[48px] rounded-md bg-ink-900 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-ink-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2";
+const secondaryButton =
+  "min-h-[48px] rounded-md border-2 border-ink-900 bg-canvas px-5 py-2.5 text-base font-medium text-ink-900 transition hover:bg-canvas-tint focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2";
+
+// Only production reports uploaded. Their "Average $" is after insurance
+// discounts, so we hold Continue until real office fees arrive (issue #80).
+function NeedsScheduleCard({ onAddFile, onType }: { onAddFile: () => void; onType: () => void }) {
+  return (
+    <div role="status" className="mt-4 rounded-lg border-2 border-amber-700 bg-amber-50 px-5 py-4">
+      <p className="text-lg font-semibold text-ink-900">One more file needed</p>
+      <ul className="mt-2 divide-y divide-amber-200">
+        <li className="flex flex-wrap items-center justify-between gap-3 py-3 text-base text-ink-900">
+          <span className="flex items-center gap-3">
+            <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gain-ink text-sm font-bold text-white">✓</span>
+            How often you do each procedure
+          </span>
+          <span className="font-semibold text-gain-ink">From your report</span>
+        </li>
+        <li className="flex flex-wrap items-center justify-between gap-3 py-3 text-base text-ink-900">
+          <span className="flex items-center gap-3">
+            <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-700 text-sm font-bold text-white">!</span>
+            What you charge for each procedure
+          </span>
+          <span className="font-semibold text-amber-900">Still needed</span>
+        </li>
+      </ul>
+      <p className="mt-2 text-base leading-relaxed text-ink-900">
+        Your report shows averages after insurance discounts, so we can&apos;t use
+        it for your fees. Add your office fee schedule.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={onAddFile} className={primaryButton}>
+          Add your fee schedule
+        </button>
+        <button type="button" onClick={onType} className={secondaryButton}>
+          I don&apos;t have one: type my fees
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const GAP_PAGE = 20;
+
+// Codes that need a fee before Continue: either every report code (typing
+// instead of a schedule) or the ones the fee schedule doesn't list.
+function FeeGapList({
+  draft,
+  patch,
+  gaps,
+  unresolved,
+  reportOnly,
+}: {
+  draft: FeeDraft;
+  patch: (p: Partial<FeeDraft>) => void;
+  gaps: FeeGap[];
+  unresolved: string[];
+  reportOnly: boolean;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const leftOut = new Set(draft.leftOut);
+  const shown = showAll ? gaps : gaps.slice(0, GAP_PAGE);
+  const done = unresolved.length === 0;
+
+  function setFee(code: string, val: string) {
+    patch({ typedFees: { ...draft.typedFees, [code]: val.replace(/[^\d.,$]/g, "") } });
+  }
+  function leave(code: string, out: boolean) {
+    patch({
+      leftOut: out ? [...draft.leftOut, code] : draft.leftOut.filter((c) => c !== code),
+    });
+  }
+  function leaveRest() {
+    patch({ leftOut: [...draft.leftOut, ...unresolved] });
+  }
+
+  const n = gaps.length;
+  const title = reportOnly
+    ? "Type your fee for each procedure"
+    : done
+    ? `${n} code${n === 1 ? "" : "s"} not on your fee schedule`
+    : `${n} code${n === 1 ? " needs" : "s need"} a fee before you continue`;
+  const intro = reportOnly
+    ? "Start with the ones you do most. Leave out any you don't want in your report."
+    : `${n === 1 ? "It is" : "They are"} on your report but not your fee schedule. Type your fee, or leave the code out.`;
+
+  return (
+    <div
+      role="status"
+      className={`mt-4 rounded-lg px-5 py-4 ${
+        done ? "border border-canvas-border bg-canvas-tint" : "border-2 border-amber-700 bg-amber-50"
+      }`}
+    >
+      <p className="text-lg font-semibold text-ink-900">{title}</p>
+      <p className="mt-1 text-base leading-relaxed text-ink-900">{intro}</p>
+      {reportOnly && (
+        <button
+          type="button"
+          onClick={() => patch({ typingFees: false })}
+          className="mt-1 min-h-[44px] text-base font-medium text-ink-900 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+        >
+          I found my fee schedule after all
+        </button>
+      )}
+      <ul className="mt-2 divide-y divide-canvas-border">
+        {shown.map((g) => {
+          const fee = draft.typedFees[g.code] ?? "";
+          const bad = fee.trim() !== "" && !isTypedFeeValid(fee);
+          return (
+            <li key={g.code} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <span className="text-base text-ink-900">
+                <span className="font-semibold">{g.code}</span>{" "}
+                {CDT_BY_CODE[g.code]?.description ?? ""}
+                {g.count > 0 && (
+                  <span className="block text-ink-700">
+                    Done {g.count.toLocaleString()} time{g.count === 1 ? "" : "s"} in your report
+                  </span>
+                )}
+              </span>
+              {leftOut.has(g.code) ? (
+                <button
+                  type="button"
+                  onClick={() => leave(g.code, false)}
+                  className="min-h-[44px] text-base font-medium text-ink-900 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+                >
+                  Left out. Undo
+                </button>
+              ) : (
+                <span className="flex flex-wrap items-center gap-2">
+                  <label htmlFor={`gap-${g.code}`} className="sr-only">
+                    Your fee for {g.code}
+                  </label>
+                  <span aria-hidden="true" className="text-lg text-ink-900">$</span>
+                  <input
+                    id={`gap-${g.code}`}
+                    inputMode="decimal"
+                    placeholder="Your fee"
+                    value={fee}
+                    aria-invalid={bad}
+                    aria-describedby={bad ? `gap-${g.code}-err` : undefined}
+                    onChange={(e) => setFee(g.code, e.target.value)}
+                    className="h-12 w-32 rounded-md border border-ink-200 bg-canvas px-3 text-lg text-ink-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => leave(g.code, true)}
+                    className="min-h-[44px] px-2 text-base font-medium text-ink-900 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900"
+                  >
+                    Leave out
+                  </button>
+                  {bad && (
+                    <span id={`gap-${g.code}-err`} className="w-full text-base text-red-700">
+                      Enter a fee between $10 and $5,000.
+                    </span>
+                  )}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        {gaps.length > GAP_PAGE && (
+          <button type="button" onClick={() => setShowAll((s) => !s)} className={secondaryButton}>
+            {showAll ? "Show fewer" : `Show all ${gaps.length}`}
+          </button>
+        )}
+        {!done && (
+          <button type="button" onClick={leaveRest} className={secondaryButton}>
+            Leave out the {unresolved.length} I haven&apos;t filled in
+          </button>
+        )}
+      </div>
+      <p className="mt-3 text-base font-semibold text-ink-900">
+        {done ? "All set. You can continue." : `${unresolved.length} left to fill in or leave out.`}
+      </p>
+    </div>
+  );
+}
+
 function ScheduleReview({
   draft,
   patch,
