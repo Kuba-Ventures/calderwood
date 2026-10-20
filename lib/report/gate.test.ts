@@ -214,3 +214,45 @@ describe("toGatedReport: sample-practice fixture totals", () => {
     expect(g.codes.every((c) => c.percentileRank === null)).toBe(true);
   });
 });
+
+describe("toGatedReport, prices-only reports", () => {
+  const dir = path.join(__dirname, "..", "..", "test-fixtures", "sample-practice");
+  const input: ComputationInput = JSON.parse(fs.readFileSync(path.join(dir, "input.json"), "utf8"));
+  const rows: UcrBenchmarkRow[] = JSON.parse(fs.readFileSync(path.join(dir, "benchmarks.json"), "utf8"));
+  const resolve = resolveBenchmarkWith(
+    new InMemoryBenchmarkSource(rows),
+    new InMemoryGeoResolver(ZIP_TO_STATE, ZIP_TO_METRO, STATE_TO_REGION)
+  );
+  const pricesOnly = () => compute({ ...input, carrierSchedules: {}, frequencies: {} }, resolve);
+
+  it("treats reports stored before volumeBasis existed as counts", async () => {
+    const out = await compute(input, resolve);
+    const legacy: ComputationOutput = {
+      ...out,
+      executiveSummary: { ...out.executiveSummary, volumeBasis: undefined },
+    };
+    const g = toGatedReport(legacy, "02446", true);
+    expect(g.volumeBasis).toBe("counts");
+    expect(g.perProcedure).toBeNull();
+  });
+
+  it("unlocked: carries the per-procedure view and ranks codes by gap per procedure", async () => {
+    const g = toGatedReport(await pricesOnly(), "02446", true);
+    expect(g.volumeBasis).toBe("none");
+    expect(g.perProcedure?.headline).not.toBeNull();
+    const gaps = g.codes.map((c) => c.gapPerProc);
+    expect(gaps).toEqual([...gaps].sort((a, b) => b - a));
+    expect(g.codesBelowP75).toEqual({
+      count: g.perProcedure!.codesBelowP75,
+      total: g.perProcedure!.codesBenchmarked,
+    });
+  });
+
+  it("locked: keeps the code counts but strips every per-procedure dollar", async () => {
+    const g = toGatedReport(await pricesOnly(), "02446", false);
+    expect(g.perProcedure?.headline).toBeNull();
+    expect(g.perProcedure?.everyday).toEqual([]);
+    expect(g.perProcedure?.codesBenchmarked).toBeGreaterThan(0);
+    expect(g.codes.every((c) => c.gapPerProc === 0)).toBe(true);
+  });
+});

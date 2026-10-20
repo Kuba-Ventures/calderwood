@@ -135,6 +135,8 @@ function DeliveredView({
   checkingOut: boolean;
 }) {
   const [selectedCarrier, setSelectedCarrier] = useState<CarrierRow | null>(null);
+  // No procedure counts: no yearly dollars anywhere on the page.
+  const pricesOnly = report.volumeBasis === "none";
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -176,7 +178,7 @@ function DeliveredView({
       )}
 
       <SummaryCards data={report} unlocked={unlocked} />
-      {unlocked && report.carrierGrid?.hasData && !report.inputCheck?.suspect && (
+      {unlocked && !pricesOnly && report.carrierGrid?.hasData && !report.inputCheck?.suspect && (
         <div className="rounded-xl border-l-[3px] border-accent bg-canvas-tint px-6 py-5">
           <h3 className="text-base font-semibold text-ink-900">The full picture</h3>
           <p className="mt-1.5 text-sm text-ink-600">
@@ -196,7 +198,8 @@ function DeliveredView({
         </div>
       )}
       {unlocked && <ReportPercentile codes={report.codes} />}
-      {unlocked && report.carrierGrid?.hasData ? (
+      {/* Carrier rankings are yearly dollars; prices-only reports skip them. */}
+      {pricesOnly ? null : unlocked && report.carrierGrid?.hasData ? (
         <CarrierAnalysis grid={report.carrierGrid} />
       ) : (
         <CarrierRankingChart
@@ -212,6 +215,7 @@ function DeliveredView({
         codes={report.codes}
         filterCarrier={unlocked ? selectedCarrier : null}
         unlocked={unlocked}
+        pricesOnly={pricesOnly}
       />
       <CategoryOpportunity categories={report.categories} unlocked={unlocked} />
       {unlocked && report.providerVariance?.length > 0 && (

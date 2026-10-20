@@ -22,7 +22,7 @@ describe("checkUploadCompleteness", () => {
     const r = checkUploadCompleteness({ codeCount: 150, volumeCount: 0, providerLabels: [] });
     expect(missing(r)).toEqual(["counts"]);
     expect(r.items[1].value).toBe("Not in this file");
-    expect(r.consequences[0]).toMatch(/estimates/);
+    expect(r.consequences[0]).toMatch(/can't calculate yearly dollars/);
     expect(r.fix).toMatch(/Quantity/);
   });
 
@@ -30,7 +30,7 @@ describe("checkUploadCompleteness", () => {
     const r = checkUploadCompleteness({ codeCount: 100, volumeCount: 30, providerLabels: [] });
     expect(missing(r)).toEqual(["counts"]);
     expect(r.items[1].value).toBe("30 of 100 codes");
-    expect(r.consequences[0]).toMatch(/^Part of/);
+    expect(r.consequences[0]).toMatch(/only include the 30 codes/);
   });
 
   it("accepts counts on half or more of the codes", () => {
@@ -74,7 +74,7 @@ describe("checkUploadCompleteness", () => {
     const r = checkUploadCompleteness({ codeCount: 3, volumeCount: 0, providerLabels: [], providerCount: 4 });
     expect(missing(r)).toEqual(["fees", "counts", "providers"]);
     expect(r.consequences).toHaveLength(3);
-    expect(r.consequences[0]).toMatch(/estimates/);
+    expect(r.consequences[0]).toMatch(/can't calculate yearly dollars/);
     expect(r.consequences[2]).toMatch(/100 or more/);
   });
 

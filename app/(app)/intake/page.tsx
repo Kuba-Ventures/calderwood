@@ -14,11 +14,13 @@ import {
   FeeStep,
   buildFeePayload,
   emptyFeeDraft,
+  hasProcedureCounts,
   isFeeBusy,
   isFeeValid,
 } from "@/components/onboarding/fee-step";
 import { CarriersStep } from "@/components/onboarding/carriers-step";
 import { CarrierSchedules } from "@/components/onboarding/carrier-schedules";
+import { NoCountsDialog } from "@/components/onboarding/no-counts-dialog";
 import { asMessage } from "@/lib/api-message";
 
 export default function IntakePage() {
@@ -30,6 +32,8 @@ export default function IntakePage() {
   const [providerCount, setProviderCount] = useState<number | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Prices with no procedure counts: stop at Continue and say so first.
+  const [noCountsOpen, setNoCountsOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +84,7 @@ export default function IntakePage() {
       return;
     }
     setError(null);
+    if (!hasProcedureCounts(fee)) return setNoCountsOpen(true);
     setStep(1);
   }
 
@@ -127,6 +132,18 @@ export default function IntakePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      <NoCountsDialog
+        open={noCountsOpen}
+        fromFile={fee.tab === "upload"}
+        onAddFile={() => {
+          setNoCountsOpen(false);
+          setFee((f) => ({ ...f, tab: "upload" }));
+        }}
+        onContinue={() => {
+          setNoCountsOpen(false);
+          setStep(1);
+        }}
+      />
       <Link href="/reports" className="text-sm text-ink-500 hover:text-ink-900">
         ← Back to reports
       </Link>

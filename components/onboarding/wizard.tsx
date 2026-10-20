@@ -15,10 +15,12 @@ import {
   FeeStep,
   buildFeePayload,
   emptyFeeDraft,
+  hasProcedureCounts,
   isFeeBusy,
   isFeeValid,
 } from "@/components/onboarding/fee-step";
 import { CarriersStep } from "@/components/onboarding/carriers-step";
+import { NoCountsDialog } from "@/components/onboarding/no-counts-dialog";
 import { asMessage } from "@/lib/api-message";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,6 +44,8 @@ export default function OnboardingWizard() {
 
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Prices with no procedure counts: stop at Continue and say so first.
+  const [noCountsOpen, setNoCountsOpen] = useState(false);
 
   function validateStep(s: number): string | null {
     if (s === 0) {
@@ -66,6 +70,7 @@ export default function OnboardingWizard() {
     const err = validateStep(step);
     if (err) return setError(err);
     setError(null);
+    if (step === 1 && !hasProcedureCounts(fee)) return setNoCountsOpen(true);
     setStep((s) => Math.min(2, s + 1));
   }
 
@@ -165,6 +170,19 @@ export default function OnboardingWizard() {
         <div className="mt-8">
           <Stepper current={step} />
         </div>
+
+        <NoCountsDialog
+          open={noCountsOpen}
+          fromFile={fee.tab === "upload"}
+          onAddFile={() => {
+            setNoCountsOpen(false);
+            setFee((f) => ({ ...f, tab: "upload" }));
+          }}
+          onContinue={() => {
+            setNoCountsOpen(false);
+            setStep(2);
+          }}
+        />
 
         <form
           onSubmit={onSubmit}

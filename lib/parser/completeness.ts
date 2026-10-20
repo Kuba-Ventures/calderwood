@@ -5,8 +5,8 @@
 //   - procedure counts (annual volume per code), and
 //   - a per-provider breakdown when the practice has more than one provider.
 //
-// Never blocks submission. A fee-only file still produces a report; we just
-// tell the dentist which totals will be estimated and how to fix the file.
+// Never blocks submission. A fee-only file still produces a prices-only
+// report; we tell the dentist what that means and how to fix the file.
 
 export type CompletenessInput = {
   /** Distinct CDT codes with a usable fee. */
@@ -73,10 +73,11 @@ export function checkUploadCompleteness(input: CompletenessInput): CompletenessR
     value: volumeCount === 0 ? "Not in this file" : `${volumeCount} of ${codeCount} codes`,
   });
   if (!countsOk) {
+    // We never estimate volume: codes without counts add nothing to yearly totals.
     consequences.push(
       volumeCount === 0
-        ? "Your dollar totals will be estimates, based on practices your size."
-        : "Part of your dollar total will be an estimate, based on practices your size."
+        ? "Without procedure counts we can't calculate yearly dollars. Your report will compare each fee per procedure."
+        : `Your yearly total will only include the ${volumeCount} codes that have counts.`
     );
     fixes.push(COUNTS_FIX);
   }

@@ -70,12 +70,17 @@ export default async function SharedReportPage({
 
         {gated.inputCheck.suspect && <FeeInputWarning check={gated.inputCheck} />}
         <SummaryCards data={gated} unlocked={unlocked} />
-        {unlocked && gated.carrierGrid?.hasData ? (
+        {/* Carrier rankings are yearly dollars; prices-only reports skip them. */}
+        {gated.volumeBasis === "none" ? null : unlocked && gated.carrierGrid?.hasData ? (
           <CarrierAnalysis grid={gated.carrierGrid} />
         ) : (
           <CarrierRankingChart carriers={gated.carriers} unlocked={unlocked} />
         )}
-        <CodeGapTable codes={gated.codes} unlocked={unlocked} />
+        <CodeGapTable
+          codes={gated.codes}
+          unlocked={unlocked}
+          pricesOnly={gated.volumeBasis === "none"}
+        />
         <CategoryOpportunity categories={gated.categories} unlocked={unlocked} />
         {unlocked && <ReportMethodology />}
 

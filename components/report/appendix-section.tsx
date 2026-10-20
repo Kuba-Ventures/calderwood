@@ -3,11 +3,13 @@ import React from "react";
 
 import { Text, View } from "@react-pdf/renderer";
 import type { ComputationOutput } from "@/lib/types/pipeline";
-import { appendixAnnual } from "@/lib/report/pdf-columns";
+import { appendixAnnual, isPricesOnly } from "@/lib/report/pdf-columns";
 import { COLORS, fmtUsd, pillStyle, styles } from "./styles";
 
 export function AppendixSection({ data }: { data: ComputationOutput }) {
   const rows = [...data.codeRows].sort((a, b) => a.code.localeCompare(b.code));
+  // Prices only: the last dollar column is the gap per procedure, not yearly.
+  const pricesOnly = isPricesOnly(data);
 
   return (
     <View>
@@ -18,8 +20,9 @@ export function AppendixSection({ data }: { data: ComputationOutput }) {
         confidence = your ZIP, 3-digit ZIP area, or metro. Medium = state.
         Low = region or national.
         No-data codes are flagged and excluded from dollar totals.
-        Annual = UCR p75 minus your fee, times annual volume. The column adds
-        up to the annual underpayment on the cover.
+        {pricesOnly
+          ? "Gap = UCR p75 minus your fee, each time you do the procedure. No yearly total: your file had no procedure counts."
+          : "Annual = UCR p75 minus your fee, times annual volume. The column adds up to the annual underpayment on the cover."}
       </Text>
 
       <View style={[styles.tableHeader, { marginTop: 14 }]}>
@@ -30,12 +33,12 @@ export function AppendixSection({ data }: { data: ComputationOutput }) {
         <View style={{ width: 50 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>P75</Text></View>
         <View style={{ width: 50 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>P90</Text></View>
         <View style={{ width: 38 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>Rank</Text></View>
-        <View style={{ width: 56 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>Annual</Text></View>
+        <View style={{ width: 56 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>{pricesOnly ? "Gap" : "Annual"}</Text></View>
         <View style={{ width: 60 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>Confidence</Text></View>
       </View>
 
       {rows.map((r) => {
-        const annualImpact = appendixAnnual(r);
+        const annualImpact = pricesOnly ? r.marketGap : appendixAnnual(r);
         return (
           <View key={r.code} style={styles.tableRow} wrap={false}>
             <View style={{ width: 44 }}><Text style={[styles.tableCell, { fontFamily: "Helvetica-Bold", fontSize: 8 }]}>{r.code}</Text></View>

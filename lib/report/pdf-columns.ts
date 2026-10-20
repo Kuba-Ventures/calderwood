@@ -28,3 +28,11 @@ export function top10Rows(data: ComputationOutput): Top10Row[] {
 export function appendixAnnual(row: CodeRow): number {
   return row.annualRecoverableMarket;
 }
+
+/**
+ * Prices-only report: the practice gave no procedure counts, so every yearly
+ * figure is 0 and the PDF shows gaps per procedure instead.
+ */
+export function isPricesOnly(data: ComputationOutput): boolean {
+  return data.executiveSummary.volumeBasis === "none";
+}
