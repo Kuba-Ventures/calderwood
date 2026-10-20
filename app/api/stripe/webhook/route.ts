@@ -6,20 +6,22 @@
 //
 // Configure the endpoint in the Stripe dashboard (or `stripe listen
 // --forward-to localhost:3000/api/stripe/webhook` locally) and put the signing
-// secret in STRIPE_WEBHOOK_SECRET.
+// secret in STRIPE_WEBHOOK_SECRET (production) or STRIPE_SANDBOX_WEBHOOK_SECRET
+// (previews). See lib/stripe-env.ts.
 
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
+import { stripeWebhookSecret } from "@/lib/stripe-env";
 import { serviceSupabase } from "@/lib/db/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const secret = stripeWebhookSecret();
   if (!secret) {
     return NextResponse.json(
-      { error: "STRIPE_WEBHOOK_SECRET not configured" },
+      { error: "Stripe webhook secret not configured" },
       { status: 500 }
     );
   }
