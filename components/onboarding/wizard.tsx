@@ -231,8 +231,12 @@ export default function OnboardingWizard() {
             >
               Back
             </button>
+            {/* Distinct keys: without them React reuses this <button> and flips
+                its type to "submit" mid-click, so Continue on the fee step
+                also submitted the form (account created, or a carriers error). */}
             {step < 2 ? (
               <button
+                key="continue"
                 type="button"
                 onClick={next}
                 className="inline-flex items-center justify-center rounded-md bg-ink-900 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-ink-700"
@@ -241,6 +245,7 @@ export default function OnboardingWizard() {
               </button>
             ) : (
               <button
+                key="submit"
                 type="submit"
                 disabled={submitting}
                 className="inline-flex items-center justify-center rounded-md bg-ink-900 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-ink-700 disabled:opacity-60"
