@@ -55,6 +55,8 @@ export type UploadedFile = {
   providerFees: Record<string, Record<string, number>>;
   /** Storage path for PDFs (kept as the raw upload). */
   pdfPath: string | null;
+  /** PDF that turned out to be the office fee schedule, not a production report. */
+  officeSchedule?: boolean;
 };
 
 export type FeeDraft = {
@@ -455,6 +457,7 @@ function UploadPane({
         rows?: { code: string; fee: number }[];
         frequencies?: Record<string, number>;
         providerFees?: Record<string, Record<string, number>>;
+        source?: "report" | "schedule";
         error?: string;
       };
       if (!parseRes.ok || !Array.isArray(parseJson.rows) || parseJson.rows.length === 0) {
@@ -472,6 +475,7 @@ function UploadPane({
         rows: parseJson.rows.map((r) => ({ code: r.code, fee: String(r.fee) })),
         volumes: parseJson.frequencies ?? {},
         providerFees: parseJson.providerFees ?? {},
+        officeSchedule: parseJson.source === "schedule",
       });
     } catch {
       updateFile(id, { status: "error", message: "Something went wrong. Try again." });
@@ -608,6 +612,10 @@ function UploadPane({
   }, [forceList]);
   const fileWord = `${files.length} file${files.length === 1 ? "" : "s"}`;
   const anyPdf = files.some((f) => f.kind === "pdf" && f.status === "done");
+  // Only production reports carry a per-provider breakdown.
+  const anyReport = files.some(
+    (f) => f.kind === "pdf" && f.status === "done" && !f.officeSchedule
+  );
 
   return (
     <div>
@@ -756,9 +764,10 @@ function UploadPane({
                 codeCount={rows.length}
                 volumeCount={Object.keys(frequencies).length}
                 providerLabels={providerLabelsFrom(merged.providerFees)}
-                // Only PDF reports carry a per-provider breakdown; CSV/Excel
-                // read one fee per code, so the check would always fire there.
-                providerCount={anyPdf ? providerCount : undefined}
+                // Only PDF production reports carry a per-provider breakdown;
+                // CSV/Excel and fee-schedule PDFs read one fee per code, so the
+                // check would always fire there.
+                providerCount={anyReport ? providerCount : undefined}
                 actionLabel="Add another file"
                 onAction={openPicker}
               />

@@ -1,7 +1,11 @@
-// Native-PDF parser for a single carrier's / PPO's fee schedule (a flat
-// "CDT code -> contracted/allowed fee" list). Distinct from pdf-summary.ts,
-// which reads a production report with volumes — a carrier schedule has no
-// volumes, just the rate that plan pays per code.
+// Native-PDF parser for a flat "CDT code -> fee" schedule. Two uses:
+//   - want "contracted" (default): one carrier's / PPO's schedule, the rate
+//     that plan pays per code (/api/carrier-schedule).
+//   - want "office": the practice's own office fee schedule, the full fee an
+//     uninsured patient pays (/api/parse-pdf fallback when the upload is not
+//     a production report).
+// Distinct from pdf-summary.ts, which reads a production report with volumes;
+// a fee schedule has no volumes, just a fee per code.
 //
 // Sends the whole PDF to Claude as a native document block (no rasterizer) with
 // a prompt tuned for fee schedules, and defensively re-validates the output.
@@ -13,17 +17,33 @@ const MODEL = "claude-opus-4-8";
 
 export type ScheduleEntry = { code: string; fee: number };
 
+export type ScheduleFeeKind = "contracted" | "office";
+
 export type PdfScheduleResult = {
   entries: ScheduleEntry[];
   notes: string[];
   confidence: "high" | "medium" | "low" | "failed";
 };
 
-const SYSTEM = `You extract a dental carrier/PPO fee schedule from a PDF: a list mapping CDT procedure codes to the fee that plan allows/contracts/pays.
+const WHAT: Record<ScheduleFeeKind, string> = {
+  contracted:
+    "a dental carrier/PPO fee schedule from a PDF: a list mapping CDT procedure codes to the fee that plan allows/contracts/pays",
+  office:
+    "a dental practice's own office fee schedule from a PDF: a list mapping CDT procedure codes to the practice's full fee (what an uninsured patient is charged)",
+};
+
+const WHICH_FEE: Record<ScheduleFeeKind, string> = {
+  contracted:
+    'the contracted/allowed/scheduled dollar amount for that code. If several fee columns exist (e.g. "office fee" vs "allowed"/"plan pays"/"scheduled"), use the carrier\'s ALLOWED/CONTRACTED amount, not the office\'s full fee.',
+  office:
+    'the practice\'s full standard fee for that code. If several fee columns exist (e.g. "Non-Member" vs "Member", "Regular" vs "Plan", "Office/UCR" vs "Allowed"), use the FULL, undiscounted fee: the non-member / regular / UCR / office column. Never use a member, discount-plan, insurance, allowed, or savings column.',
+};
+
+const systemFor = (want: ScheduleFeeKind) => `You extract ${WHAT[want]}.
 
 Extract one row per CDT code:
 - code: the CDT code (the letter D followed by exactly 4 digits, e.g. D0120, D2740).
-- fee: the contracted/allowed/scheduled dollar amount for that code. If several fee columns exist (e.g. "office fee" vs "allowed"/"plan pays"/"scheduled"), use the carrier's ALLOWED/CONTRACTED amount, not the office's full fee.
+- fee: ${WHICH_FEE[want]}
 
 STRICT rules:
 - Include only valid CDT codes (D + 4 digits). Skip headers, category labels, totals, and any non-CDT row.
@@ -48,7 +68,10 @@ function extractJson(text: string): string {
 export async function parsePdfSchedule(opts: {
   pdfBase64: string;
   apiKey?: string;
+  /** Which fee to read when the schedule has several columns. */
+  want?: ScheduleFeeKind;
 }): Promise<PdfScheduleResult> {
+  const want = opts.want ?? "contracted";
   const apiKey = opts.apiKey ?? process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return {
@@ -64,7 +87,7 @@ export async function parsePdfSchedule(opts: {
     .stream({
       model: MODEL,
       max_tokens: 16000,
-      system: SYSTEM,
+      system: systemFor(want),
       messages: [
       {
         role: "user",
@@ -79,7 +102,10 @@ export async function parsePdfSchedule(opts: {
           },
           {
             type: "text",
-            text: "Extract this carrier fee schedule's CDT codes and contracted fees. Respond with JSON only.",
+            text:
+              want === "office"
+                ? "Extract this office fee schedule's CDT codes and full (non-member, undiscounted) fees. Respond with JSON only."
+                : "Extract this carrier fee schedule's CDT codes and contracted fees. Respond with JSON only.",
           },
         ],
       },
