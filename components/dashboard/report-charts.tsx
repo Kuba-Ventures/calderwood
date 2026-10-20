@@ -18,6 +18,9 @@ export function SummaryCards({
   data: GatedReport;
   unlocked?: boolean;
 }) {
+  if (data.volumeBasis === "none") {
+    return <PricesOnlySummaryCards data={data} unlocked={unlocked} />;
+  }
   // Carrier ranking needs per-carrier rates, which master-only intake doesn't
   // capture. With no carrier data, fall back to the top recoverable CODE so the
   // "Biggest opportunity" tile shows a real number instead of "Other / $0".
@@ -74,6 +77,73 @@ export function SummaryCards({
         value={`${data.codesBelowP75.count} of ${data.codesBelowP75.total}`}
         sublabel="in your top codes"
       />
+    </div>
+  );
+}
+
+// Prices-only upload (no procedure counts): no yearly dollars exist, so the
+// cards lead with what the practice collects less each time.
+function PricesOnlySummaryCards({
+  data,
+  unlocked,
+}: {
+  data: GatedReport;
+  unlocked: boolean;
+}) {
+  const headline = data.perProcedure?.headline ?? null;
+  // codes are ranked by gap per procedure for prices-only reports.
+  const biggest = unlocked ? data.codes.find((c) => c.ucrP75 > 0 && c.gapPerProc > 0) : undefined;
+  const shown = (fee: number, p75: number) => Math.round(p75) - Math.round(fee);
+  return (
+    <div>
+      <p className="mb-4 rounded-lg border border-amber-700 bg-amber-50 px-4 py-3 text-base leading-relaxed text-ink-900">
+        <span className="font-semibold">Prices only.</span> Your file had no
+        procedure counts, so this report compares each fee to your area but
+        does not total yearly dollars. Add a production report or a Quantity
+        column to see yearly totals.
+      </p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <SummaryCard
+          label={headline ? `Less per ${headline.name.toLowerCase()}` : "Everyday procedures"}
+          value={
+            data.inputCheck?.suspect ? (
+              "Check upload"
+            ) : (
+              <LockedInline unlocked={unlocked} placeholder="$••">
+                {headline ? formatUsd(shown(headline.practiceFee, headline.p75)) : "At or above"}
+              </LockedInline>
+            )
+          }
+          sublabel={
+            data.inputCheck?.suspect
+              ? "Fees look like averages, not your fee schedule"
+              : headline && unlocked
+                ? `${formatUsd(Math.round(headline.practiceFee))} vs ${formatUsd(Math.round(headline.p75))}, local 75th percentile`
+                : "vs the local 75th percentile, each time"
+          }
+          tone="warn"
+        />
+        <SummaryCard
+          label="Largest gap per procedure"
+          value={
+            <LockedInline unlocked={unlocked} placeholder="••••••">
+              {biggest?.code ?? "—"}
+            </LockedInline>
+          }
+          sublabel={
+            !unlocked
+              ? "Unlock to see your biggest gap"
+              : biggest
+                ? `${formatUsd(shown(biggest.yourFee, biggest.ucrP75))} less each time`
+                : "No codes below the local 75th percentile"
+          }
+        />
+        <SummaryCard
+          label="Codes below UCR"
+          value={`${data.codesBelowP75.count} of ${data.codesBelowP75.total}`}
+          sublabel="of the codes we could benchmark"
+        />
+      </div>
     </div>
   );
 }
@@ -229,12 +299,15 @@ export function CodeGapTable({
   codes,
   filterCarrier,
   unlocked = true,
+  pricesOnly = false,
 }: {
   codes: CodeRow[];
   filterCarrier?: CarrierRow | null;
   unlocked?: boolean;
+  /** No procedure counts: drop the volume and yearly columns. */
+  pricesOnly?: boolean;
 }) {
-  const [sortKey, setSortKey] = useState<SortKey>("annualGap");
+  const [sortKey, setSortKey] = useState<SortKey>(pricesOnly ? "gapPerProc" : "annualGap");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
 
   const filtered = useMemo(() => {
@@ -312,20 +385,24 @@ export function CodeGapTable({
                 onClick={() => toggleSort("gapPerProc")}
                 align="right"
               />
-              <ThSort
-                label="Volume"
-                active={sortKey === "annualVolume"}
-                dir={sortDir}
-                onClick={() => toggleSort("annualVolume")}
-                align="right"
-              />
-              <ThSort
-                label="Annual underpayment"
-                active={sortKey === "annualGap"}
-                dir={sortDir}
-                onClick={() => toggleSort("annualGap")}
-                align="right"
-              />
+              {!pricesOnly && (
+                <>
+                  <ThSort
+                    label="Volume"
+                    active={sortKey === "annualVolume"}
+                    dir={sortDir}
+                    onClick={() => toggleSort("annualVolume")}
+                    align="right"
+                  />
+                  <ThSort
+                    label="Annual underpayment"
+                    active={sortKey === "annualGap"}
+                    dir={sortDir}
+                    onClick={() => toggleSort("annualGap")}
+                    align="right"
+                  />
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -358,18 +435,22 @@ export function CodeGapTable({
                       {formatUsd(recoverablePerProc)}
                     </LockedInline>
                   </td>
-                  <td className="px-3 py-3 sm:px-4 text-right text-ink-500">
-                    {c.annualVolume.toLocaleString()}
-                  </td>
-                  <td
-                    className={`px-3 py-3 sm:px-4 text-right font-medium ${
-                      annualRecoverable > 0 ? "text-red-600" : "text-ink-400"
-                    }`}
-                  >
-                    <LockedInline unlocked={unlocked}>
-                      {formatUsd(annualRecoverable)}
-                    </LockedInline>
-                  </td>
+                  {!pricesOnly && (
+                    <>
+                      <td className="px-3 py-3 sm:px-4 text-right text-ink-500">
+                        {c.annualVolume.toLocaleString()}
+                      </td>
+                      <td
+                        className={`px-3 py-3 sm:px-4 text-right font-medium ${
+                          annualRecoverable > 0 ? "text-red-600" : "text-ink-400"
+                        }`}
+                      >
+                        <LockedInline unlocked={unlocked}>
+                          {formatUsd(annualRecoverable)}
+                        </LockedInline>
+                      </td>
+                    </>
+                  )}
                 </tr>
               );
             })}

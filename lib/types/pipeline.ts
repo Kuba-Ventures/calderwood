@@ -92,6 +92,29 @@ export type CodeRow = {
 
 export type UnderpaymentBasis = "carrier" | "market";
 
+export type VolumeBasis = "counts" | "none";
+
+/** One procedure's gap to the local p75, per time it is performed. */
+export type PerProcedureGap = {
+  code: string;
+  /** Plain-English name for everyday codes, else the CDT description. */
+  name: string;
+  practiceFee: number;
+  p75: number;
+  /** p75 minus your fee: what you collect less each time. */
+  gap: number;
+};
+
+export type PerProcedureSummary = {
+  /** First everyday procedure below p75: the cover headline. */
+  headline: PerProcedureGap | null;
+  /** Everyday procedures below p75, display order. */
+  everyday: PerProcedureGap[];
+  /** Benchmarked codes, and how many sit below p75. */
+  codesBenchmarked: number;
+  codesBelowP75: number;
+};
+
 export type ComputationOutput = {
   codeRows: CodeRow[];
   executiveSummary: {
@@ -105,6 +128,15 @@ export type ComputationOutput = {
     codesBelowP75InTop20: { count: number; total: number };
     topCarrier: { name: string; recoverable: number } | null;
     underpaymentBasis: UnderpaymentBasis;
+    /**
+     * "counts": the practice supplied procedure counts, so yearly dollars are
+     * real. "none": prices only; every yearly figure is 0 and the report leads
+     * with per-procedure gaps instead. Absent on reports stored before this
+     * existed (those used estimated volumes); treat absent as "counts".
+     */
+    volumeBasis?: VolumeBasis;
+    /** Per-procedure view, used when volumeBasis is "none". */
+    perProcedure?: PerProcedureSummary;
   };
   top10ByImpact: CodeRow[];
   recoverableByCarrier: Array<{ carrier: string; recoverable: number }>;

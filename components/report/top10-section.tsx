@@ -3,10 +3,11 @@ import React from "react";
 
 import { Text, View } from "@react-pdf/renderer";
 import type { ComputationOutput } from "@/lib/types/pipeline";
-import { top10Rows } from "@/lib/report/pdf-columns";
+import { isPricesOnly, top10Rows } from "@/lib/report/pdf-columns";
 import { COLORS, fmtUsd, styles } from "./styles";
 
 export function Top10Section({ data }: { data: ComputationOutput }) {
+  if (isPricesOnly(data)) return <Top10PerProcedure data={data} />;
   const rows = top10Rows(data);
   const top10Total = rows.reduce((s, r) => s + r.annual, 0);
   const headline = data.executiveSummary.totalAnnualUnderpayment;
@@ -48,6 +49,42 @@ export function Top10Section({ data }: { data: ComputationOutput }) {
           </View>
         );
       })}
+    </View>
+  );
+}
+
+// Prices only: ranked by what the practice collects less each time it does the
+// procedure. No volume or yearly columns (we have no counts).
+function Top10PerProcedure({ data }: { data: ComputationOutput }) {
+  const rows = top10Rows(data);
+  return (
+    <View>
+      <Text style={styles.sectionLabel}>Section 2 · Biggest gaps per procedure</Text>
+      <Text style={styles.h2}>
+        Where one fee change matters most.
+      </Text>
+      <Text style={[styles.bodyMuted, { marginTop: 6 }]}>
+        Sorted by the gap each time you do the procedure: UCR p75 minus your fee.
+        Add your procedure counts to rank by yearly dollars instead.
+      </Text>
+
+      <View style={[styles.tableHeader, { marginTop: 16 }]}>
+        <View style={{ width: 44 }}><Text style={styles.tableHeadCell}>Code</Text></View>
+        <View style={{ flex: 2 }}><Text style={styles.tableHeadCell}>Procedure</Text></View>
+        <View style={{ width: 64 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>Fee</Text></View>
+        <View style={{ width: 64 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>P75</Text></View>
+        <View style={{ width: 72 }}><Text style={[styles.tableHeadCell, { textAlign: "right" }]}>Each time</Text></View>
+      </View>
+
+      {rows.map(({ row: r, gap }) => (
+        <View key={r.code} style={styles.tableRow}>
+          <View style={{ width: 44 }}><Text style={[styles.tableCell, { fontFamily: "Helvetica-Bold", fontSize: 8 }]}>{r.code}</Text></View>
+          <View style={{ flex: 2 }}><Text style={styles.tableCell}>{r.description}</Text></View>
+          <View style={{ width: 64 }}><Text style={styles.tableCellRight}>{fmtUsd(r.practiceFee)}</Text></View>
+          <View style={{ width: 64 }}><Text style={styles.tableCellRight}>{r.p75 !== null ? fmtUsd(r.p75) : "--"}</Text></View>
+          <View style={{ width: 72 }}><Text style={[styles.tableCellRight, { color: COLORS.red, fontFamily: "Helvetica-Bold" }]}>+{fmtUsd(gap)}</Text></View>
+        </View>
+      ))}
     </View>
   );
 }

@@ -10,7 +10,12 @@ import { LockCard, LockedInline } from "@/components/report/lock-overlay";
 
 // Structural subset the tiles need — satisfied by both ReportData and the
 // gated report shape (which differs only in worstCarrier, unused here).
-type ReportLike = { codes: CodeRow[]; carriers: CarrierRow[] };
+type ReportLike = {
+  codes: CodeRow[];
+  carriers: CarrierRow[];
+  /** "none" = prices only (no procedure counts): no yearly figures. */
+  volumeBasis?: "counts" | "none";
+};
 
 // Estimate where yourFee sits in the local UCR distribution. Median = 50th,
 // p75 = 75th. Linear extrapolation, clamped 1..99. Approximation only,
@@ -145,15 +150,20 @@ function TopCodesTile({
   // Benchmarked codes only, top 5 by recoverable. Recoverable is a positive
   // opportunity, so render it as gain (green), not a red loss.
   const rows = (data?.codes ?? []).filter((c) => c.ucrP75 > 0).slice(0, 5);
+  // Prices only: codes come ranked by gap per procedure; no yearly column.
+  const pricesOnly = data?.volumeBasis === "none";
   return (
-    <TileShell title="Top codes by annual impact" empty={!data}>
+    <TileShell
+      title={pricesOnly ? "Top codes by gap per procedure" : "Top codes by annual impact"}
+      empty={!data}
+    >
       <table className="w-full text-sm">
         <thead className="text-left text-[11px] uppercase tracking-wide text-ink-400">
           <tr>
             <th className="py-1.5 pr-2 font-medium">Code</th>
             <th className="py-1.5 pr-2 font-medium">Procedure</th>
             <th className="py-1.5 pr-2 text-right font-medium">Per proc</th>
-            <th className="py-1.5 text-right font-medium">Annual</th>
+            {!pricesOnly && <th className="py-1.5 text-right font-medium">Annual</th>}
           </tr>
         </thead>
         <tbody>
@@ -170,11 +180,13 @@ function TopCodesTile({
                   {formatUsd(Math.max(0, row.gapPerProc))}
                 </LockedInline>
               </td>
-              <td className="py-2 text-right font-serif text-sm font-medium text-red-700 tabular-nums">
-                <LockedInline unlocked={unlocked}>
-                  {formatUsd(Math.max(0, row.annualGap))}
-                </LockedInline>
-              </td>
+              {!pricesOnly && (
+                <td className="py-2 text-right font-serif text-sm font-medium text-red-700 tabular-nums">
+                  <LockedInline unlocked={unlocked}>
+                    {formatUsd(Math.max(0, row.annualGap))}
+                  </LockedInline>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

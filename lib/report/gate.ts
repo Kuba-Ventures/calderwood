@@ -15,7 +15,11 @@ import type {
   CodeRow,
   ReportData,
 } from "@/lib/storage";
-import type { ComputationOutput } from "@/lib/types/pipeline";
+import type {
+  ComputationOutput,
+  PerProcedureSummary,
+  VolumeBasis,
+} from "@/lib/types/pipeline";
 import { categoryFor } from "@/lib/data/cdt-categories";
 import { assessFeeSanity, type FeeSanity } from "@/lib/computation/fee-sanity";
 import { summarizeTotals } from "@/lib/computation/compute";
@@ -83,6 +87,16 @@ export type GatedReport = Omit<ReportData, "worstCarrier"> & {
   providerVariance: ProviderVarianceRow[];
   /** Input sanity check. When suspect, the UI shows a re-upload prompt, not dollars. */
   inputCheck: FeeSanity;
+  /**
+   * "none" = prices-only upload: every yearly figure is 0, so the UI leads
+   * with perProcedure instead. Reports stored before this existed are "counts".
+   */
+  volumeBasis: VolumeBasis;
+  /**
+   * Per-procedure view for prices-only reports. When locked, the gaps are
+   * stripped (headline null, everyday empty) and only the counts stay.
+   */
+  perProcedure: PerProcedureSummary | null;
 };
 
 function gradeFor(blended: number): string {
@@ -246,7 +260,11 @@ export function computationToReportData(
     annualUnderpaymentUsd: totals.feeScheduleGap,
     worstCarrier,
     carriers,
-    codes: codes.sort((a, b) => b.annualGap - a.annualGap),
+    // Prices only: annual gaps are all 0, so rank by the gap per procedure.
+    codes:
+      output.executiveSummary.volumeBasis === "none"
+        ? codes.sort((a, b) => b.gapPerProc - a.gapPerProc)
+        : codes.sort((a, b) => b.annualGap - a.annualGap),
     zip,
   };
 }
@@ -269,7 +287,13 @@ export function toGatedReport(
   unlocked: boolean
 ): GatedReport {
   const full = computationToReportData(output, zip);
-  const codesBelowP75 = output.executiveSummary.codesBelowP75InTop20;
+  const volumeBasis: VolumeBasis = output.executiveSummary.volumeBasis ?? "counts";
+  const perProcedure = output.executiveSummary.perProcedure ?? null;
+  // Prices only: "top 20 by volume" has no meaning, so count every benchmarked
+  // code instead (still a non-gated teaser stat).
+  const codesBelowP75 = perProcedure
+    ? { count: perProcedure.codesBelowP75, total: perProcedure.codesBenchmarked }
+    : output.executiveSummary.codesBelowP75InTop20;
   const inputCheck = assessFeeSanity(output.codeRows);
   // A suspect input (averages, not office fees) never gets a dollar teaser.
   const teaserUsd = inputCheck.suspect ? 0 : teaserFigure(full.annualUnderpaymentUsd);
@@ -281,6 +305,8 @@ export function toGatedReport(
       unlocked: true,
       teaserUsd,
       inputCheck,
+      volumeBasis,
+      perProcedure,
       carrierUnderpaymentUsd: rich.carrierGrid.hasData
         ? summarizeTotals(output.codeRows).carrierGap
         : 0,
@@ -339,6 +365,11 @@ export function toGatedReport(
     unlocked: false,
     teaserUsd,
     inputCheck,
+    volumeBasis,
+    // Keep the counts (teaser), strip every dollar gap.
+    perProcedure: perProcedure
+      ? { ...perProcedure, headline: null, everyday: [] }
+      : null,
     codesBelowP75,
     zip: full.zip,
     annualUnderpaymentUsd: 0,

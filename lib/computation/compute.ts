@@ -11,8 +11,12 @@ import {
   ComputationInput,
   ComputationOutput,
   GeoLevel,
+  PerProcedureGap,
+  PerProcedureSummary,
   UnderpaymentBasis,
+  VolumeBasis,
 } from "@/lib/types/pipeline";
+import { EVERYDAY_CODES, EVERYDAY_TABLE_SIZE } from "@/lib/data/everyday-codes";
 
 export type ResolveBenchmark = (
   zip5: string,
@@ -45,6 +49,18 @@ export async function compute(
     );
   }
 
+  // Prices only: no code came with a procedure count. We never estimate
+  // volume, so yearly dollars are not computed and the report leads with
+  // per-procedure gaps instead.
+  const volumeBasis: VolumeBasis = Object.values(input.frequencies).some((n) => n > 0)
+    ? "counts"
+    : "none";
+  if (volumeBasis === "none") {
+    flags.push(
+      "No procedure counts supplied. Yearly dollar figures are not computed; gaps are shown per procedure."
+    );
+  }
+
   // --- Per-code computation ----------------------------------------------
 
   for (const entry of input.masterSchedule) {
@@ -53,7 +69,7 @@ export async function compute(
     const haveFrequency = typeof frequency === "number" && frequency > 0;
 
     const annualFrequency = haveFrequency ? frequency : 0;
-    if (!haveFrequency) {
+    if (!haveFrequency && volumeBasis === "counts") {
       flags.push(
         `Frequency missing for ${entry.code}; annual recoverable cannot be computed.`
       );
@@ -169,9 +185,12 @@ export async function compute(
   // headline. Excludes no_data and zero-gap codes. Ranking by the worst
   // carrier's gap times the code's full volume would reconcile with neither
   // total.
+  // Prices only: every annual figure is 0, so rank by the gap per procedure.
+  const impact = (row: CodeRow) =>
+    volumeBasis === "none" ? row.marketGap : row.annualRecoverableMarket;
   const top10ByImpact = [...scoredCodes]
-    .filter((row) => row.annualRecoverableMarket > 0)
-    .sort((a, b) => b.annualRecoverableMarket - a.annualRecoverableMarket)
+    .filter((row) => impact(row) > 0)
+    .sort((a, b) => impact(b) - impact(a))
     .slice(0, 10);
 
   // Recoverable by carrier -- volume-weighted total per carrier, descending.
@@ -195,6 +214,8 @@ export async function compute(
       codesBelowP75InTop20,
       topCarrier,
       underpaymentBasis: basis,
+      volumeBasis,
+      ...(volumeBasis === "none" ? { perProcedure: summarizePerProcedure(scoredCodes) } : {}),
     },
     top10ByImpact,
     recoverableByCarrier,
@@ -253,6 +274,37 @@ export function computePercentileRank(fee: number, b: Benchmark): number {
   }
   if (b.p50 <= 0) return 0;
   return Math.max(0, 50 * (fee / b.p50));
+}
+
+/**
+ * Per-procedure view for a prices-only report: everyday procedures below the
+ * local p75 with what the practice collects less each time, plus how many
+ * benchmarked codes sit below p75. Exported for tests.
+ */
+export function summarizePerProcedure(scored: CodeRow[]): PerProcedureSummary {
+  const benchmarked = scored.filter((r) => r.p75 !== null);
+  const byCode = new Map(benchmarked.map((r) => [r.code, r]));
+  const everyday: PerProcedureGap[] = [];
+  for (const { code, name } of EVERYDAY_CODES) {
+    const r = byCode.get(code);
+    if (!r || r.p75 === null || r.marketGap <= 0) continue;
+    everyday.push({ code, name, practiceFee: r.practiceFee, p75: r.p75, gap: r.marketGap });
+    if (everyday.length === EVERYDAY_TABLE_SIZE) break;
+  }
+  // No everyday code below market: lead with the largest gap instead.
+  let headline: PerProcedureGap | null = everyday[0] ?? null;
+  if (!headline) {
+    const top = [...benchmarked].sort((a, b) => b.marketGap - a.marketGap)[0];
+    if (top && top.p75 !== null && top.marketGap > 0) {
+      headline = { code: top.code, name: top.description, practiceFee: top.practiceFee, p75: top.p75, gap: top.marketGap };
+    }
+  }
+  return {
+    headline,
+    everyday,
+    codesBenchmarked: benchmarked.length,
+    codesBelowP75: benchmarked.filter((r) => r.marketGap > 0).length,
+  };
 }
 
 function pickWorkedExample(top10: CodeRow[]): CodeRow | null {

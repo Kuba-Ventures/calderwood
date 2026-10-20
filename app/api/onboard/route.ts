@@ -205,7 +205,7 @@ export async function POST(request: Request) {
 
     // PDF reports and CSV/Excel files with a quantity column carry the
     // practice's real annual volumes. Persist them so generateReport uses
-    // actual frequencies instead of the per-provider defaults.
+    // actual frequencies (with none, the report is prices only).
     if (fee.method === "pdf" && fee.frequencies) {
       await insertFrequencies(sb, practice.id, fee.frequencies);
     } else if (Object.keys(parsed.frequencies).length > 0) {

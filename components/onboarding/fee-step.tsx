@@ -136,6 +136,17 @@ export function draftSchedule(d: FeeDraft) {
   return { merged, ...applyEdits(merged, d.edits) };
 }
 
+/**
+ * True when the fee input carries real procedure counts. Paste and Top 20
+ * never do; uploads do when any combined code has a count. EOB photos are read
+ * by hand, so they skip the check.
+ */
+export function hasProcedureCounts(d: FeeDraft): boolean {
+  if (d.tab === "upload" && d.uploadedKind === "eob") return true;
+  if (d.tab !== "upload") return false;
+  return Object.keys(draftSchedule(d).frequencies).length > 0;
+}
+
 /** True while any upload is still being read. */
 export function isFeeBusy(d: FeeDraft): boolean {
   if (d.tab !== "upload") return false;

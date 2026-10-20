@@ -161,6 +161,61 @@ describe("compute -- Underwood Family Dental fixture", () => {
     expect(out.flags.some((f) => f.includes("D2740"))).toBe(true);
   });
 
+  it("marks a report with real counts as volumeBasis counts", async () => {
+    const out = await compute(input, resolve);
+    expect(out.executiveSummary.volumeBasis).toBe("counts");
+    expect(out.executiveSummary.perProcedure).toBeUndefined();
+  });
+
+  it("prices only: no counts means no yearly dollars and no estimated volume", async () => {
+    const pricesOnly: ComputationInput = { ...input, carrierSchedules: {}, frequencies: {} };
+    const out = await compute(pricesOnly, resolve);
+    expect(out.executiveSummary.volumeBasis).toBe("none");
+    expect(out.executiveSummary.totalAnnualUnderpayment).toBe(0);
+    expect(out.codeRows.every((r) => r.annualFrequency === 0)).toBe(true);
+    // One summary flag instead of one "frequency missing" flag per code.
+    expect(out.flags.filter((f) => f.startsWith("Frequency missing"))).toEqual([]);
+    expect(out.flags.some((f) => f.startsWith("No procedure counts supplied"))).toBe(true);
+  });
+
+  it("prices only: top 10 ranks by gap per procedure", async () => {
+    const out = await compute({ ...input, carrierSchedules: {}, frequencies: {} }, resolve);
+    const gaps = out.top10ByImpact.map((r) => r.marketGap);
+    expect(gaps.length).toBeGreaterThan(0);
+    expect(gaps).toEqual([...gaps].sort((a, b) => b - a));
+    expect(gaps.every((g) => g > 0)).toBe(true);
+  });
+
+  it("prices only: per-procedure summary leads with everyday codes below p75", async () => {
+    const out = await compute({ ...input, carrierSchedules: {}, frequencies: {} }, resolve);
+    const p = out.executiveSummary.perProcedure!;
+    const below = out.codeRows.filter((r) => r.p75 !== null && r.marketGap > 0);
+    expect(p.codesBenchmarked).toBe(out.codeRows.filter((r) => r.p75 !== null).length);
+    expect(p.codesBelowP75).toBe(below.length);
+    expect(p.everyday.length).toBeLessThanOrEqual(6);
+    for (const e of p.everyday) {
+      const row = out.codeRows.find((r) => r.code === e.code)!;
+      expect(e.gap).toBe(row.marketGap);
+      expect(e.gap).toBeGreaterThan(0);
+    }
+    expect(p.headline).toEqual(p.everyday[0] ?? p.headline);
+  });
+
+  it("prices only, all fees above p75: no headline", async () => {
+    const out = await compute(
+      {
+        ...input,
+        carrierSchedules: {},
+        frequencies: {},
+        masterSchedule: input.masterSchedule.map((e) => ({ ...e, fee: e.fee * 10 })),
+      },
+      resolve
+    );
+    expect(out.executiveSummary.perProcedure!.headline).toBeNull();
+    expect(out.executiveSummary.perProcedure!.everyday).toEqual([]);
+    expect(out.top10ByImpact).toEqual([]);
+  });
+
   it("clamps market gap at zero when practice fee >= p75", async () => {
     const allAboveP75: ComputationInput = {
       ...input,

@@ -19,10 +19,6 @@ import { compute } from "@/lib/computation/compute";
 import { resolveForZip } from "@/lib/benchmark/supabase-source";
 import { loadCdtDescriptions } from "@/lib/cdt/descriptions";
 import {
-  defaultFrequencies,
-  providersFromBucket,
-} from "@/lib/data/default-frequencies";
-import {
   getFeeSchedules,
   getFrequencies,
   upsertReport,
@@ -76,15 +72,10 @@ export async function generateReport(
     }
   }
 
-  // Frequencies: use stored billing volumes if present, else fall back to the
-  // per-provider defaults scaled by the practice's provider count.
-  let frequencies = await getFrequencies(sb, practice.id);
-  if (Object.keys(frequencies).length === 0) {
-    frequencies = defaultFrequencies(
-      masterSchedule.map((e) => e.code),
-      providersFromBucket(practice.provider_count_bucket)
-    );
-  }
+  // Frequencies: only the practice's real procedure counts. We never estimate
+  // volume; with no counts, compute() returns a prices-only report that
+  // compares each fee per procedure instead of totaling yearly dollars.
+  const frequencies = await getFrequencies(sb, practice.id);
 
   const input: ComputationInput = {
     zip5: practice.zip5,

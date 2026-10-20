@@ -46,6 +46,15 @@ export function MethodologySection({
         -- those codes are excluded from that carrier&apos;s totals.
       </Text>
 
+      {data.executiveSummary.volumeBasis === "none" && (
+        <Text style={[styles.bodyMuted, { marginTop: 8 }]}>
+          Your upload had prices but no procedure counts, so this report does not
+          total yearly dollars. We never estimate how often you do a procedure.
+          Every gap is shown per procedure; add a production report or a Quantity
+          column to see yearly totals.
+        </Text>
+      )}
+
       <Text style={[styles.bodyMuted, { marginTop: 8 }]}>
         Annual recoverable is the per-code gap multiplied by your annual
         frequency for that code (sourced from your PMS export). The headline
@@ -60,7 +69,7 @@ export function MethodologySection({
         Worked example · {ex ? ex.code : "(no eligible code)"}
       </Text>
 
-      {ex ? <Example row={ex} basis={basis} /> : (
+      {ex ? <Example row={ex} basis={basis} pricesOnly={data.executiveSummary.volumeBasis === "none"} /> : (
         <Text style={styles.bodyMuted}>
           No code in your top 10 by impact met the worked-example criteria
           (high-confidence benchmark, positive gap, frequency above threshold).
@@ -71,7 +80,15 @@ export function MethodologySection({
   );
 }
 
-function Example({ row, basis }: { row: CodeRow; basis: UnderpaymentBasis }) {
+function Example({
+  row,
+  basis,
+  pricesOnly,
+}: {
+  row: CodeRow;
+  basis: UnderpaymentBasis;
+  pricesOnly: boolean;
+}) {
   // For carrier basis, walk through the worst-paying carrier on this code.
   const worstCarrier = basis === "carrier"
     ? Object.entries(row.annualRecoverableByCarrier).sort((a, b) => b[1] - a[1])[0]
@@ -114,7 +131,14 @@ function Example({ row, basis }: { row: CodeRow; basis: UnderpaymentBasis }) {
         </View>
       )}
 
-      {basis === "market" && (
+      {basis === "market" && pricesOnly && (
+        <View style={{ marginTop: 14, padding: 12, backgroundColor: COLORS.canvasTint }}>
+          <Line label="Gap each time (UCR p75 minus your fee)" value={fmtUsd(row.marketGap)} bold accent />
+          <Line label="Yearly total" value="Needs procedure counts" />
+        </View>
+      )}
+
+      {basis === "market" && !pricesOnly && (
         <View style={{ marginTop: 14, padding: 12, backgroundColor: COLORS.canvasTint }}>
           <Line label="Gap (UCR p75 minus your fee)" value={fmtUsd(row.marketGap)} />
           <Line label="Annual frequency" value={row.annualFrequency.toLocaleString()} />

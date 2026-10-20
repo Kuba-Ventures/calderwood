@@ -32,9 +32,11 @@ export function ReportDoc({
   meta: ReportMeta;
 }) {
   const basis = data.executiveSummary.underpaymentBasis;
+  const pricesOnly = data.executiveSummary.volumeBasis === "none";
   const hasProviderVariance = providerVarianceRows(data).length > 0;
-  const basisLine =
-    basis === "carrier"
+  const basisLine = pricesOnly
+    ? "Prices only: gaps shown per procedure vs UCR p75. No procedure counts supplied, so no yearly totals."
+    : basis === "carrier"
       ? "Headline based on master fee gap to UCR p75. Carrier figures use contracted rates, volume split evenly across carriers."
       : "Headline based on master fee gap to UCR p75 (no carrier schedules parsed).";
 
@@ -77,11 +79,14 @@ export function ReportDoc({
         </Page>
       )}
 
-      <Page size="LETTER" style={styles.page}>
-        <BrandHeader />
-        <CategorySection data={data} />
-        <Footer basisLine={basisLine} />
-      </Page>
+      {/* Category totals are yearly dollars; nothing to show without counts. */}
+      {!pricesOnly && (
+        <Page size="LETTER" style={styles.page}>
+          <BrandHeader />
+          <CategorySection data={data} />
+          <Footer basisLine={basisLine} />
+        </Page>
+      )}
 
       <Page size="LETTER" style={styles.page}>
         <BrandHeader />
