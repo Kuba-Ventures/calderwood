@@ -12,6 +12,7 @@ import { browserSupabase, hasSupabaseEnv } from "@/lib/db/client";
 import {
   FeeDraft,
   FeeStep,
+  feeGapMessage,
   buildFeePayload,
   emptyFeeDraft,
   hasProcedureCounts,
@@ -79,7 +80,7 @@ export default function IntakePage() {
       if (isFeeBusy(fee)) {
         setError("Still reading your files. Give it a moment, then continue.");
       } else {
-        setError("Add your fee schedule, or switch to Paste / Top 20.");
+        setError(feeGapMessage(fee) ?? "Add your fee schedule, or switch to Paste / Top 20.");
       }
       return;
     }
