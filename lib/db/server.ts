@@ -50,3 +50,18 @@ export function serviceSupabase() {
     }
   );
 }
+
+// Service-role client whose every request bypasses Next's fetch cache. Use it
+// where a stale read changes behavior, e.g. the AI health job, which decides
+// whether to email from the rows it reads (a cached empty read sent a
+// duplicate alert in another product).
+export function uncachedServiceSupabase() {
+  return createClient(
+    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
+    }
+  );
+}
