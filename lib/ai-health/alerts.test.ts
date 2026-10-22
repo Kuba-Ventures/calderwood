@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  DAILY_EMAIL_LIMIT_NOTICE,
-  anAlertEmailWentOutSince,
-  buildAiHealthDailyEmail,
+  ALERT_EMAIL_RULE_NOTICE,
+  aDownEmailWentOutForThisServiceSince,
+  buildAiHealthAlertEmail,
   describeDowntime,
   downSinceForIncident,
   isOutageWorthReporting,
   isRecoveryAwaitingReport,
-  pacificDayKey,
   reportedIncidentTimes,
   startOfPacificDay,
   type StoredAiServiceCheck,
@@ -44,9 +43,20 @@ describe("isOutageWorthReporting", () => {
     ).toBe(true);
   });
 
-  it("keeps reporting an outage that was already emailed, so the next day mentions it again", () => {
+  it("does not report an outage again while it lasts, even on a later day", () => {
     expect(
       isOutageWorthReporting({ status: "down", failureKind: "out_of_credits" }, [
+        stored({ status: "down", failureKind: "out_of_credits", checkedAt: "2026-10-23T10:00:00.000Z" }),
+        stored({ status: "down", failureKind: "out_of_credits", checkedAt: "2026-10-21T10:00:00.000Z", alertSent: "down" }),
+        stored({ checkedAt: "2026-10-21T09:50:00.000Z" }),
+      ])
+    ).toBe(false);
+  });
+
+  it("treats a new outage after a fix as new", () => {
+    expect(
+      isOutageWorthReporting({ status: "down", failureKind: "key_rejected" }, [
+        stored({ alertSent: "recovered" }),
         stored({ status: "down", failureKind: "out_of_credits", alertSent: "down" }),
       ])
     ).toBe(true);
@@ -107,14 +117,39 @@ describe("reportedIncidentTimes", () => {
   });
 });
 
-describe("anAlertEmailWentOutSince", () => {
-  it("looks only at checks that sent an email on or after the cutoff", () => {
+describe("aDownEmailWentOutForThisServiceSince", () => {
+  it("counts only down emails on or after the cutoff", () => {
     const checks = [
+      stored({ checkedAt: "2026-10-22T09:00:00.000Z", alertSent: "recovered" }),
       stored({ checkedAt: "2026-10-22T06:50:00.000Z", alertSent: "down" }),
-      stored({ checkedAt: "2026-10-22T08:00:00.000Z" }),
     ];
-    expect(anAlertEmailWentOutSince(checks, "2026-10-22T07:00:00.000Z")).toBe(false);
-    expect(anAlertEmailWentOutSince(checks, "2026-10-22T06:00:00.000Z")).toBe(true);
+    expect(aDownEmailWentOutForThisServiceSince(checks, "2026-10-22T07:00:00.000Z")).toBe(false);
+    expect(aDownEmailWentOutForThisServiceSince(checks, "2026-10-22T06:00:00.000Z")).toBe(true);
+  });
+
+  it("caps a flapping service at one down email per Pacific day", () => {
+    const now = new Date("2026-10-22T20:00:00.000Z");
+    const flapped = [
+      stored({ status: "working", checkedAt: "2026-10-22T19:50:00.000Z", alertSent: "recovered" }),
+      stored({ status: "down", checkedAt: "2026-10-22T18:00:00.000Z", alertSent: "down" }),
+      stored({ status: "working", checkedAt: "2026-10-22T17:50:00.000Z" }),
+    ];
+    const newOutage = { status: "down" as const, failureKind: "out_of_credits" as const };
+    expect(isOutageWorthReporting(newOutage, flapped)).toBe(true);
+    expect(aDownEmailWentOutForThisServiceSince(flapped, startOfPacificDay(now).toISOString())).toBe(true);
+    const nextDay = new Date("2026-10-23T16:00:00.000Z");
+    expect(aDownEmailWentOutForThisServiceSince(flapped, startOfPacificDay(nextDay).toISOString())).toBe(false);
+  });
+
+  it("sends no fixed email for a flap whose down email was suppressed", () => {
+    expect(
+      isRecoveryAwaitingReport({ status: "working" }, [
+        stored({ status: "down" }),
+        stored({ status: "down" }),
+        stored({ status: "working", alertSent: "recovered" }),
+        stored({ status: "down", alertSent: "down" }),
+      ])
+    ).toBe(false);
   });
 });
 
@@ -122,11 +157,6 @@ describe("Pacific day", () => {
   it("starts at 07:00 UTC in daylight time and 08:00 UTC in standard time", () => {
     expect(startOfPacificDay(new Date("2026-10-22T03:00:00.000Z")).toISOString()).toBe("2026-10-21T07:00:00.000Z");
     expect(startOfPacificDay(new Date("2026-12-01T20:00:00.000Z")).toISOString()).toBe("2026-12-01T08:00:00.000Z");
-  });
-
-  it("keys the day in Pacific time, not UTC", () => {
-    expect(pacificDayKey(new Date("2026-10-22T03:00:00.000Z"))).toBe("2026-10-21");
-    expect(pacificDayKey(new Date("2026-10-22T08:00:00.000Z"))).toBe("2026-10-22");
   });
 });
 
@@ -221,7 +251,7 @@ describe("checkClaude", () => {
   });
 });
 
-describe("buildAiHealthDailyEmail", () => {
+describe("buildAiHealthAlertEmail", () => {
   const outage = {
     service: "claude" as const,
     failureKind: "out_of_credits" as const,
@@ -229,19 +259,19 @@ describe("buildAiHealthDailyEmail", () => {
     downSinceIso: "2026-10-21T17:00:00.000Z",
   };
 
-  it("says what breaks for practices, who fixes it, and that it is daily", () => {
-    const email = buildAiHealthDailyEmail({ outages: [outage], recoveries: [] });
+  it("says what breaks for practices, who fixes it, and when emails are sent", () => {
+    const email = buildAiHealthAlertEmail({ outages: [outage], recoveries: [] });
     expect(email.subject).toContain("down");
     expect(email.subject).toContain("credit balance");
     expect(email.text).toContain("PDF");
     expect(email.text).toContain("Anthropic Console");
     expect(email.text).toContain("Your credit balance is too low");
-    expect(email.text).toContain(DAILY_EMAIL_LIMIT_NOTICE);
+    expect(email.text).toContain(ALERT_EMAIL_RULE_NOTICE);
     expect(email.text).not.toMatch(/\u2014/);
   });
 
   it("reports a recovery with how long the outage lasted", () => {
-    const email = buildAiHealthDailyEmail({
+    const email = buildAiHealthAlertEmail({
       outages: [],
       recoveries: [
         { service: "claude", downSinceIso: "2026-10-21T17:00:00.000Z", recoveredAtIso: "2026-10-21T19:30:00.000Z" },
@@ -252,7 +282,7 @@ describe("buildAiHealthDailyEmail", () => {
   });
 
   it("leads with the outage when the email has both", () => {
-    const email = buildAiHealthDailyEmail({
+    const email = buildAiHealthAlertEmail({
       outages: [outage],
       recoveries: [
         { service: "claude", downSinceIso: "2026-10-21T10:00:00.000Z", recoveredAtIso: "2026-10-21T11:00:00.000Z" },
@@ -263,7 +293,7 @@ describe("buildAiHealthDailyEmail", () => {
   });
 
   it("escapes HTML in the provider's message", () => {
-    const email = buildAiHealthDailyEmail({
+    const email = buildAiHealthAlertEmail({
       outages: [{ ...outage, failureKind: "unexpected_response", failureDetail: "<script>x</script>" }],
       recoveries: [],
     });

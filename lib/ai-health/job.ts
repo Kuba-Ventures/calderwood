@@ -1,24 +1,24 @@
 // Runs the AI service checks, stores each result in ai_service_checks, and
-// sends at most one combined health email per Pacific day through Resend
-// (what is down now plus what recovered since the last email). The rules live
-// in alerts.ts. Called every 10 minutes by Vercel Cron via /api/cron/ai-health.
+// emails through Resend only when a service goes down or is fixed (one email
+// per run combining both). A service gets at most one down email per Pacific
+// day. The rules live in alerts.ts. Called every 10 minutes by Vercel Cron via
+// /api/cron/ai-health.
 //
 // alert_sent on a row records what that check's service was reported as in
-// the email this run sent, which is how later runs know an email already went
-// out today and which recoveries are still unreported.
+// the email this run sent, which is how later runs know an outage was already
+// reported and whether a fix is still owed.
 
 import "server-only";
 import { uncachedServiceSupabase } from "@/lib/db/server";
 import {
-  anAlertEmailWentOutSince,
-  buildAiHealthDailyEmail,
+  aDownEmailWentOutForThisServiceSince,
+  buildAiHealthAlertEmail,
   downSinceForIncident,
   isOutageWorthReporting,
   isRecoveryAwaitingReport,
-  pacificDayKey,
   reportedIncidentTimes,
   startOfPacificDay,
-  type AiHealthDailyEmailInput,
+  type AiHealthAlertEmailInput,
   type AiServiceAlertKind,
   type ServiceOutageForEmail,
   type ServiceRecoveryForEmail,
@@ -66,8 +66,8 @@ async function readEarlierChecksNewestFirst(service: AiServiceName): Promise<Sto
   return ((data ?? []) as AiServiceCheckRow[]).map(storedCheckFromRow);
 }
 
-async function sendDailyEmail(
-  input: AiHealthDailyEmailInput,
+async function sendAlertEmail(
+  input: AiHealthAlertEmailInput,
   recipients: string[],
   idempotencyKey: string
 ): Promise<boolean> {
@@ -76,14 +76,14 @@ async function sendDailyEmail(
     console.warn("[ai-health] RESEND_API_KEY not set, cannot send the alert");
     return false;
   }
-  const email = buildAiHealthDailyEmail(input);
+  const email = buildAiHealthAlertEmail(input);
   try {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        // One email per Pacific day, even if a run is retried.
+        // One email per run, even if the request is retried.
         "Idempotency-Key": idempotencyKey,
       },
       body: JSON.stringify({
@@ -117,7 +117,7 @@ export type AiServiceCheckOutcome = {
 
 export type AiHealthRunOutcome = {
   checks: AiServiceCheckOutcome[];
-  email: "sent" | "not_needed" | "already_sent_today" | "no_recipients" | "send_failed";
+  email: "sent" | "not_needed" | "no_recipients" | "send_failed";
 };
 
 export async function runAiHealthCheck(now = new Date()): Promise<AiHealthRunOutcome> {
@@ -126,12 +126,15 @@ export async function runAiHealthCheck(now = new Date()): Promise<AiHealthRunOut
   const results = await checkAllAiServices();
   const earlierByService = await Promise.all(results.map((check) => readEarlierChecksNewestFirst(check.service)));
 
+  const startOfTodayIso = startOfPacificDay(now).toISOString();
   const outages: ServiceOutageForEmail[] = [];
   const recoveries: ServiceRecoveryForEmail[] = [];
   const alertKindByService = new Map<AiServiceName, AiServiceAlertKind>();
   results.forEach((check, index) => {
     const earlier = earlierByService[index];
-    if (isOutageWorthReporting(check, earlier)) {
+    const newOutageNotEmailedToday =
+      isOutageWorthReporting(check, earlier) && !aDownEmailWentOutForThisServiceSince(earlier, startOfTodayIso);
+    if (newOutageNotEmailedToday) {
       outages.push({
         service: check.service,
         failureKind: check.failureKind,
@@ -145,21 +148,17 @@ export async function runAiHealthCheck(now = new Date()): Promise<AiHealthRunOut
     }
   });
 
-  const alreadySentToday = anAlertEmailWentOutSince(earlierByService.flat(), startOfPacificDay(now).toISOString());
   let email: AiHealthRunOutcome["email"] = "not_needed";
   if (outages.length > 0 || recoveries.length > 0) {
-    if (alreadySentToday) {
-      email = "already_sent_today";
-    } else if (recipients.length === 0) {
+    if (recipients.length === 0) {
       email = "no_recipients";
     } else {
-      const sent = await sendDailyEmail({ outages, recoveries }, recipients, `ai-health-${pacificDayKey(now)}`);
+      const sent = await sendAlertEmail({ outages, recoveries }, recipients, `ai-health-${nowIso}`);
       email = sent ? "sent" : "send_failed";
     }
   }
 
-  // A skipped or failed send records no alert, so a later run reports it
-  // (today if nothing went out yet, otherwise in tomorrow's email).
+  // A failed send records no alert, so the next run tries again.
   const rows = results.map((check) => ({
     service: check.service,
     checked_at: nowIso,

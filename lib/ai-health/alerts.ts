@@ -1,15 +1,16 @@
 // Pure alerting logic for the AI service health check: what is worth
-// reporting, when an incident started, and what the daily email says. No I/O
+// reporting, when an incident started, and what the alert email says. No I/O
 // here, so it is unit tested in alerts.test.ts.
 //
 // Rules:
-// - At most one email per Pacific day, combining every service that is down
-//   now and every recovery since the last email.
-// - Failures that never fix themselves (out of credits, revoked key) are worth
-//   reporting on the first failed check. Transient ones (outage, rate limit,
-//   network) need two failed checks in a row, so a single blip is ignored.
-// - An outage still going the next day is reported again in that day's email.
-//   A recovery after the day's email went out is reported in the next one.
+// - Email only when something goes down and when it is fixed. Nothing while an
+//   outage lasts, and never an "all good" email.
+// - Failures that never fix themselves (out of credits, revoked key) count on
+//   the first failed check. Transient ones (outage, rate limit, network) need
+//   two failed checks in a row, so a single blip is ignored.
+// - A service that keeps flipping gets at most one down email per Pacific day
+//   (the job checks this with aDownEmailWentOutForThisServiceSince). A fixed
+//   email only follows a down email that actually went out.
 // - "unknown" (key not configured) is never reported.
 
 import type {
@@ -92,6 +93,8 @@ export function isOutageWorthReporting(
   earlierNewestFirst: StoredAiServiceCheck[]
 ): boolean {
   if (newCheck.status !== "down") return false;
+  const alreadyReported = checksInCurrentIncident(earlierNewestFirst).some((check) => check.alertSent === "down");
+  if (alreadyReported) return false;
   const neverFixesItself =
     newCheck.failureKind !== null && FAILURES_THAT_NEVER_FIX_THEMSELVES.includes(newCheck.failureKind);
   const previousWasAlsoDown = earlierNewestFirst[0]?.status === "down";
@@ -143,12 +146,12 @@ export function reportedIncidentTimes(
   };
 }
 
-export function anAlertEmailWentOutSince(
-  recentChecks: Pick<StoredAiServiceCheck, "checkedAt" | "alertSent">[],
+export function aDownEmailWentOutForThisServiceSince(
+  earlierNewestFirst: Pick<StoredAiServiceCheck, "checkedAt" | "alertSent">[],
   sinceIso: string
 ): boolean {
   const sinceMs = Date.parse(sinceIso);
-  return recentChecks.some((check) => check.alertSent !== null && Date.parse(check.checkedAt) >= sinceMs);
+  return earlierNewestFirst.some((check) => check.alertSent === "down" && Date.parse(check.checkedAt) >= sinceMs);
 }
 
 function pacificDateParts(instant: Date): { year: number; month: number; day: number; hour: number } {
@@ -162,12 +165,6 @@ function pacificDateParts(instant: Date): { year: number; month: number; day: nu
   }).formatToParts(instant);
   const part = (type: string) => Number(parts.find((p) => p.type === type)?.value);
   return { year: part("year"), month: part("month"), day: part("day"), hour: part("hour") };
-}
-
-// "2026-10-21" for the Pacific calendar day containing `instant`.
-export function pacificDayKey(instant: Date): string {
-  const { year, month, day } = pacificDateParts(instant);
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 // Midnight Pacific at the start of the day containing `instant`. Pacific
@@ -227,14 +224,14 @@ export type ServiceRecoveryForEmail = {
   recoveredAtIso: string;
 };
 
-export type AiHealthDailyEmailInput = {
+export type AiHealthAlertEmailInput = {
   outages: ServiceOutageForEmail[];
   recoveries: ServiceRecoveryForEmail[];
 };
 
 export type AiServiceAlertEmail = { subject: string; text: string; html: string };
 
-export function dailyEmailSubject(input: AiHealthDailyEmailInput): string {
+export function alertEmailSubject(input: AiHealthAlertEmailInput): string {
   if (input.outages.length === 1) {
     const outage = input.outages[0];
     return `New Fee Schedule PDF parsing is down: ${AI_SERVICE_DISPLAY_NAMES[outage.service]} says ${FAILURE_SUMMARIES[outage.failureKind ?? "unexpected_response"]}`;
@@ -262,15 +259,15 @@ function recoveryParagraph(recovery: ServiceRecoveryForEmail): string {
   return `${AI_SERVICE_DISPLAY_NAMES[recovery.service]} is working again since ${formatPacificTime(recovery.recoveredAtIso)} PT, after being down for ${describeDowntime(recovery.downSinceIso, recovery.recoveredAtIso)}. PDF uploads on New Fee Schedule work again.`;
 }
 
-export const DAILY_EMAIL_LIMIT_NOTICE =
-  "You get at most one of these emails a day. The check runs every 10 minutes; if it is still broken tomorrow you will hear again, and a recovery after today's email is reported in the next one.";
+export const ALERT_EMAIL_RULE_NOTICE =
+  "You only get an email when something goes down and another when it is fixed. Nothing is sent while it stays down or while everything is working. The check runs every 10 minutes.";
 
-export function buildAiHealthDailyEmail(input: AiHealthDailyEmailInput): AiServiceAlertEmail {
-  const subject = dailyEmailSubject(input);
+export function buildAiHealthAlertEmail(input: AiHealthAlertEmailInput): AiServiceAlertEmail {
+  const subject = alertEmailSubject(input);
   const paragraphs = [
     ...input.outages.flatMap(outageParagraphs),
     ...input.recoveries.map(recoveryParagraph),
-    DAILY_EMAIL_LIMIT_NOTICE,
+    ALERT_EMAIL_RULE_NOTICE,
   ];
   const text = paragraphs.join("\n\n");
   const accent = input.outages.length > 0 ? "#dc2626" : "#16a34a";
