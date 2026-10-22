@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildAiServiceAlertEmail,
-  decideAiServiceAlert,
+  DAILY_EMAIL_LIMIT_NOTICE,
+  anAlertEmailWentOutSince,
+  buildAiHealthDailyEmail,
   describeDowntime,
   downSinceForIncident,
+  isOutageWorthReporting,
+  isRecoveryAwaitingReport,
+  pacificDayKey,
+  reportedIncidentTimes,
+  startOfPacificDay,
   type StoredAiServiceCheck,
 } from "./alerts";
 import { checkClaude, classifyAnthropicFailure } from "./checks";
@@ -22,70 +28,105 @@ function stored(overrides: Partial<StoredAiServiceCheck> = {}): StoredAiServiceC
   };
 }
 
-describe("decideAiServiceAlert", () => {
-  it("alerts on the first failed check when credits run out", () => {
-    expect(decideAiServiceAlert({ status: "down", failureKind: "out_of_credits" }, [stored()])).toBe("down");
+describe("isOutageWorthReporting", () => {
+  it("reports running out of credits on the first failed check", () => {
+    expect(isOutageWorthReporting({ status: "down", failureKind: "out_of_credits" }, [stored()])).toBe(true);
+    expect(isOutageWorthReporting({ status: "down", failureKind: "key_rejected" }, [])).toBe(true);
   });
 
-  it("alerts on the first failed check when the key is rejected, even with no history", () => {
-    expect(decideAiServiceAlert({ status: "down", failureKind: "key_rejected" }, [])).toBe("down");
-  });
-
-  it("waits for a second failed check before alerting on a transient outage", () => {
-    expect(decideAiServiceAlert({ status: "down", failureKind: "provider_outage" }, [stored()])).toBeNull();
+  it("waits for a second failed check on a transient outage", () => {
+    expect(isOutageWorthReporting({ status: "down", failureKind: "provider_outage" }, [stored()])).toBe(false);
     expect(
-      decideAiServiceAlert({ status: "down", failureKind: "provider_outage" }, [
+      isOutageWorthReporting({ status: "down", failureKind: "provider_outage" }, [
         stored({ status: "down", failureKind: "provider_outage" }),
         stored(),
       ])
-    ).toBe("down");
+    ).toBe(true);
   });
 
-  it("sends only one down alert per incident", () => {
+  it("keeps reporting an outage that was already emailed, so the next day mentions it again", () => {
     expect(
-      decideAiServiceAlert({ status: "down", failureKind: "out_of_credits" }, [
-        stored({ status: "down", failureKind: "out_of_credits" }),
+      isOutageWorthReporting({ status: "down", failureKind: "out_of_credits" }, [
         stored({ status: "down", failureKind: "out_of_credits", alertSent: "down" }),
-        stored(),
       ])
-    ).toBeNull();
+    ).toBe(true);
   });
 
-  it("sends recovered only when a down alert went out for the incident", () => {
+  it("never reports working or unknown checks", () => {
+    expect(isOutageWorthReporting({ status: "working", failureKind: null }, [])).toBe(false);
+    expect(isOutageWorthReporting({ status: "unknown", failureKind: "not_configured" }, [])).toBe(false);
+  });
+});
+
+describe("isRecoveryAwaitingReport", () => {
+  it("is true when the last email reported the service down", () => {
     expect(
-      decideAiServiceAlert({ status: "working", failureKind: null }, [
+      isRecoveryAwaitingReport({ status: "working" }, [
+        stored({ status: "working" }),
         stored({ status: "down", failureKind: "out_of_credits", alertSent: "down" }),
-        stored(),
       ])
-    ).toBe("recovered");
-    expect(
-      decideAiServiceAlert({ status: "working", failureKind: null }, [
-        stored({ status: "down", failureKind: "provider_outage" }),
-        stored(),
-      ])
-    ).toBeNull();
+    ).toBe(true);
   });
 
-  it("does not send recovered twice", () => {
+  it("is false once the recovery was reported, or when the outage was never emailed", () => {
     expect(
-      decideAiServiceAlert({ status: "working", failureKind: null }, [
+      isRecoveryAwaitingReport({ status: "working" }, [
         stored({ alertSent: "recovered" }),
-        stored({ status: "down", failureKind: "out_of_credits", alertSent: "down" }),
+        stored({ status: "down", alertSent: "down" }),
       ])
-    ).toBeNull();
+    ).toBe(false);
+    expect(isRecoveryAwaitingReport({ status: "working" }, [stored({ status: "down" }), stored()])).toBe(false);
   });
 
-  it("does not let an earlier incident's alert silence a new one", () => {
-    expect(
-      decideAiServiceAlert({ status: "down", failureKind: "key_rejected" }, [
-        stored(),
-        stored({ status: "down", failureKind: "out_of_credits", alertSent: "down" }),
-      ])
-    ).toBe("down");
+  it("is false while the service is still down", () => {
+    expect(isRecoveryAwaitingReport({ status: "down" }, [stored({ status: "down", alertSent: "down" })])).toBe(false);
+  });
+});
+
+describe("reportedIncidentTimes", () => {
+  it("finds when the reported outage began and its first working check", () => {
+    const times = reportedIncidentTimes(
+      [
+        stored({ status: "working", checkedAt: "2026-10-22T09:20:00.000Z" }),
+        stored({ status: "working", checkedAt: "2026-10-22T09:10:00.000Z" }),
+        stored({ status: "down", checkedAt: "2026-10-22T09:00:00.000Z", alertSent: "down" }),
+        stored({ status: "down", checkedAt: "2026-10-22T08:50:00.000Z" }),
+        stored({ status: "working", checkedAt: "2026-10-22T08:40:00.000Z" }),
+      ],
+      "2026-10-22T09:30:00.000Z"
+    );
+    expect(times).toEqual({ downSinceIso: "2026-10-22T08:50:00.000Z", recoveredAtIso: "2026-10-22T09:10:00.000Z" });
   });
 
-  it("never alerts on an unknown check", () => {
-    expect(decideAiServiceAlert({ status: "unknown", failureKind: "not_configured" }, [])).toBeNull();
+  it("uses now when the service only just recovered", () => {
+    const times = reportedIncidentTimes(
+      [stored({ status: "down", checkedAt: "2026-10-22T09:00:00.000Z", alertSent: "down" })],
+      "2026-10-22T09:10:00.000Z"
+    );
+    expect(times.recoveredAtIso).toBe("2026-10-22T09:10:00.000Z");
+  });
+});
+
+describe("anAlertEmailWentOutSince", () => {
+  it("looks only at checks that sent an email on or after the cutoff", () => {
+    const checks = [
+      stored({ checkedAt: "2026-10-22T06:50:00.000Z", alertSent: "down" }),
+      stored({ checkedAt: "2026-10-22T08:00:00.000Z" }),
+    ];
+    expect(anAlertEmailWentOutSince(checks, "2026-10-22T07:00:00.000Z")).toBe(false);
+    expect(anAlertEmailWentOutSince(checks, "2026-10-22T06:00:00.000Z")).toBe(true);
+  });
+});
+
+describe("Pacific day", () => {
+  it("starts at 07:00 UTC in daylight time and 08:00 UTC in standard time", () => {
+    expect(startOfPacificDay(new Date("2026-10-22T03:00:00.000Z")).toISOString()).toBe("2026-10-21T07:00:00.000Z");
+    expect(startOfPacificDay(new Date("2026-12-01T20:00:00.000Z")).toISOString()).toBe("2026-12-01T08:00:00.000Z");
+  });
+
+  it("keys the day in Pacific time, not UTC", () => {
+    expect(pacificDayKey(new Date("2026-10-22T03:00:00.000Z"))).toBe("2026-10-21");
+    expect(pacificDayKey(new Date("2026-10-22T08:00:00.000Z"))).toBe("2026-10-22");
   });
 });
 
@@ -180,45 +221,51 @@ describe("checkClaude", () => {
   });
 });
 
-describe("buildAiServiceAlertEmail", () => {
-  it("says what breaks for practices and who fixes it", () => {
-    const email = buildAiServiceAlertEmail({
-      alertKind: "down",
-      service: "claude",
-      failureKind: "out_of_credits",
-      failureDetail: "400: Your credit balance is too low",
-      downSinceIso: "2026-10-21T17:00:00.000Z",
-      nowIso: "2026-10-21T17:00:00.000Z",
-    });
+describe("buildAiHealthDailyEmail", () => {
+  const outage = {
+    service: "claude" as const,
+    failureKind: "out_of_credits" as const,
+    failureDetail: "400: Your credit balance is too low",
+    downSinceIso: "2026-10-21T17:00:00.000Z",
+  };
+
+  it("says what breaks for practices, who fixes it, and that it is daily", () => {
+    const email = buildAiHealthDailyEmail({ outages: [outage], recoveries: [] });
     expect(email.subject).toContain("down");
     expect(email.subject).toContain("credit balance");
     expect(email.text).toContain("PDF");
     expect(email.text).toContain("Anthropic Console");
     expect(email.text).toContain("Your credit balance is too low");
+    expect(email.text).toContain(DAILY_EMAIL_LIMIT_NOTICE);
     expect(email.text).not.toMatch(/\u2014/);
   });
 
-  it("reports how long the recovered outage lasted", () => {
-    const email = buildAiServiceAlertEmail({
-      alertKind: "recovered",
-      service: "claude",
-      failureKind: null,
-      failureDetail: null,
-      downSinceIso: "2026-10-21T17:00:00.000Z",
-      nowIso: "2026-10-21T19:30:00.000Z",
+  it("reports a recovery with how long the outage lasted", () => {
+    const email = buildAiHealthDailyEmail({
+      outages: [],
+      recoveries: [
+        { service: "claude", downSinceIso: "2026-10-21T17:00:00.000Z", recoveredAtIso: "2026-10-21T19:30:00.000Z" },
+      ],
     });
     expect(email.subject).toContain("back");
     expect(email.text).toContain("2 hours 30 minutes");
   });
 
+  it("leads with the outage when the email has both", () => {
+    const email = buildAiHealthDailyEmail({
+      outages: [outage],
+      recoveries: [
+        { service: "claude", downSinceIso: "2026-10-21T10:00:00.000Z", recoveredAtIso: "2026-10-21T11:00:00.000Z" },
+      ],
+    });
+    expect(email.subject).toContain("down");
+    expect(email.text).toContain("working again");
+  });
+
   it("escapes HTML in the provider's message", () => {
-    const email = buildAiServiceAlertEmail({
-      alertKind: "down",
-      service: "claude",
-      failureKind: "unexpected_response",
-      failureDetail: "<script>x</script>",
-      downSinceIso: "2026-10-21T17:00:00.000Z",
-      nowIso: "2026-10-21T17:00:00.000Z",
+    const email = buildAiHealthDailyEmail({
+      outages: [{ ...outage, failureKind: "unexpected_response", failureDetail: "<script>x</script>" }],
+      recoveries: [],
     });
     expect(email.html).not.toContain("<script>");
     expect(email.html).toContain("&lt;script&gt;");

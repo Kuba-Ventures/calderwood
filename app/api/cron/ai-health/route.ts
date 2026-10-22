@@ -1,7 +1,8 @@
 // GET /api/cron/ai-health: Vercel Cron target, every 10 minutes (vercel.json).
 // Sends one tiny real request to each AI service the app depends on, records
-// the result in ai_service_checks, and emails AI_HEALTH_ALERT_TO when a service
-// goes down or recovers (see lib/ai-health/alerts.ts for the rules).
+// the result in ai_service_checks, and emails AI_HEALTH_ALERT_TO at most once
+// per Pacific day with what is down and what recovered (see
+// lib/ai-health/alerts.ts for the rules).
 //
 // 401 unless `Authorization: Bearer $CRON_SECRET`.
 
@@ -18,13 +19,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
-    const outcomes = await runAiHealthCheck();
+    const outcome = await runAiHealthCheck();
     console.log(
-      `[ai-health] ${outcomes
-        .map((o) => `${o.service}=${o.status}${o.alertSent ? ` (${o.alertSent} alert sent)` : ""}`)
-        .join(", ")}`
+      `[ai-health] ${outcome.checks
+        .map((o) => `${o.service}=${o.status}${o.alertSent ? ` (reported ${o.alertSent})` : ""}`)
+        .join(", ")}; email=${outcome.email}`
     );
-    return NextResponse.json({ checks: outcomes });
+    return NextResponse.json(outcome);
   } catch (error) {
     console.error("[ai-health] cron run failed:", error);
     return NextResponse.json({ error: "AI health check failed" }, { status: 500 });
