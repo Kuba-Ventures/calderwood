@@ -1,8 +1,8 @@
 // GET /api/cron/ai-health: Vercel Cron target, every 10 minutes (vercel.json).
 // Sends one tiny real request to each AI service the app depends on, records
-// the result in ai_service_checks, and emails AI_HEALTH_ALERT_TO at most once
-// per Pacific day with what is down and what recovered (see
-// lib/ai-health/alerts.ts for the rules).
+// the result in ai_service_checks, and emails AI_HEALTH_ALERT_TO only when a
+// service goes down or is fixed, at most one down email per service per
+// Pacific day (see lib/ai-health/alerts.ts for the rules).
 //
 // 401 unless `Authorization: Bearer $CRON_SECRET`.
 
