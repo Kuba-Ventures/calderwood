@@ -74,8 +74,9 @@ The **NDAS fee-data license is signed** and the **ADA CDT application is with AD
 - View-only shared report at `/r/<token>`, no login required.
 
 **Backend / data**
-- API routes under `app/api/`: `onboard`, `intake`, `upload-url`, `parse-pdf`, `carrier-schedule`, `eob-ocr`, `generate`, `report`, `share`, `checkout`, `stripe/webhook`, `account`, `reset-data`, `inbound`, plus `admin/` (seed-finley, verify-rls).
+- API routes under `app/api/`: `onboard`, `intake`, `upload-url`, `parse-pdf`, `carrier-schedule`, `eob-ocr`, `generate`, `report`, `share`, `checkout`, `stripe/webhook`, `account`, `reset-data`, `inbound`, `cron/ai-health`, plus `admin/` (seed-finley, verify-rls).
 - Inbound mail (`app/api/inbound/route.ts`, `lib/inbound/`): Resend `email.received` webhook with Svix signature check; forwards sales@ mail to `INBOUND_FORWARD_TO` with attachments, `reply_to` set to the sender, and an idempotency key (PR #68).
+- AI health check (`app/api/cron/ai-health/route.ts`, `lib/ai-health/`): Vercel Cron every 10 minutes (`vercel.json`) sends a one-token `claude-haiku-5-5` request with the production `ANTHROPIC_API_KEY`, stores the result in `ai_service_checks`, and emails `AI_HEALTH_ALERT_TO` (default finley@qsbsrollover.com) through Resend when PDF parsing goes down and again when it recovers. Out of credits or a rejected key alerts on the first failed check; outages and rate limits need two in a row. Needs `CRON_SECRET`; sender is `AI_HEALTH_ALERT_FROM`, then `RESEND_FROM_EMAIL`, then alerts@newfeeschedule.com. No dashboard page.
 - `eob-ocr` is a stub: it stores the uploaded image for a human to read and returns `queued: true`. No OCR, no rate limiting yet (`app/api/eob-ocr/route.ts`).
 - Parsing (`lib/parser/`): CSV and PDF dispatch; Claude vision extracts code, fee, annual volume, and per-provider fees (`pdf-summary.ts`); per-carrier schedules (`pdf-schedule.ts`).
 - Benchmark resolution (`lib/benchmark/resolve.ts`): cascades zip5, zip3, metro, state, region, national; skips levels with sample_size below 30; never blends levels.
@@ -88,7 +89,7 @@ The **NDAS fee-data license is signed** and the **ADA CDT application is with AD
 - Checkout (`app/api/checkout/route.ts`): Stripe promotion codes allowed, card collection only if required; the webhook unlocks on `paid` or `no_payment_required` (PR #73).
 
 **Infrastructure**
-- Supabase Postgres, project "Calderwood Tech"; 10 migrations (`supabase/migrations/0001` to `0010`). `0009` adds the zip5 tier and NDAS tables; `0010` enables RLS on them.
+- Supabase Postgres, project "Calderwood Tech"; 11 migrations (`supabase/migrations/0001` to `0011`). `0009` adds the zip5 tier and NDAS tables; `0010` enables RLS on them; `0011` adds `ai_service_checks` (RLS on, no policy, service role only).
 - Supabase Auth: Site URL `https://newfeeschedule.com`; redirect allow-list covers apex and `www` (`/reset-password` and `/**`) plus localhost (updated 2026-10-07).
 - Stripe Checkout (hosted) plus webhook setting `paid_at` on `checkout.session.completed`.
 - Scripts: `load:zcta`, `load:ucr`, `load:ndas`, `geo:build`, `render:sample-report`, `seed:finley`, `db:migrate`. `/data` is gitignored so vendor extracts can't be committed.
