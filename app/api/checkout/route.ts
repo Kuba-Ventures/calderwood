@@ -70,7 +70,9 @@ export async function POST(request: Request) {
           },
         },
       ],
-      success_url: `${origin}/dashboard?paid=1`,
+      // {CHECKOUT_SESSION_ID} is a Stripe template; the dashboard verifies
+      // the session server-side before firing the GA4 purchase event.
+      success_url: `${origin}/dashboard?paid=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/reports`,
     });
     return NextResponse.json({ url: session.url });
