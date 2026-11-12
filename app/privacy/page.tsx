@@ -21,7 +21,7 @@ export default function PrivacyStub() {
         Privacy
       </h1>
       <p className="mt-6 max-w-prose text-base leading-relaxed text-ink-700">
-        Placeholder. The full privacy policy is published before payments go live. In short: we collect the data you submit through the intake form (zip code, fee schedule, carriers, contact info) and use it solely to produce and deliver your report. We never see patient data and the intake form is built to refuse PHI. We do not sell your data. Our website also uses Google Analytics and the Meta Pixel to measure visits and our ads, as described below.
+        We collect the data you submit through the intake form (zip code, fee schedule, carriers, contact info) and use it solely to produce and deliver your report. We never see patient data and the intake form is built to refuse PHI. We do not sell your data. Our website also uses Google Analytics and the Meta Pixel to measure visits and our ads, as described below.
       </p>
 
       <h2 className={heading}>Analytics</h2>
