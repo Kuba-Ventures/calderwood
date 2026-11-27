@@ -1,8 +1,11 @@
+import { pageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Terms | New Fee Schedule",
-};
+export const metadata = pageMetadata(
+  "/terms",
+  "Terms | New Fee Schedule",
+  "The terms of service for using New Fee Schedule and its dental fee benchmark reports.",
+);
 
 export default function TermsStub() {
   return (

@@ -1,8 +1,11 @@
+import { pageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Privacy | New Fee Schedule",
-};
+export const metadata = pageMetadata(
+  "/privacy",
+  "Privacy | New Fee Schedule",
+  "How New Fee Schedule collects, uses and protects your practice data, including analytics and advertising measurement.",
+);
 
 const body = "mt-4 max-w-prose text-base leading-relaxed text-ink-700";
 const heading = "mt-10 text-xl font-semibold text-ink-900";
